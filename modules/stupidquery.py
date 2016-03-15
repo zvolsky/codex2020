@@ -12,11 +12,10 @@ use the PQLConfig() instance in method calls to give them info about required ta
 import re
 
 class PQFConfig(object):
-    def __init__(self, word_connect=' !0 ', title=4, author=1003, isbn=7, issn=8):
+    def __init__(self, title=4, author=1003, isbn=7, issn=8):
         """title, autor, isbn (issn) are required for 'smart' method
         defaults from http://jib-info.cuni.cz/dokumenty/techdoc/ProfilJIB.pdf
         """
-        self.word_connect = word_connect
         self.title = title
         self.author = author
         self.isbn = isbn
@@ -29,8 +28,8 @@ def smart(txt, config=PQFConfig()):
     for large numbers creates ISBN query, otherwise Title (+ Author if comma inside) query
     examples:
         .smart('9783886181926') -> '@or @attr 1=7 @attr 3=1 9783886181926 @attr 1=7 @attr 3=1 3886181928'
-        .smart('Řecko a ostrovy') -> '@attr 1=4 @attr 3=1 "\xc5\x98ecko !0 a !0 ostrovy"'
-        .smart('Hašek, Jaroslav') -> '@or @attr 1=4 @attr 3=1 "Ha\xc5\xa1ek, !0 Jaroslav" @attr 1=1003 @attr 3=1 "Ha\xc5\xa1ek, !0 Jaroslav"'
+        .smart('Řecko a ostrovy') -> '@attr 1=4 @attr 3=1 "\xc5\x98ecko a ostrovy"'
+        .smart('Hašek, Jaroslav') -> '@or @attr 1=4 @attr 3=1 "Ha\xc5\xa1ek, Jaroslav" @attr 1=1003 @attr 3=1 "Ha\xc5\xa1ek, Jaroslav"'
     """
     txt = txt.strip()
     if len(txt) >= 8 and txt.replace('-', '').isdigit():  # ISBN
@@ -38,7 +37,7 @@ def smart(txt, config=PQFConfig()):
         if '-' not in txt and len(txt) == 13 and txt[:3] == '978':  # can have old ISBN (10-char)
             pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.isbn, ean2isbn(txt)))
     else:
-        txt = re.sub('\s+', config.word_connect, txt)
+        txt = re.sub('\s+', ' ', txt)
         pqf = '@attr 1=%s @attr 3=1 "%s"' % (config.title, txt)
         if ',' in txt:
             pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.author, txt))

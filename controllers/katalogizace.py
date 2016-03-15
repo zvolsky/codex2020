@@ -19,19 +19,16 @@ def hledej_appendkey():
     hledat = request.vars.appendkey
     #                                       hledat=unicode(hledat,'utf-8').encode('cp1250')
     if hledat and len(hledat) >= 3:
-        print hledat, 1
-        #try:
-        conn = zoom.Connection ('aleph.nkp.cz', 9991)
-        res = None
-        #except ConnectionError:
-        #    res = P(T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?"))
+        try:
+            conn = zoom.Connection ('aleph.nkp.cz', 9991)
+            res = None
+        except ConnectionError:
+            res = P(T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?"))
         if res is None:
             conn.databaseName = 'SKC-UTF'  # AUT-UTF # http://aleph.nkp.cz/F/?func=file&file_name=base-list
             conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
             conn.charset = 'UTF-8'
-            print hledat, 2
             query = zoom.Query('PQF', smart(hledat))
-            print hledat, 3
             '''
                 "CCL", ISO 8777, (http://www.indexdata.dk/yaz/doc/tools.tkl#CCL)
                 "S-CCL", the same, but interpreted on the server side
@@ -42,12 +39,10 @@ def hledej_appendkey():
                 "ZSQL", Z-SQL, see (http://archive.dstc.edu.au/DDU/projects/Z3950/Z+SQL/)
                 "CQL-TREE", a general-purpose escape allowing any object with a toRPN method to be used,
             '''
-            #try:
-            #from pdb import set_trace; set_trace()
-            results = conn.search(query)
-            print hledat, 4
-            #except Exception:
-            #    results = None
+            try:
+                results = conn.search(query)
+            except Exception:
+                results = None
             if results is None:
                 res = P(T("Spojení se souhrnným katalogem bylo navázáno, ale dotaz selhal"))
             else:
@@ -60,7 +55,6 @@ def hledej_appendkey():
                     res.append(LI(record.title()))
                 res = UL(res)
             conn.close()
-            print hledat, 5
     else:
         res = P(T("Zadej alespoň 3 znaky pro vyhledání."))
     return res
