@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from pymarc import MARCReader    # pymarc z PyPI
-from PyZ3950 import zoom  # z https://github.com/Brown-University-Library/PyZ3950 nebo viz forked.yannick.io
-                          #  python setup.py install
+from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: python setup.py install
+                          # napoprvé import z Py pod rootovskými právy (něco si ještě vytvoří)
+    # viz forked.yannick.io:
+        # originální asl2/ chyba instalace,
+        # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
 
-from stupidccl import catalogue
+from stupidquery import smart
 
 def publikace():
     link('js/codex2020/katalogizace/publikace')
@@ -27,7 +30,7 @@ def hledej_appendkey():
             conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
             conn.charset = 'UTF-8'
             print hledat, 2
-            query = zoom.Query('CCL', '"' + catalogue(hledat) + '"')
+            query = zoom.Query('PQF', smart(hledat))
             print hledat, 3
             '''
                 "CCL", ISO 8777, (http://www.indexdata.dk/yaz/doc/tools.tkl#CCL)
