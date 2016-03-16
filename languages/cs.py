@@ -316,6 +316,7 @@
 'Plural Form #%s': 'Množné číslo #%s',
 'Plural-Forms:': 'Množná čísla:',
 'Powered by': 'Používá technologii',
+'počáteční 2-3 slova názvu nebo sejmi EAN čarový kód pro vyhledání publikace': 'počáteční 2-3 slova názvu nebo sejmi EAN čarový kód pro vyhledání publikace',
 'počáteční znaky názvu pro pokus nalézt publikaci online nebo offline (např. 10-15 znaků)': 'počáteční znaky názvu pro pokus nalézt publikaci online nebo offline (např. 10-15 znaků)',
 'Preface': 'Předmluva',
 'previous 100 rows': 'předchozích 100 řádků',

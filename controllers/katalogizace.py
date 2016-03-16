@@ -11,7 +11,9 @@ from stupidquery import smart
 
 def publikace():
     link('js/codex2020/katalogizace/publikace')
-    form = SQLFORM(db.publikace)
+    form = SQLFORM.factory(
+            Field('appendkey', 'string', length=20, label=T("Zkus najít podle"),
+                comment=T("počáteční 2-3 slova názvu nebo sejmi EAN čarový kód pro vyhledání publikace")))
     return dict(form=form)
 
 # ajax

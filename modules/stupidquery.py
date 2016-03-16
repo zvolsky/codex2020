@@ -21,6 +21,7 @@ class PQFConfig(object):
         self.isbn = isbn
         self.issn = issn
 
+# PQF queries: http://www.indexdata.com/yaz/doc/tools.html#pqf-examples
 # PQF example: '@or @attr 1=4 @attr 3=1 "Ohře" @attr 1=4 @attr 3=1 "Berounka"'
 def smart(txt, config=PQFConfig()):
     """creates PQF query suitable for catalogize
