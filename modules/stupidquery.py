@@ -33,10 +33,18 @@ def smart(txt, config=PQFConfig()):
         .smart('Hašek, Jaroslav') -> '@or @attr 1=4 @attr 3=1 "Ha\xc5\xa1ek, Jaroslav" @attr 1=1003 @attr 3=1 "Ha\xc5\xa1ek, Jaroslav"'
     """
     txt = txt.strip()
-    if len(txt) >= 8 and txt.replace('-', '').isdigit():  # ISBN
-        pqf = '@attr 1=%s @attr 3=1 %s' % (config.isbn, txt)
-        if '-' not in txt and len(txt) == 13 and txt[:3] == '978':  # can have old ISBN (10-char)
-            pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.isbn, ean2isbn(txt)))
+    nodashes = txt.replace('-', '').replace(' ','')
+    if len(nodashes) >= 8 and (nodashes.isdigit() or nodashes[:1] == 'M' and nodashes[1:].isdigit()):
+        # ISBN / ISSN / ISMN
+        if len(txt) > len(nodashes):  # i.e. '-' or ' ' in txt:  <=> manual writing
+            pqf = '@attr 1=%s @attr 3=1 %s' % (config.isbn if len(nodashes) > 9 else config.issn, nodashes)
+        elif len(txt) >= 13 and txt[:3] == '977':  # ISSN
+            pqf = '@attr 1=%s @attr 3=1 %s' % (config.issn, ean2issn(nodashes))
+            pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.issn, nodashes[:13]))  # no idea if 977.. can be in ISSN index, but lets try it
+        else:
+            pqf = '@attr 1=%s @attr 3=1 %s' % (config.isbn, nodashes)
+            if len(txt) == 13 and txt[:3] == '978':  # can have old ISBN (10-char)
+                pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.isbn, ean2isbn10(nodashes)))
     else:
         txt = re.sub('\s+', ' ', txt)
         pqf = '@attr 1=%s @attr 3=1 "%s"' % (config.title, txt)
@@ -44,12 +52,19 @@ def smart(txt, config=PQFConfig()):
             pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.author, txt))
     return pqf
 
-def ean2isbn(ean):
+def ean2isbn10(ean):
     """convert EAN to old version (10-char) ISBN
-    before the call test if EAN is 978... EAN
+    before the call test if EAN is 978... EAN (no need to call with 979..)
     old version of EAN can but not must really exist (because book can have 13-char ISBN)
     """
     significant = ean[3:-1]
+    return significant + _check_digit10(significant)
+
+def ean2issn(ean):
+    """convert EAN to ISSN
+    before the call test if EAN is 977... EAN
+    """
+    significant = ean[3:10]
     return significant + _check_digit10(significant)
 
 def _check_digit10(firstninedigits):
