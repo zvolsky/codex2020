@@ -7,7 +7,7 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
         # originální asl2/ chyba instalace,
         # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
 
-from stupidquery import smart
+from stupidquery import smartquery
 
 def publikace():
     link('js/codex2020/katalogizace/publikace')
@@ -30,7 +30,7 @@ def hledej_appendkey():
             conn.databaseName = 'SKC-UTF'  # AUT-UTF # http://aleph.nkp.cz/F/?func=file&file_name=base-list
             conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
             conn.charset = 'UTF-8'
-            query = zoom.Query('PQF', smart(hledat))
+            query = zoom.Query('PQF', smartquery(hledat))
             '''
                 "CCL", ISO 8777, (http://www.indexdata.dk/yaz/doc/tools.tkl#CCL)
                 "S-CCL", the same, but interpreted on the server side
@@ -51,12 +51,66 @@ def hledej_appendkey():
                 marc = ''
                 for r in results:
                     marc += r.data
-                reader = MARCReader(marc)
+                reader = MARCReader(marc, to_unicode=True)
                 res = []
                 for record in reader:
+                    updatedb(record)
                     res.append(LI(record.title()))
+                #results[i].data
                 res = UL(res)
             conn.close()
     else:
         res = P(T("Zadej alespoň 3 znaky pro vyhledání."))
     return res
+
+# internal - presun jinam
+def updatedb(record):
+    import hashlib
+    title = record.title()
+    author = record.author()
+    publisher = record.publisher()
+    pubyear = record.pubyear()
+    isbn = record.isbn()
+    ean = isxn2ean()
+    row = None
+    if ean:
+        if ean[:3] == '977':  # can have everything in [10:12] position
+            row = db(db.publication.ean.startswith(ean[:10])).select(
+                    db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+        else:
+            row = db(db.publication.ean == ean).select(
+                    db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+    if not row:
+        md5 = hashlib.md5('|'.join([title, author, publisher, pubyear]))
+        row = db(db.publication.md5 == md5).select(
+                db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+    if row:
+        db[row.id] = TODO
+    else:
+        db.publication.insert(TODO)
+    '''
+        Field('title', 'string', length=255,
+              label=T("Název"), comment=T("hlavní název publikace")),
+        Field('uniformtitle', 'string', length=255,
+              label=T("uniformtitle"), comment=T("uniformtitle")),
+        Field('author', 'string', length=200,
+              label=T("Autor"), comment=T("autor")),
+        Field('isbn', 'string', length=20,
+              label=T("ISBN"), comment=T("ISBN")),
+        Field('subjects', 'string', length=255,
+              label=T("subjects"), comment=T("subjects")),
+        Field('addedentries', 'string', length=255,
+              label=T("addedentries"), comment=T("addedentries")),
+        Field('location', 'string', length=255,
+              label=T("location"), comment=T("location")),
+        Field('notes', 'string', length=255,
+              label=T("notes"), comment=T("notes")),
+        Field('physicaldescription', 'string', length=255,
+              label=T("physicaldescription"), comment=T("physicaldescription")),
+        Field('publisher', 'string', length=255,
+              label=T("publisher"), comment=T("publisher")),
+        Field('pubyear', 'string', length=100,
+              label=T("pubyear"), comment=T("pubyear")),
+        Field('marc', 'text',
+              label=T("marc"), comment=T("marc")),
+    '''
