@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 
+class PublLengths(object):
+    title = 255
+    uniformtitle = 255
+    author = 200
+    isbn = 20
+    subjects = 255
+    addedentries = 255
+    publ_location = 255
+    notes = 255
+    physicaldescription = 255
+    publisher = 255
+    pubyear = 100
+
 db.define_table('answer',
         Field('md5', 'string', length=32,
               label=T("md5"), comment=T("md5")),
         Field('ean', 'string', length=20,
               label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
-        Field('title', 'string', length=255,
+        Field('title', 'string', length=PublLengths.title,
               label=T("Název"), comment=T("hlavní název publikace")),
-        Field('uniformtitle', 'string', length=255,
+        Field('uniformtitle', 'string', length=PublLengths.uniformtitle,
               label=T("uniformtitle"), comment=T("uniformtitle")),
-        Field('author', 'string', length=200,
+        Field('author', 'string', length=PublLengths.author,
               label=T("Autor"), comment=T("autor")),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),
@@ -29,27 +42,27 @@ db.define_table('publication',
               label=T("md5"), comment=T("md5")),
         Field('ean', 'string', length=20,
               label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
-        Field('title', 'string', length=255,
+        Field('title', 'string', length=PublLengths.title,
               label=T("Název"), comment=T("hlavní název publikace")),
-        Field('uniformtitle', 'string', length=255,
+        Field('uniformtitle', 'string', length=PublLengths.uniformtitle,
               label=T("uniformtitle"), comment=T("uniformtitle")),
-        Field('author', 'string', length=200,
+        Field('author', 'string', length=PublLengths.author,
               label=T("Autor"), comment=T("autor")),
-        Field('isbn', 'string', length=20,
+        Field('isbn', 'string', length=PublLengths.isbn,
               label=T("ISBN"), comment=T("ISBN")),
-        Field('subjects', 'string', length=255,
+        Field('subjects', 'string', length=PublLengths.subjects,
               label=T("subjects"), comment=T("subjects")),
-        Field('addedentries', 'string', length=255,
+        Field('addedentries', 'string', length=PublLengths.addedentries,
               label=T("addedentries"), comment=T("addedentries")),
-        Field('publ_location', 'string', length=255,   # location is reserved word
+        Field('publ_location', 'string', length=PublLengths.publ_location,   # location is reserved word
               label=T("location"), comment=T("location")),
-        Field('notes', 'string', length=255,
-              label=T("notes"), comment=T("notes")),
-        Field('physicaldescription', 'string', length=255,
+        Field('notes', 'string', length=PublLengths.notes,
+              label=T("notes"), comment=T("physicaldescription")),
+        Field('physicaldescription', 'string', length=PublLengths.physicaldescription,
               label=T("physicaldescription"), comment=T("physicaldescription")),
-        Field('publisher', 'string', length=255,
+        Field('publisher', 'string', length=PublLengths.publisher,
               label=T("publisher"), comment=T("publisher")),
-        Field('pubyear', 'string', length=100,
+        Field('pubyear', 'string', length=PublLengths.pubyear,
               label=T("pubyear"), comment=T("pubyear")),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),

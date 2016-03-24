@@ -92,11 +92,11 @@ def check_digit_ean(firsttwelvedigits):
 
 def isxn_to_ean(isxn):
     """for ISSN digits [10:12] will be set to 00 - printed EAN may be different in [10:12] position"""
+    if not isxn:     # accepts None
+        return ''
     isxn = isxn.strip()
     digits = ''.join(i for i in isxn if i.isdigit())
     cnt = len(digits)
-    if not isxn:     # accepts None
-        return ''
     if cnt >= 12:
         return digits[:12] + check_digit_ean(digits)   # check_digit_ean will slice to [:12]
     if isxn[-1:] == 'X' and cnt == 9 or len(digits) >= 10:
