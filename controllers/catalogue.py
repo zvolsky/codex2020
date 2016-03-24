@@ -96,15 +96,23 @@ def updatedb(record):
         row = db(db.answer.md5 == md5).select(
                 db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
     '''
-    new = dict(md5=md5, ean=ean, title=title, uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
-               author=author, marc=marc
-               )
+    try:
+        new = dict(md5=md5, ean=ean, title=title, isbn=isbn,
+                uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
+                #subjects=(record.subjects() or '')[:PublLengths.subjects],
+                addedentries=(record.addedentries() or '')[:PublLengths.addedentries],
+                publ_location=(record.location() or '')[:PublLengths.publ_location],
+                #notes=(record.notes() or '')[:PublLengths.notes],
+                #physicaldescription=(record.physicaldescription() or '')[:PublLengths.physicaldescription],
+                publisher=(record.publisher() or '')[:PublLengths.publisher],
+                pubyear=(record.pubyear() or '')[:PublLengths.pubyear],
+                author=author, marc=marc
+                )
+        db.publication.insert(**new)
+    except:
+        pass
     '''
-               isbn=isbn, subjects=record.subjects(), addedentries=record.addedentries(),
-               publ_location=record.location(), notes=record.notes(), physicaldescription=record.physicaldescription(),
-               publisher=record.publisher(), pubyear=record.pubyear(),
     if row:
         db[row.id] = new
     else:
     '''
-    db.publication.insert(**new)
