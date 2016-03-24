@@ -9,10 +9,10 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
 
 from stupidquery import smartquery, isxn_to_ean
 
-def publikace():
+def find():
     link('js/codex2020/katalogizace/publikace')
     form = SQLFORM.factory(
-            Field('appendkey', 'string', length=20, label=T("Zkus najít podle"),
+            Field('starter', 'string', length=20, label=T("Zkus najít podle"),
                 comment=T("počáteční 2-3 slova názvu nebo sejmi EAN čarový kód pro vyhledání publikace")))
     return dict(form=form)
 
@@ -67,28 +67,30 @@ def hledej_appendkey():
 # internal - presun jinam
 def updatedb(record):
     import hashlib
+    marc = record.as_marc()
+    md5 = hashlib.md5(marc)
     title = record.title()
     author = record.author()
-    publisher = record.publisher()
-    pubyear = record.pubyear()
     isbn = record.isbn()
     ean = isxn_to_ean(isbn)
-    md5 = hashlib.md5('|'.join([title, author, publisher, pubyear]))
     row = None
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
-            row = db(db.publication.ean.startswith(ean[:10])).select(
-                    db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+            row = db(db.answer.ean.startswith(ean[:10])).select(
+                    db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
         else:
-            row = db(db.publication.ean == ean).select(
-                    db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+            row = db(db.answer.ean == ean).select(
+                    db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
     if not row:
-        row = db(db.publication.md5 == md5).select(
-                db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+        row = db(db.answer.md5 == md5).select(
+                db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
     new = dict(md5=md5, ean=ean, title=title, uniformtitle=record.uniformtitle(),
-               author=author, isbn=isbn, subjects=record.subjects(), addedentries=record.addedentries(),
+               author=author, marc=marc)
+    '''
+    isbn=isbn, subjects=record.subjects(), addedentries=record.addedentries(),
                publ_location=record.location(), notes=record.notes(), physicaldescription=record.physicaldescription(),
-               publisher=publisher, pubyear=pubyear, marc=record.as_marc())
+               publisher=publisher, pubyear=pubyear,
+    '''
     if row:
         db[row.id] = new
     else:
