@@ -7,7 +7,7 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
         # originální asl2/ chyba instalace,
         # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
 
-from stupidquery import smartquery
+from stupidquery import smartquery, isxn_to_ean
 
 def publikace():
     link('js/codex2020/katalogizace/publikace')
@@ -58,6 +58,7 @@ def hledej_appendkey():
                     res.append(LI(record.title()))
                 #results[i].data
                 res = UL(res)
+                print 555
             conn.close()
     else:
         res = P(T("Zadej alespoň 3 znaky pro vyhledání."))
@@ -71,7 +72,8 @@ def updatedb(record):
     publisher = record.publisher()
     pubyear = record.pubyear()
     isbn = record.isbn()
-    ean = isxn2ean()
+    ean = isxn_to_ean(isbn)
+    md5 = hashlib.md5('|'.join([title, author, publisher, pubyear]))
     row = None
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
@@ -81,36 +83,13 @@ def updatedb(record):
             row = db(db.publication.ean == ean).select(
                     db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
     if not row:
-        md5 = hashlib.md5('|'.join([title, author, publisher, pubyear]))
         row = db(db.publication.md5 == md5).select(
                 db.publication.id, limitby=(0,1), orderby_on_limitby=False).first()
+    new = dict(md5=md5, ean=ean, title=title, uniformtitle=record.uniformtitle(),
+               author=author, isbn=isbn, subjects=record.subjects(), addedentries=record.addedentries(),
+               publ_location=record.location(), notes=record.notes(), physicaldescription=record.physicaldescription(),
+               publisher=publisher, pubyear=pubyear, marc=record.as_marc())
     if row:
-        db[row.id] = TODO
+        db[row.id] = new
     else:
-        db.publication.insert(TODO)
-    '''
-        Field('title', 'string', length=255,
-              label=T("Název"), comment=T("hlavní název publikace")),
-        Field('uniformtitle', 'string', length=255,
-              label=T("uniformtitle"), comment=T("uniformtitle")),
-        Field('author', 'string', length=200,
-              label=T("Autor"), comment=T("autor")),
-        Field('isbn', 'string', length=20,
-              label=T("ISBN"), comment=T("ISBN")),
-        Field('subjects', 'string', length=255,
-              label=T("subjects"), comment=T("subjects")),
-        Field('addedentries', 'string', length=255,
-              label=T("addedentries"), comment=T("addedentries")),
-        Field('location', 'string', length=255,
-              label=T("location"), comment=T("location")),
-        Field('notes', 'string', length=255,
-              label=T("notes"), comment=T("notes")),
-        Field('physicaldescription', 'string', length=255,
-              label=T("physicaldescription"), comment=T("physicaldescription")),
-        Field('publisher', 'string', length=255,
-              label=T("publisher"), comment=T("publisher")),
-        Field('pubyear', 'string', length=100,
-              label=T("pubyear"), comment=T("pubyear")),
-        Field('marc', 'text',
-              label=T("marc"), comment=T("marc")),
-    '''
+        db.publication.insert(**new)

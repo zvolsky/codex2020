@@ -95,6 +95,8 @@ def isxn_to_ean(isxn):
     isxn = isxn.strip()
     digits = ''.join(i for i in isxn if i.isdigit())
     cnt = len(digits)
+    if not isxn:     # accepts None
+        return ''
     if cnt >= 12:
         return digits[:12] + check_digit_ean(digits)   # check_digit_ean will slice to [:12]
     if isxn[-1:] == 'X' and cnt == 9 or len(digits) >= 10:

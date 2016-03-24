@@ -1,9 +1,33 @@
 # -*- coding: utf-8 -*-
 
+db.define_table('answer',
+        Field('md5', 'string', length=32,
+              label=T("md5"), comment=T("md5")),
+        Field('ean', 'string', length=20,
+              label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
+        Field('title', 'string', length=255,
+              label=T("Název"), comment=T("hlavní název publikace")),
+        Field('uniformtitle', 'string', length=255,
+              label=T("uniformtitle"), comment=T("uniformtitle")),
+        Field('author', 'string', length=200,
+              label=T("Autor"), comment=T("autor")),
+        Field('marc', 'text',
+              label=T("marc"), comment=T("marc")),
+        )
+
+db.define_table('answer_starter',
+        Field('answer_id', db.answer,
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('starter_type', 'string', length=1,
+              label=T("Typ řetězce"), comment=T("typ řetězce (T=titul, A=autor)")),
+        Field('starter', 'string', length=60,
+              label=T("Řetězec"), comment=T("začátek řetězce")),
+        )
+
 db.define_table('publication',
         Field('md5', 'string', length=32,
               label=T("md5"), comment=T("md5")),
-        Field('EAN', 'string', length=20,
+        Field('ean', 'string', length=20,
               label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
         Field('title', 'string', length=255,
               label=T("Název"), comment=T("hlavní název publikace")),
@@ -17,7 +41,7 @@ db.define_table('publication',
               label=T("subjects"), comment=T("subjects")),
         Field('addedentries', 'string', length=255,
               label=T("addedentries"), comment=T("addedentries")),
-        Field('location', 'string', length=255,
+        Field('publ_location', 'string', length=255,   # location is reserved word
               label=T("location"), comment=T("location")),
         Field('notes', 'string', length=255,
               label=T("notes"), comment=T("notes")),
