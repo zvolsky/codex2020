@@ -14,16 +14,12 @@ class PublLengths(object):
     pubyear = 100
 
 db.define_table('answer',
-        Field('md5', 'string', length=32,
-              label=T("md5"), comment=T("md5")),
+        Field('md5publ', 'string', length=32,
+              label=T("md5publ"), comment=T("md5publ")),
+        Field('md5marc', 'string', length=32,
+              label=T("md5marc"), comment=T("md5marc")),
         Field('ean', 'string', length=20,
               label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
-        Field('title', 'string', length=PublLengths.title,
-              label=T("Název"), comment=T("hlavní název publikace")),
-        Field('uniformtitle', 'string', length=PublLengths.uniformtitle,
-              label=T("uniformtitle"), comment=T("uniformtitle")),
-        Field('author', 'string', length=PublLengths.author,
-              label=T("Autor"), comment=T("autor")),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),
         )
