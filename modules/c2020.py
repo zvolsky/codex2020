@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: python setup.py install
                           # napoprvé import z Py pod rootovskými právy (něco si ještě vytvoří)
     # viz forked.yannick.io:

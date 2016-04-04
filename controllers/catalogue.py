@@ -6,6 +6,7 @@ from pymarc import MARCReader    # pymarc z PyPI
 
 from books import isxn_to_ean
 from c2020 import smartquery, world_get
+from marcfrom import MarcFrom
 
 
 def find():
@@ -24,7 +25,7 @@ def find():
                 for r in results:
                     for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
                         inserted += updatedb(record)
-                response.flash = T('%s staženo, z toho nových: %s' % (results.length, inserted))
+                response.flash = T('%s staženo, z toho nových: %s' % (len(results), inserted))
         else:
             response.flash = T("Zadej alespoň 3 znaky pro vyhledání.")
     return dict(form=form)
@@ -39,22 +40,16 @@ def updatedb(record):
 
     marc = record.as_marc()
     md5marc = hashlib.md5(marc).hexdigest()
-    row = db(db.answer.md5 == md5).select(
-            db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
-    if row:
-        return
-    title = record.title() or ''
-    author = record.author() or ''
-    publisher = record.publisher() or ''
-    pubyear = record.pubyear() or ''
-    md5publ = hashlib.md5('%s|%s|%s|%s' % (title, author, publisher, pubyear)).hexdigest()
 
-    title = title[:PublLengths.title]
-    author = author[:PublLengths.author]
-    publisher = publisher[:PublLengths.publisher]
-    pubyear = pubyear[:PublLengths.pubyear]
+    marcrec = MarcFrom(record)
+    md5publ = hashlib.md5(('%s|%s|%s|%s' % (marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)).encode('utf-8')).hexdigest()
 
-    isbn = (record.isbn() or '')[:PublLengths.isbn]
+    #title = marcrec.title[:PublLengths.title]
+    #author = marcrec.author[:PublLengths.author]
+    #publisher = marcrec.publisher[:PublLengths.publisher]
+    #pubyear = marcrec.pubyear[:PublLengths.pubyear]
+
+    isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
     answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc)
