@@ -25,7 +25,7 @@ def find():
                 for r in results:
                     for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
                         inserted += updatedb(record)
-                response.flash = T('%s staženo, z toho nových: %s' % (len(results), inserted))
+                response.flash = T('%s staženo, z toho nových: %s') % (len(results), inserted)
         else:
             response.flash = T("Zadej alespoň 3 znaky pro vyhledání.")
     return dict(form=form)
