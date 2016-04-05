@@ -18,6 +18,7 @@
 '165 staženo, z toho nových: 0': '165 staženo, z toho nových: 0',
 '165 staženo, z toho nových: 1': '165 staženo, z toho nových: 1',
 '165 staženo, z toho nových: 149': '165 staženo, z toho nových: 149',
+'402 staženo, z toho nových: 354': '402 staženo, z toho nových: 354',
 '90 staženo, z toho nových: 79': '90 staženo, z toho nových: 79',
 '904 staženo, z toho nových: 778': '904 staženo, z toho nových: 778',
 '@markmin\x01(file **gluon/contrib/plural_rules/%s.py** is not found)': '@markmin\x01(soubor **gluon/contrib/plural_rules/%s.py** nenalezen)',

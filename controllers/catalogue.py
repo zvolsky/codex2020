@@ -55,8 +55,10 @@ def updatedb(record):
     answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc)
 
     if ean:
-        # TODO: 977
-        row = db(db.answer.ean == ean).select(db.answer.id, db.answer.md5marc).first()
+        if ean[:3] == '977':  # can have everything in [10:12] position
+            row = db(db.answer.ean.startswith(ean[:10])).select(db.answer.id, db.answer.md5marc).first()
+        else:
+            row = db(db.answer.ean == ean).select(db.answer.id, db.answer.md5marc).first()
         if exists_update():
             return False
     # no isbn/ean

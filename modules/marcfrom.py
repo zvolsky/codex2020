@@ -4,15 +4,13 @@ class MarcFrom(object):
     def __init__(self, record):
         self.record = record
 
-        self.title = self.authorities = self.authors = None  # to make pylint happy; parse_...() will set them
-        self.parse_title()
-        self.parse_authors()  # will call self.parse_authorities() and establish self.authorities and self.authors
-        self.publisher = record.publisher() or ''
-        self.pubyear = record.pubyear() or ''
-        self.isbn = record.isbn() or ''
+        self.title = self.publisher = self.publisher_by_name = self.pubyear = ''
+        self.authorities = self.authors = []  # to make pylint happy; parse_...() will set them
 
-        from pdb import set_trace; set_trace()
-        pass
+        self.parse_title()
+        self.parse_authors()    # will call self.parse_authorities() and establish self.authorities and self.authors
+        self.parse_publisher()  # will eastablish self.publisher and .pubyear
+        self.isbn = record.isbn() or ''
 
     def join(self, *parts):
         joined = ''
@@ -20,6 +18,24 @@ class MarcFrom(object):
             if part:
                 joined = joined.rstrip() + ' ' + part
         return joined.strip()
+
+    def parse_publisher(self):
+        """
+        Note: 264 field with second indicator '1' indicates publisher.
+        """
+        def get_publisher(marc_publisher):
+            place = marc_publisher['a']
+            company = marc_publisher['b']
+            self.publisher = self.join(place, company)
+            self.publisher_by_name = self.join(company, name)
+
+        for f in self.get_fields('260', '264'):
+            if self['260']:
+                set_publisher(self['260'])
+                self.pubyear = self['260']['c'] or ''
+            if self['264'] and f.indicator2 == '1':
+                set_publisher(self['260'])
+                self.pubyear = self['264']['c'] or ''
 
     def parse_title(self):
         def spec_append(part):
@@ -63,6 +79,7 @@ class MarcFrom(object):
             mt_value = marc_title.value().strip()
             if subval != mt_value:
                 spec_append(mt_value)
+        self.title_parts = parts
 
     def parse_authors(self):
         """will call self.parse_authorities() and establish self.authorities and self.authors
@@ -86,16 +103,27 @@ class MarcFrom(object):
         4: date info $d,
         5: role $4
         """
+        def parse_one(fld, allowed_more):
+            for marc_authority in self.record.get_fields('700'):
+                name = marc_authority['a']
+                if not name:
+                    continue
+                more1 = more2 = ''
+                if 'b' in allowed_more:
+                    more1 = marc_authority['b'] or ''  # roman --or-- subpart
+                if 'c' in allowed_more:
+                    more2 = marc_authority['c'] or ''  # additional info to the name
+                date_info = marc_authority['d'] or ''
+                role = marc_authority['4'] or '?'
+                authorities.append((self.join(name, more1, more2).rstrip(', '), name, more1, more2, date_info, role))
+
         authorities = []
-        for marc_authority in self.record.get_fields('700'):
-            name = marc_authority['a']
-            if not name:
-                continue
-            roman = marc_authority['b'] or ''
-            additional = marc_authority['c'] or ''
-            date_info = marc_authority['d'] or ''
-            role = marc_authority['4'] or '?'
-            authorities.append((self.join(name, roman, additional).rstrip(', '), name, roman, additional, date_info, role))
+        parse_one('100', 'bc')  # author person
+        parse_one('110', 'b')   # author corporation
+        parse_one('111', 'b')   # author event/action
+        parse_one('700', 'bc')  # person
+        parse_one('710', 'b')   # corporation
+        parse_one('720', '')    # unsure name
         self.authorities = authorities
 
     def joined_authors(self, join_char=';'):

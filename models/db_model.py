@@ -25,12 +25,19 @@ db.define_table('answer',
         )
 
 db.define_table('answer_starter',
-        Field('answer_id', db.answer,
-              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
         Field('starter_type', 'string', length=1,
               label=T("Typ řetězce"), comment=T("typ řetězce (T=titul, A=autor)")),
         Field('starter', 'string', length=60,
               label=T("Řetězec"), comment=T("začátek řetězce")),
+        Field('starter_hash', 'integer',
+              label=T("Hash řetězce"), comment=T("hash (kontrolní součet) řetězce")),
+        )
+
+db.define_table('answer_link',
+        Field('answer_id', db.answer,
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('answer_starter_id', db.answer_starter,
+              label=T("Vyhledávací řetězec"), comment=T("příslušnost k vyhledávacímu řetězci")),
         )
 
 db.define_table('publication',
