@@ -38,6 +38,8 @@ db.define_table('answer_link',
               label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
         Field('answer_starter_id', db.answer_starter,
               label=T("Vyhledávací řetězec"), comment=T("příslušnost k vyhledávacímu řetězci")),
+        Field('role', 'string', length=3,
+              label=T("role"), comment=T("role")),
         )
 
 db.define_table('publication',

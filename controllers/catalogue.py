@@ -36,6 +36,8 @@ def updatedb(record):
         if row:
             if row.md5marc != md5marc:    # same ean, changed info
                 db.answer[row.id] = answer
+                # TODO: delete related answer_join
+                # TODO: update answer_join, answer_idx
             return True  # row exists, stop next actions
 
     marc = record.as_marc()
@@ -54,6 +56,21 @@ def updatedb(record):
 
     answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc)
 
+    #---------
+    new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
+            uniformtitle='; '.join(fld.value() for fld in (record.uniformtitle() or []))[:PublLengths.uniformtitle],
+            subjects='; '.join(fld.value() for fld in (record.subjects() or []))[:PublLengths.subjects],
+            addedentries='; '.join(fld.value() for fld in (record.addedentries() or []))[:PublLengths.addedentries],
+            publ_location='; '.join(fld.value() for fld in (record.location() or []))[:PublLengths.publ_location],
+            notes='; '.join(fld.value() for fld in (record.notes() or []))[:PublLengths.notes],
+            physicaldescription='; '.join(fld.value() for fld in (record.physicaldescription() or []))[:PublLengths.physicaldescription],
+            publisher=marcrec.publisher[:PublLengths.publisher],
+            pubyear=marcrec.pubyear[:PublLengths.pubyear],
+            author=marcrec.author[:PublLengths.author],
+            )
+    db.publication.insert(**new)
+    #---------
+
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
             row = db(db.answer.ean.startswith(ean[:10])).select(db.answer.id, db.answer.md5marc).first()
@@ -67,6 +84,7 @@ def updatedb(record):
         return False
     else:
         db.answer.insert(**answer)
+        # TODO: update answer_join, answer_idx
         return True
 
     '''

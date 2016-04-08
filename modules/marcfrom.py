@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
 class MarcFrom(object):
+    repeatJoiner = '; '
+
     def __init__(self, record):
         self.record = record
 
-        self.title = self.publisher = self.publisher_by_name = self.pubyear = ''
+        self.title = self.pubplace = self.pubyear = self.publisher = self.author = ''
+        self.publishers = self.publishers_by_name = self.publishers_by_place = []
         self.authorities = self.authors = []  # to make pylint happy; parse_...() will set them
 
         self.parse_title()
-        self.parse_authors()    # will call self.parse_authorities() and establish self.authorities and self.authors
-        self.parse_publisher()  # will eastablish self.publisher and .pubyear
+        aut_publishers = self.parse_authors()  # will call self.parse_authorities() and establish self.authorities and self.authors
+        self.parse_publisher(aut_publishers)   # will eastablish self.publishers (from 110/aut_publishers or from 260/264) and .pubyear
         self.isbn = record.isbn() or ''
 
     def join(self, *parts):
@@ -19,23 +22,47 @@ class MarcFrom(object):
                 joined = joined.rstrip() + ' ' + part
         return joined.strip()
 
-    def parse_publisher(self):
+    def fix(self, txt):
+        if txt:
+            return txt.rstrip(':.,;/ ')
+        return ''
+
+    def parse_publisher(self, aut_publishers):
         """
+        will eastablish self.publisher (from aut_publishers or from 260/264) and .pubyear
+        aut_publishers are from author-110
         Note: 264 field with second indicator '1' indicates publisher.
         """
+        # TODO: fix .publishers[], publisher, same authors[], author
         def get_publisher(marc_publisher):
-            place = marc_publisher['a']
-            company = marc_publisher['b']
-            self.publisher = self.join(place, company)
-            self.publisher_by_name = self.join(company, name)
+            place = self.fix(marc_publisher['a'])
+            if place and not self.pubplace:
+                self.pubplace = place
+            company = self.fix(marc_publisher['b'])
+            for idx, aut_publisher_row in enumerate(aut_publishers):
+                aut_publisher, used = aut_publisher_row
+                if not used and aut_publisher.lower() in company.lower():  # not very important to optimize, usually cnt is ~ 1
+                    company = aut_publisher   # prefer 110, because sometimes 260/264 contains additional text like "published by.."
+                    aut_publishers[idx][1] = True
+            self.publishers.append(company)
+            self.publishers_by_place.append(self.join(place, company))
+            self.publishers_by_name.append(self.join(company, place))
+            if not self.pubyear:
+                self.pubyear = marc_publisher['c'] or ''
 
-        for f in self.get_fields('260', '264'):
-            if self['260']:
-                set_publisher(self['260'])
-                self.pubyear = self['260']['c'] or ''
-            if self['264'] and f.indicator2 == '1':
-                set_publisher(self['260'])
-                self.pubyear = self['264']['c'] or ''
+        aut_publishers = [[aut_publisher, False] for aut_publisher in aut_publishers]  # False: not used for replacement
+        rec = self.record
+        for f in rec.get_fields('260', '264'):
+            if rec['260']:
+                get_publisher(rec['260'])
+            if rec['264'] and f.indicator2 == '1':
+                get_publisher(rec['264'])
+        for aut_publisher, used in aut_publishers:
+            if not used:
+                self.publishers.append(aut_publisher)
+                self.publishers_by_place.append(self.join(self.pubplace, aut_publisher))
+                self.publishers_by_name.append(self.join(aut_publisher, self.pubplace))
+        self.publisher = self.join(self.pubplace + ' : ' + self.repeatJoiner.join(self.publishers))
 
     def parse_title(self):
         def spec_append(part):
@@ -83,15 +110,18 @@ class MarcFrom(object):
 
     def parse_authors(self):
         """will call self.parse_authorities() and establish self.authorities and self.authors
-        list of tuples:
+        list of tuples (TODO: fix here) :
         0: author name ($a+$b+$c),
+        return name of 110 author which is suitable as publisher
         """
-        self.parse_authorities()
+        publishers = self.parse_authorities()
         authors = []
         for authority in self.authorities:
             if authority[5] in ('aut'):
                 authors.append(authority[0])
         self.authors = authors
+        self.author = self.repeatJoiner.join(self.authors)
+        return publishers
 
     def parse_authorities(self):
         """authorities (authors+...)
@@ -102,10 +132,12 @@ class MarcFrom(object):
         3: additional part of name $c,
         4: date info $d,
         5: role $4
+        return name of 110 author which is suitable as publisher
         """
-        def parse_one(fld, allowed_more):
-            for marc_authority in self.record.get_fields('700'):
-                name = marc_authority['a']
+        def parse_one(fld, allowed_more, get_names=False):
+            names = []
+            for marc_authority in self.record.get_fields(fld):
+                name = self.fix(marc_authority['a'])
                 if not name:
                     continue
                 more1 = more2 = ''
@@ -116,15 +148,19 @@ class MarcFrom(object):
                 date_info = marc_authority['d'] or ''
                 role = marc_authority['4'] or '?'
                 authorities.append((self.join(name, more1, more2).rstrip(', '), name, more1, more2, date_info, role))
+                if get_names:
+                    names.append(name)
+            return names
 
         authorities = []
         parse_one('100', 'bc')  # author person
-        parse_one('110', 'b')   # author corporation
+        publishers = parse_one('110', 'b', get_names=True)   # author corporation, result is suitable as publishers
         parse_one('111', 'b')   # author event/action
         parse_one('700', 'bc')  # person
         parse_one('710', 'b')   # corporation
         parse_one('720', '')    # unsure name
         self.authorities = authorities
+        return publishers
 
     def joined_authors(self, join_char=';'):
         """will return all authors as single string,
