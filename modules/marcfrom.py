@@ -6,13 +6,19 @@ class MarcFrom(object):
     def __init__(self, record):
         self.record = record
 
+        # to make pylint happy; parse_...() will set them
         self.title = self.pubplace = self.pubyear = self.publisher = self.author = ''
-        self.publishers = self.publishers_by_name = self.publishers_by_place = []
-        self.authorities = self.authors = []  # to make pylint happy; parse_...() will set them
+        self.publishers = []
+        self.publishers_by_name = []
+        self.publishers_by_place = []
+        self.authorities = []
+        self.authors = []
+        self.subjects = []
 
         self.parse_title()
         aut_publishers = self.parse_authors()  # will call self.parse_authorities() and establish self.authorities and self.authors
         self.parse_publisher(aut_publishers)   # will eastablish self.publishers (from 110/aut_publishers or from 260/264) and .pubyear
+        self.parse_subjects()
         self.isbn = record.isbn() or ''
 
     def join(self, *parts):
@@ -39,14 +45,17 @@ class MarcFrom(object):
             if place and not self.pubplace:
                 self.pubplace = place
             company = self.fix(marc_publisher['b'])
-            for idx, aut_publisher_row in enumerate(aut_publishers):
-                aut_publisher, used = aut_publisher_row
-                if not used and aut_publisher.lower() in company.lower():  # not very important to optimize, usually cnt is ~ 1
-                    company = aut_publisher   # prefer 110, because sometimes 260/264 contains additional text like "published by.."
-                    aut_publishers[idx][1] = True
-            self.publishers.append(company)
-            self.publishers_by_place.append(self.join(place, company))
-            self.publishers_by_name.append(self.join(company, place))
+            if company:
+                for idx, aut_publisher_row in enumerate(aut_publishers):
+                    aut_publisher, used = aut_publisher_row
+                    if not used and aut_publisher.lower() in company.lower():  # not very important to optimize, usually cnt is ~ 1
+                        company = aut_publisher   # prefer 110, because sometimes 260/264 contains additional text like "published by.."
+                        aut_publishers[idx][1] = True
+                self.publishers.append(company)
+                self.publishers_by_place.append(self.join(place, company))
+                self.publishers_by_name.append(self.join(company, place))
+            else:
+                self.publishers_by_place.append(place)
             if not self.pubyear:
                 self.pubyear = marc_publisher['c'] or ''
 
@@ -62,7 +71,7 @@ class MarcFrom(object):
                 self.publishers.append(aut_publisher)
                 self.publishers_by_place.append(self.join(self.pubplace, aut_publisher))
                 self.publishers_by_name.append(self.join(aut_publisher, self.pubplace))
-        self.publisher = self.join(self.pubplace + ' : ' + self.repeatJoiner.join(self.publishers))
+        self.publisher = self.pubplace + ' : ' + self.repeatJoiner.join(self.publishers)
 
     def parse_title(self):
         def spec_append(part):
@@ -162,8 +171,15 @@ class MarcFrom(object):
         self.authorities = authorities
         return publishers
 
-    def joined_authors(self, join_char=';'):
+    def joined_authors(self):
         """will return all authors as single string,
         authors are separated by join_char
         """
-        return (join_char + ' ').join(self.authors)
+        return self.repeatJoiner.join(self.authors)
+
+    def parse_subjects(self):
+        subjects = []
+        for subject in self.record.subjects():
+            subjects.append(subject['a'])
+        # TODO: 072: $a i $x (kód, popis)
+        self.subjects = subjects

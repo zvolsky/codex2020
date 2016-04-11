@@ -46,11 +46,6 @@ def updatedb(record):
     marcrec = MarcFrom(record)
     md5publ = hashlib.md5(('%s|%s|%s|%s' % (marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)).encode('utf-8')).hexdigest()
 
-    #title = marcrec.title[:PublLengths.title]
-    #author = marcrec.author[:PublLengths.author]
-    #publisher = marcrec.publisher[:PublLengths.publisher]
-    #pubyear = marcrec.pubyear[:PublLengths.pubyear]
-
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
@@ -58,8 +53,8 @@ def updatedb(record):
 
     #---------
     new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
-            uniformtitle='; '.join(fld.value() for fld in (record.uniformtitle() or []))[:PublLengths.uniformtitle],
-            subjects='; '.join(fld.value() for fld in (record.subjects() or []))[:PublLengths.subjects],
+            uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
+            subjects='; '.join(marcrec.subjects)[:PublLengths.subjects],
             addedentries='; '.join(fld.value() for fld in (record.addedentries() or []))[:PublLengths.addedentries],
             publ_location='; '.join(fld.value() for fld in (record.location() or []))[:PublLengths.publ_location],
             notes='; '.join(fld.value() for fld in (record.notes() or []))[:PublLengths.notes],
@@ -86,36 +81,3 @@ def updatedb(record):
         db.answer.insert(**answer)
         # TODO: update answer_join, answer_idx
         return True
-
-    '''
-    if ean:
-        if ean[:3] == '977':  # can have everything in [10:12] position
-            row = db(db.answer.ean.startswith(ean[:10])).select(
-                    db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
-        else:
-            row = db(db.answer.ean == ean).select(
-                    db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
-    if not row:
-        row = db(db.answer.md5 == md5).select(
-                db.answer.id, limitby=(0,1), orderby_on_limitby=False).first()
-
-    try:
-        new = dict(md5=md5, ean=ean, title=title, isbn=isbn,
-                uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
-                #subjects=(record.subjects() or '')[:PublLengths.subjects],
-                addedentries=(record.addedentries() or '')[:PublLengths.addedentries],
-                publ_location=(record.location() or '')[:PublLengths.publ_location],
-                #notes=(record.notes() or '')[:PublLengths.notes],
-                #physicaldescription=(record.physicaldescription() or '')[:PublLengths.physicaldescription],
-                publisher=(record.publisher() or '')[:PublLengths.publisher],
-                pubyear=(record.pubyear() or '')[:PublLengths.pubyear],
-                author=author, marc=marc
-                )
-        db.publication.insert(**new)
-    except:
-        pass
-
-    if row:
-        db[row.id] = new
-    else:
-    '''
