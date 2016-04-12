@@ -5,13 +5,16 @@ class PublLengths(object):
     uniformtitle = 255
     author = 200
     isbn = 20
+    series = 100
     subjects = 255
+    categories = 100
     addedentries = 255
     publ_location = 255
     notes = 255
     physicaldescription = 255
     publisher = 255
     pubyear = 100
+    country = 3
 
 db.define_table('answer',
         Field('md5publ', 'string', length=32,
@@ -20,6 +23,8 @@ db.define_table('answer',
               label=T("md5marc"), comment=T("md5marc")),
         Field('ean', 'string', length=20,
               label=T("Čarový kód EAN"), comment=T("čarový kód, vytištěný na publikaci")),
+        Field('country', 'string', length=PublLengths.country,
+              label=T("Země vydání"), comment=T("země vydání")),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),
         )
@@ -39,7 +44,14 @@ db.define_table('answer_link',
         Field('answer_starter_id', db.answer_starter,
               label=T("Vyhledávací řetězec"), comment=T("příslušnost k vyhledávacímu řetězci")),
         Field('role', 'string', length=3,
-              label=T("role"), comment=T("role")),
+              label=T("Role"), comment=T("role, pořadí v sérii, apod.")),
+        )
+
+db.define_table('answer_lang',
+        Field('answer_id', db.answer,
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('lang', 'string', length=3,
+              label=T("Jazyk"), comment=T("jazyk publikace nebo její části")),
         )
 
 db.define_table('publication',
@@ -55,8 +67,12 @@ db.define_table('publication',
               label=T("Autor"), comment=T("autor")),
         Field('isbn', 'string', length=PublLengths.isbn,
               label=T("ISBN"), comment=T("ISBN")),
+        Field('series', 'string', length=PublLengths.series,
+              label=T("series"), comment=T("series")),
         Field('subjects', 'string', length=PublLengths.subjects,
               label=T("subjects"), comment=T("subjects")),
+        Field('categories', 'string', length=PublLengths.categories,
+              label=T("categories"), comment=T("categories")),
         Field('addedentries', 'string', length=PublLengths.addedentries,
               label=T("addedentries"), comment=T("addedentries")),
         Field('publ_location', 'string', length=PublLengths.publ_location,   # location is reserved word

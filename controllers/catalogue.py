@@ -6,7 +6,7 @@ from pymarc import MARCReader    # pymarc z PyPI
 
 from books import isxn_to_ean
 from c2020 import smartquery, world_get
-from marcfrom import MarcFrom
+from marcfrom import MarcFrom_AlephCz
 
 
 def find():
@@ -43,18 +43,20 @@ def updatedb(record):
     marc = record.as_marc()
     md5marc = hashlib.md5(marc).hexdigest()
 
-    marcrec = MarcFrom(record)
+    marcrec = MarcFrom_AlephCz(record)
     md5publ = hashlib.md5(('%s|%s|%s|%s' % (marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)).encode('utf-8')).hexdigest()
 
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
-    answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc)
+    answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc, country=marcrec.country[:PublLengths.country])
 
     #---------
     new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
             uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
+            series=marcrec.series[:PublLengths.series],
             subjects='; '.join(marcrec.subjects)[:PublLengths.subjects],
+            categories='; '.join(map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories))[:PublLengths.categories],
             addedentries='; '.join(fld.value() for fld in (record.addedentries() or []))[:PublLengths.addedentries],
             publ_location='; '.join(fld.value() for fld in (record.location() or []))[:PublLengths.publ_location],
             notes='; '.join(fld.value() for fld in (record.notes() or []))[:PublLengths.notes],

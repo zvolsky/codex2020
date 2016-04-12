@@ -1,24 +1,34 @@
 # -*- coding: utf-8 -*-
 
 class MarcFrom(object):
+    """convert from Marc to properties
+    TODO: initially made for Aleph/cz; if more systems will be implemented later,
+     move specific behaviour into derived MarcFrom_AlephCz class
+    """
     repeatJoiner = '; '
 
     def __init__(self, record):
         self.record = record
 
         # to make pylint happy; parse_...() will set them
-        self.title = self.pubplace = self.pubyear = self.publisher = self.author = ''
+        self.title = self.pubplace = self.pubyear = self.publisher = self.author = self.series = ''
+        self.country = self.language_orig = ''
+        self.languages = []
         self.publishers = []
         self.publishers_by_name = []
         self.publishers_by_place = []
         self.authorities = []
         self.authors = []
         self.subjects = []
+        self.categories = []  # list of tuples: 0:$a category code, 1:$x code subdivision
 
         self.parse_title()
         aut_publishers = self.parse_authors()  # will call self.parse_authorities() and establish self.authorities and self.authors
         self.parse_publisher(aut_publishers)   # will eastablish self.publishers (from 110/aut_publishers or from 260/264) and .pubyear
-        self.parse_subjects()
+        self.parse_lang()
+        self.parse_country()
+        self.parse_series()
+        self.parse_subjects()  # and categories
         self.isbn = record.isbn() or ''
 
     def join(self, *parts):
@@ -28,9 +38,10 @@ class MarcFrom(object):
                 joined = joined.rstrip() + ' ' + part
         return joined.strip()
 
-    def fix(self, txt):
+    def fix(self, txt, additional='.'):
+        """additional: use additional='' if content usually contains abbreviations"""
         if txt:
-            return txt.rstrip(':.,;/ ')
+            return txt.rstrip(':,;/= ' + additional)
         return ''
 
     def parse_publisher(self, aut_publishers):
@@ -177,9 +188,38 @@ class MarcFrom(object):
         """
         return self.repeatJoiner.join(self.authors)
 
+    def parse_lang(self):
+        languages = self.record['041']
+        if languages:
+            self.languages = languages.get_subfields('a')
+            self.language_orig = languages['h']
+
+    def parse_country(self):
+        country = self.record['044']
+        if country:
+            self.country = country['a']
+
+    def parse_series(self):
+        series = self.record['490']
+        if series:
+            self.series = self.fix(series['a'])
+        #TODO: $v order(index) in series
+
     def parse_subjects(self):
         subjects = []
         for subject in self.record.subjects():
             subjects.append(subject['a'])
-        # TODO: 072: $a i $x (kód, popis)
         self.subjects = subjects
+
+        categories = []
+        for category in self.record.get_fields('072'):
+            categories.append((category['a'], category['x']))
+        self.categories = categories
+
+
+class MarcFrom_AlephCz(MarcFrom):
+    """http://text.nkp.cz/o-knihovne/odborne-cinnosti/zpracovani-fondu/roztridit/stt-prehled
+    TODO: MarcFrom parent class was initially made for Aleph/cz; if more systems will be implemented later,
+     move specific behaviour into this derived MarcFrom_AlephCz class
+    """
+    pass
