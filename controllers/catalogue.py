@@ -49,7 +49,9 @@ def updatedb(record):
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
-    answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc, country=marcrec.country[:PublLengths.country])
+    answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc,
+                  country=marcrec.country[:PublLengths.country],
+                  year_from=marcrec.pubyears[0], year_to=marcrec.pubyears[1])
 
     #---------
     new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
