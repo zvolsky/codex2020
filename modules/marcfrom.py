@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 class MarcFrom(object):
     """convert from Marc to properties
     TODO: initially made for Aleph/cz; if more systems will be implemented later,
@@ -11,8 +13,9 @@ class MarcFrom(object):
         self.record = record
 
         # to make pylint happy; parse_...() will set them
-        self.title = self.pubplace = self.pubyear = self.publisher = self.author = self.series = ''
+        self.title = self.pubplace = self.publisher = self.author = self.series = ''
         self.country = self.language_orig = ''
+        self.pubyear = (None, None)  # from/to
         self.languages = []
         self.publishers = []
         self.publishers_by_name = []
@@ -67,8 +70,22 @@ class MarcFrom(object):
                 self.publishers_by_name.append(self.join(company, place))
             else:
                 self.publishers_by_place.append(place)
-            if not self.pubyear:
-                self.pubyear = marc_publisher['c'] or ''
+
+            if self.pubyear[0] is None:
+                pubyear = marc_publisher['c'] or ''
+                numbers = re.findall(r'\d+', pubyear)
+                syear2 = numbers[-1:]
+                syear1 = numbers[-2:-1] or syear2
+                nyear1 = syear1 and int(syear1[0]) or 0
+                nyear2 = syear2 and int(syear2[0]) or 0
+                if nyear1 < 100:                      # 1993 -> (1993,1993)
+                    nyear1 = nyear2
+                elif 0 < nyear2 < 10:                 # 1990-2 -> (1990,1992)
+                    nyear2 += int(nyear1 / 10) * 10
+                elif nyear2 < 100:                    # 1990-92 -> (1990,1992), 1989-91 -> (1989,1991)
+                    nyear2 += int(nyear1 / 100) * 100
+                if nyear1 > 100 and nyear2 > 100:
+                    self.pubyear = (nyear1, nyear2)
 
         aut_publishers = [[aut_publisher, False] for aut_publisher in aut_publishers]  # False: not used for replacement
         rec = self.record
