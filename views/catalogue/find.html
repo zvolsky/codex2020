@@ -2,4 +2,9 @@
 
 {{=form}}
 
-<div id="nabidka_nalezenych"></div>
+<ul id="nabidka_nalezenych">
+    {{for q in questions:}}
+        {{done = 'qdone' if q[1] else 'qpending'}}
+        <li class="{{=done}}">{{=q[0]}}</li>
+    {{pass}}
+</ul>

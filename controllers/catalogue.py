@@ -6,17 +6,34 @@ from pymarc import MARCReader    # pymarc z PyPI
 
 from books import isxn_to_ean
 from c2020 import smartquery, world_get
+from c2020redis import redis_user
 from marcfrom import MarcFrom_AlephCz
 
 
+@auth.requires_login()
 def find():
     #link('js/codex2020/katalogizace/publikace')
+    rc, user_key = redis_user(auth)
     form = SQLFORM.factory(
             Field('starter', 'string', length=20, label=T("Zkus najít podle"),
                 comment=T("počáteční 2-3 slova názvu nebo sejmi EAN čarový kód pro vyhledání publikace")))
     if form.process().accepted:
-        fnd = form.vars.starter
+        fnd = form.vars.starter  # .strip() ?
         if fnd and len(fnd) >= 3:
+            qkey = user_key + 'Q'
+            rc.rpush(qkey, fnd)
+        else:
+            response.flash = T("Zadej alespoň 3 znaky pro vyhledání.")
+    questions = []
+    for q in rc.lrange(user_key + 'Q', 0, -1):
+        is_in_hash = True if 'neco' in q else False
+        questions.append((q, is_in_hash))
+    return dict(form=form, questions=questions)
+    # LSET nesmysl + LREM pro odstranění zprostřed
+
+def xxx():
+    if False:
+        if False:
             warning, results = world_get(fnd)
             if warning:
                 response.flash = warning
