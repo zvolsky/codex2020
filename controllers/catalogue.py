@@ -6,12 +6,54 @@ from pymarc import MARCReader    # pymarc z PyPI
 
 from books import isxn_to_ean
 from c2020 import smartquery, world_get
-from c2020redis import redis_user
 from marcfrom import MarcFrom_AlephCz
 
 
 @auth.requires_login()
+def get_status():
+    """called from find() action and via setInterval/ajax
+    maybe this can be redesigned as a component, using LOAD() and web2py_component(url,id) function
+    """
+    find_status = ''
+    questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
+            db.question.id, db.question.question, db.question.answered,
+            db.question.known, db.question.we_have, orderby=db.question.id)
+    if questions:
+        some_ready = False
+        status_rows = []
+        for q in questions:
+            cls = 'list-group-item '
+            if q.answered:
+                cls += 'list-group-item-success active'
+                some_ready = True
+            else:
+                cls += 'disabled'
+            status_rows.append(A(SPAN(q.we_have or 0, _class="badge"), SPAN(q.known or 0, _class="badge"), q.question, _href='#', _class=cls))
+        if some_ready:
+            hint = T("Vyber vyhledanou knihu ke katalogizaci nebo zadej další")
+        else:
+            hint = T("Počkej na vyhledání předchozího zadání nebo zadej další knihu ke zpracování")
+        find_status = SPAN(hint, _class="help-block") + DIV(*status_rows, _class="list-group", _style="max-width: 500px;")
+    return find_status
+
+@auth.requires_login()
 def find():
+    form = SQLFORM(db.question)
+    if form.process().accepted:
+        warning, results = world_get(form.vars.question)
+        if warning:
+            response.flash = warning
+        else:
+            inserted = 0
+            for r in results:
+                for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
+                    inserted += updatedb(record)
+            retrieved = len(results)
+            db.question[form.vars.id] = {'answered': datetime.datetime.now(), 'retrieved': retrieved, 'inserted': inserted}
+            response.flash = T('%s staženo, z toho nových: %s') % (retrieved, inserted)
+    return dict(form=form, find_status=get_status())
+
+def xfind():
     #link('js/codex2020/katalogizace/publikace')
     rc, user_key = redis_user(auth)
     form = SQLFORM.factory(

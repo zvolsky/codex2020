@@ -2,6 +2,7 @@
 
 import datetime
 
+'''
 from mzm import accept, link
 site_static = '../../../site-static/'
 link(site_static + 'js/mzj', site_static + 'css/mzc')
@@ -13,3 +14,4 @@ if request.is_local:
     track_changes(True)    # auto-reload modules
 #else:
 #    request.requires_https()
+'''

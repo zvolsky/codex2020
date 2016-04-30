@@ -2,9 +2,14 @@
 
 {{=form}}
 
-<ul id="nabidka_nalezenych">
-    {{for q in questions:}}
-        {{done = 'qdone' if q[1] else 'qpending'}}
-        <li class="{{=done}}">{{=q[0]}}</li>
-    {{pass}}
-</ul>
+<div id="find_status">{{=find_status}}</div>
+
+<script>
+var interval = 2000;
+function getStatus() {
+    ajax('{{=URL('get_status')}}', [], 'find_status');
+    window.setTimeout(getStatus, interval);
+    interval = 1.2 * interval;  // make server load less for the page without user activities
+}
+window.setTimeout(getStatus, interval);
+</script>

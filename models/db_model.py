@@ -16,6 +16,48 @@ class PublLengths(object):
     pubyear = 100
     country = 3
 
+    question_min = 3
+    question = 60
+
+class UNIQUE_QUESTION(object):
+    def __init__(self, error_message=T('dotaz už je ve frontě')):
+        self.error_message = error_message
+    def __call__(self, value):
+        if db((db.question.question == value) & (db.question.auth_user_id == auth.user_id) & (db.question.live == True)
+              ).select(db.question.id, limitby=(0, 1)):
+            return (value, self.error_message)
+        else:
+            return (value, None)
+
+db.define_table('question',
+        Field('auth_user_id', db.auth_user, default=auth.user_id,
+              readable=False, writable=False,
+              label=T("Uživatel"), comment=T("zadavatel dotazu")),
+        Field('question', 'string', length=PublLengths.question,
+              requires=[IS_LENGTH(minsize=PublLengths.question_min, maxsize=PublLengths.question,
+                            error_message=T("zadej %s až %s znaků") % (PublLengths.question_min, PublLengths.question)),
+                        UNIQUE_QUESTION()],
+              label=T("Dotaz"), comment=T("zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN")),
+        Field('answered', 'datetime',
+              readable=False, writable=False,
+              label=T("Dokončeno"), comment=T("čas dokončení zpracování po odpovědi")),
+        Field('known', 'integer',
+              readable=False, writable=False,
+              label=T("Již známo"), comment=T("počet lokálně známých publikací")),
+        Field('we_have', 'integer',
+              readable=False, writable=False,
+              label=T("Vlastněno"), comment=T("počet vyhovujících publikací v knihovně uživatele")),
+        Field('retrieved', 'integer',
+              readable=False, writable=False,
+              label=T("Celkem získáno"), comment=T("počet nalezených publikací")),
+        Field('inserted', 'integer',
+              readable=False, writable=False,
+              label=T("Nově získáno"), comment=T("nových (dosud nestažených)")),
+        Field('live', 'boolean', default=True,
+              readable=False, writable=False,
+              label=T("Nezpracováno"), comment=T("čeká se na odpověď nebo její použití (katalogizaci)")),
+        )
+
 db.define_table('answer',
         Field('md5publ', 'string', length=32,
               label=T("md5publ"), comment=T("md5publ")),
