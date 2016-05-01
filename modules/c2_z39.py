@@ -11,7 +11,7 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
 from books import ean2isbn10, ean2issn
 
 
-def world_get(fnd):
+def get_from_large_library(fnd):
     results = None
     try:
         conn = zoom.Connection ('aleph.nkp.cz', 9991)

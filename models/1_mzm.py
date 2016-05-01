@@ -2,6 +2,11 @@
 
 import datetime
 
+if request.is_local:
+    from gluon.custom_import import track_changes
+    track_changes(True)    # auto-reload modules
+
+
 '''
 from mzm import accept, link
 site_static = '../../../site-static/'

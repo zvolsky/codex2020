@@ -2,14 +2,14 @@
 
 {{=form}}
 
-<div id="find_status">{{=find_status}}</div>
+<div id="retrieve_status">{{=retrieve_status}}</div>
 
 <script>
 var interval = 2000;
-function getStatus() {
-    ajax('{{=URL('get_status')}}', [], 'find_status');
-    window.setTimeout(getStatus, interval);
-    interval = 1.2 * interval;  // make server load less for the page without user activities
+function getRetrieveStatus() {
+    ajax('{{=URL('retrieve_status')}}', [], 'retrieve_status');
+    window.setTimeout(getRetrieveStatus, interval);
+    interval = 1.2 * interval;  // make server load less for the page without user interaction
 }
-window.setTimeout(getStatus, interval);
+window.setTimeout(getRetrieveStatus, interval);
 </script>
