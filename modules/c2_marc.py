@@ -4,23 +4,21 @@ import hashlib
 
 from pymarc import MARCReader    # pymarc z PyPI
 
-from gluon import current
-
 from books import isxn_to_ean
 from c2_db import PublLengths
 from marc_dialects import MarcFrom_AlephCz
 
 
-def parse_Marc_and_updatedb(results):
+def parse_Marc_and_updatedb(db, results):
     inserted = 0
     for r in results:
         for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
-            inserted += updatedb(record)
+            inserted += updatedb(db, record)
     return len(results), inserted
 
 
-def updatedb(record):
-    db = current.db
+def updatedb(db, record):
+    # db = current.db   # not possible here if running in extra thread, a parameter is necessary
     def exists_update():
         if row:
             if row.md5marc != md5marc:    # same ean, changed info
