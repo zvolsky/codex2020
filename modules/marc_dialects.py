@@ -13,6 +13,8 @@ class MarcFrom(object):
         self.record = record
 
         # to make pylint happy; parse_...() will set them
+        self.title_ignore_chars = 0
+        self.title_parts = []
         self.title = self.pubplace = self.publisher = self.pubyear = self.author = self.series = ''
         self.country = self.language_orig = ''
         self.pubyears = (None, None)  # from/to
@@ -113,11 +115,12 @@ class MarcFrom(object):
                 parts.append(part)
 
         parts = []
-        for marc_title in self.record.get_fields('245'):
-            try:
-                self.title_ignore_chars = int(marc_title.indicator2)
-            except:
-                self.title_ignore_chars = 0
+        for idxt, marc_title in enumerate(self.record.get_fields('245')):
+            if not idxt:
+                try:
+                    self.title_ignore_chars = int(marc_title.indicator2)
+                except:
+                    self.title_ignore_chars = 0
             self.title = marc_title.value().strip()
             parts.append(self.title)
             if self.title_ignore_chars:
@@ -173,9 +176,12 @@ class MarcFrom(object):
         5: role $4
         return name of 110 author which is suitable as publisher
         """
-        def parse_one(fld, allowed_more, get_names=False):
+        def parse_one(fld, allowed_more='', get_names=False):
+            return parse_common(self.record.get_fields(fld), allowed_more='', get_names=False)
+
+        def parse_common(flds, allowed_more='', get_names=False):
             names = []
-            for marc_authority in self.record.get_fields(fld):
+            for marc_authority in flds:
                 name = self.fix(marc_authority['a'])
                 if not name:
                     continue
@@ -197,7 +203,9 @@ class MarcFrom(object):
         parse_one('111', 'b')   # author event/action
         parse_one('700', 'bc')  # person
         parse_one('710', 'b')   # corporation
-        parse_one('720', '')    # unsure name
+        #parse_one('720', '')   # unsure name -- handled as addedentries
+        parse_common(self.record.get_fields('711', '720', '730', '740', '752', '753', '754', '790', '791',
+                        '792', '793', '796', '797', '798', '799'))    # tags from .addedentries() without 700, 710
         self.authorities = authorities
         return publishers
 

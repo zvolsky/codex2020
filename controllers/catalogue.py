@@ -51,7 +51,7 @@ def find_worker():
     we use ajax instead of real threading because threading is not good idea from inside the web server
         (because not we but web server has full control over creating/destroying processes/threads)
 
-    maybe web server timeout need to be increased like for nginx:
+    maybe web server timeout need to be increased like for nginx (increase from 60s):
         http
         {
           server
@@ -70,6 +70,6 @@ def find_worker():
         if not warning:
             #    response.flash = warning
             #else:
-            retrieved, inserted = parse_Marc_and_updatedb(db, results)
+            retrieved, inserted = parse_Marc_and_updatedb(results)
             db.question[int(question_id)] = {'answered': datetime.datetime.now(), 'retrieved': retrieved, 'inserted': inserted}
     return ''  # dummy result here

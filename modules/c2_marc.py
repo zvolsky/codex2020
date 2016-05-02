@@ -2,29 +2,31 @@
 
 import hashlib
 
-from pymarc import MARCReader    # pymarc z PyPI
+from pymarc import MARCReader    # pymarc from PyPI
+
+from gluon import current
 
 from books import isxn_to_ean
-from c2_db import PublLengths
+from c2_db import PublLengths, create_idxs, del_idxs
 from marc_dialects import MarcFrom_AlephCz
 
 
-def parse_Marc_and_updatedb(db, results):
+def parse_Marc_and_updatedb(results):
     inserted = 0
     for r in results:
         for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
-            inserted += updatedb(db, record)
+            inserted += updatedb(record)
     return len(results), inserted
 
 
-def updatedb(db, record):
-    # db = current.db   # not possible here if running in extra thread, a parameter is necessary
+def updatedb(record):
+    db = current.db
     def exists_update():
-        if row:
-            if row.md5marc != md5marc:    # same ean, changed info
+        if row:                           # same ean or same significant data -> same book
+            if row.md5marc != md5marc:    # yes, same book, but changed info
                 db.answer[row.id] = answer
-                # TODO: delete related answer_join
-                # TODO: update answer_join, answer_idx
+                del_idxs(row.id)  # delete related indexes before re-creating them
+                create_idxs(row.id, get_idx_data(marcrec, record))
             return True  # row exists, stop next actions
 
     marc = record.as_marc()
@@ -40,7 +42,7 @@ def updatedb(db, record):
                   country=marcrec.country[:PublLengths.country],
                   year_from=marcrec.pubyears[0], year_to=marcrec.pubyears[1])
 
-    #---------
+    '''#---------
     new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
             uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
             series=marcrec.series[:PublLengths.series],
@@ -55,20 +57,41 @@ def updatedb(db, record):
             author=marcrec.author[:PublLengths.author],
             )
     db.publication.insert(**new)
-    #---------
+    #---------'''
 
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
             row = db(db.answer.ean.startswith(ean[:10])).select(db.answer.id, db.answer.md5marc).first()
         else:
             row = db(db.answer.ean == ean).select(db.answer.id, db.answer.md5marc).first()
-        if exists_update():
-            return False
+        if exists_update():  # row exists...
+            return False     # ...do not continue to find (using significant data) and do not insert
     # no isbn/ean
     row = db(db.answer.md5publ == md5publ).select(db.answer.id, db.answer.md5marc).first()
-    if exists_update():
-        return False
+    if exists_update():      # row exists...
+        return False         # ...do not insert
     else:
-        db.answer.insert(**answer)
-        # TODO: update answer_join, answer_idx
-        return True
+        row_id = db.answer.insert(**answer)
+        create_idxs(row_id, get_idx_data(marcrec, record))
+        return True          # True: new row has been inserted
+
+
+def get_idx_data(marcrec, record):
+    """get data for indexes as a dictionary
+    """
+    return {
+        'title_ignore_chars': marcrec.title_ignore_chars,
+        'title_parts': marcrec.title_parts,
+        'uniformtitle': record.uniformtitle(),
+        'series': marcrec.series,
+        'language_orig': marcrec.language_orig,
+        # iterables
+        'subjects': marcrec.subjects,
+        'categories': map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories),
+        'authorities': marcrec.authorities,
+        'addedentries': [fld.value() for fld in (record.addedentries() or [])],  # puvodci, TODO: improve format
+        'locations': [fld.value() for fld in (record.location() or [])],  # TODO: does exist? meaning? improve format
+        'publishers_by_place': marcrec.publishers_by_place,
+        'publishers_by_name': marcrec.publishers_by_name,
+        'languages': marcrec.languages,
+    }
