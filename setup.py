@@ -10,6 +10,9 @@ setup(
 	# PyZ3950: z https://github.com/alexsdutton/PyZ3950,
 	#	pak: python setup.py install,
 	#	pak: make the first import from Py with root privileges (will create something?) <- need fix!
+    # pymarc: from PyPI
+    #   if: 'module' object has no attribute 'python_2_unicode_compatible'
+    #   then try: pip install six --upgrade
   author = 'Mirek Zvolsky',
   author_email = 'zvolsky@seznam.cz',
   url = 'https://github.com/zvolsky/codex2020',

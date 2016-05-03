@@ -2,7 +2,7 @@
 
 import hashlib
 
-from pymarc import MARCReader    # pymarc from PyPI
+from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 
 from gluon import current
 
