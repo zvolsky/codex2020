@@ -57,7 +57,13 @@ def truncate_idxs():
         db.executesql('CREATE INDEX idx_long_item ON idx_long (item);')
     db.commit()
 
-def create_idxs(answer_id, data):
+def create_idxs(answer_id, marcrec, record, old_fastinfo=''):
+    fastinfo = 'T' + marcrec.title + '\nA' + marcrec.author + '\nP' + marcrec.publisher + '\nY' + marcrec.pubyear
+    if fastinfo != old_fastinfo:
+        db = current.db
+        db.answer[answer_id] = {'fastinfo': fastinfo}
+
+    data = get_idx_data(marcrec, record)
     added_words = []
     parts = data['title_parts']
     if parts:
@@ -76,6 +82,26 @@ def create_idxs(answer_id, data):
     add_long_iter(answer_id, data['locations'], 'O')
     add_long_iter(answer_id, data['publishers_by_name'], 'P')
     add_long_iter(answer_id, data['publishers_by_place'], 'P')
+
+def get_idx_data(marcrec, record):
+    """get data for indexes as a dictionary
+    """
+    return {
+        'title_ignore_chars': marcrec.title_ignore_chars,
+        'title_parts': marcrec.title_parts,
+        'uniformtitle': record.uniformtitle(),
+        'series': marcrec.series,
+        'language_orig': marcrec.language_orig,
+        # iterables
+        'subjects': marcrec.subjects,
+        'categories': map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories),
+        'authorities': marcrec.authorities,
+        'addedentries': [fld.value() for fld in (record.addedentries() or [])],  # puvodci, TODO: improve format
+        'locations': [fld.value() for fld in (record.location() or [])],  # TODO: does exist? meaning? improve format
+        'publishers_by_place': marcrec.publishers_by_place,
+        'publishers_by_name': marcrec.publishers_by_name,
+        'languages': marcrec.languages,
+    }
 
 def add_titles(answer_id, added_words, titles):
     for title in titles:

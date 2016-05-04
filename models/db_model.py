@@ -64,6 +64,8 @@ db.define_table('answer',
               label=T("vydání od"), comment=T("vydání od roku")),
         Field('year_to', 'integer',
               label=T("vydání do"), comment=T("vydání do roku")),
+        Field('fastinfo', 'text',
+              label=T("hlavní údaje"), comment=T("hlavní údaje")),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),
         )

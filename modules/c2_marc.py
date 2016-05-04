@@ -26,7 +26,7 @@ def updatedb(record):
             if row.md5marc != md5marc:    # yes, same book, but changed info
                 db.answer[row.id] = answer
                 del_idxs(row.id)  # delete related indexes before re-creating them
-                create_idxs(row.id, get_idx_data(marcrec, record))
+                create_idxs(row.id, marcrec, record, row.fastinfo)
             return True  # row exists, stop next actions
 
     marc = record.as_marc()
@@ -59,39 +59,19 @@ def updatedb(record):
     db.publication.insert(**new)
     #---------'''
 
+    flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo)
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
-            row = db(db.answer.ean.startswith(ean[:10])).select(db.answer.id, db.answer.md5marc).first()
+            row = db(db.answer.ean.startswith(ean[:10])).select(*flds).first()
         else:
-            row = db(db.answer.ean == ean).select(db.answer.id, db.answer.md5marc).first()
+            row = db(db.answer.ean == ean).select(*flds).first()
         if exists_update():  # row exists...
             return False     # ...do not continue to find (using significant data) and do not insert
     # no isbn/ean
-    row = db(db.answer.md5publ == md5publ).select(db.answer.id, db.answer.md5marc).first()
+    row = db(db.answer.md5publ == md5publ).select(*flds).first()
     if exists_update():      # row exists...
         return False         # ...do not insert
     else:
         row_id = db.answer.insert(**answer)
-        create_idxs(row_id, get_idx_data(marcrec, record))
+        create_idxs(row_id, marcrec, record)
         return True          # True: new row has been inserted
-
-
-def get_idx_data(marcrec, record):
-    """get data for indexes as a dictionary
-    """
-    return {
-        'title_ignore_chars': marcrec.title_ignore_chars,
-        'title_parts': marcrec.title_parts,
-        'uniformtitle': record.uniformtitle(),
-        'series': marcrec.series,
-        'language_orig': marcrec.language_orig,
-        # iterables
-        'subjects': marcrec.subjects,
-        'categories': map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories),
-        'authorities': marcrec.authorities,
-        'addedentries': [fld.value() for fld in (record.addedentries() or [])],  # puvodci, TODO: improve format
-        'locations': [fld.value() for fld in (record.location() or [])],  # TODO: does exist? meaning? improve format
-        'publishers_by_place': marcrec.publishers_by_place,
-        'publishers_by_name': marcrec.publishers_by_name,
-        'languages': marcrec.languages,
-    }

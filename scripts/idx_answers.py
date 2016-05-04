@@ -6,7 +6,6 @@ from gluon import current
 current.db = db
 
 from c2_db import create_idxs, truncate_idxs
-from c2_marc import get_idx_data
 from marc_dialects import MarcFrom_AlephCz
 
 
@@ -24,7 +23,7 @@ def idx_answers():
         for row in rows:
             record = MARCReader(row.marc, to_unicode=True).next()
             marcrec = MarcFrom_AlephCz(record)
-            create_idxs(row.id, get_idx_data(marcrec, record))
+            create_idxs(row.id, marcrec, record, row.fastinfo)
 
             answer_id = row.id
             cnt += 1
