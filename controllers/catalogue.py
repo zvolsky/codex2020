@@ -72,6 +72,7 @@ def find_worker():
             #else:
             retrieved, inserted = parse_Marc_and_updatedb(results)
 
-            db.question[question_id] = {'duration': (datetime.datetime.utcnow() - question.asked).seconds + 1,
-                                             'retrieved': retrieved, 'inserted': inserted}
+            db.question[question_id] = {
+                    'duration': round((datetime.datetime.utcnow() - question.asked).total_seconds(), 0),
+                    'retrieved': retrieved, 'inserted': inserted}
     return ''  # dummy result here
