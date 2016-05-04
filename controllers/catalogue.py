@@ -11,14 +11,14 @@ from c2_marc import parse_Marc_and_updatedb
 def retrieve_status():
     find_status = ''
     questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
-            db.question.id, db.question.question, db.question.answered,
+            db.question.id, db.question.question, db.question.duration,
             db.question.known, db.question.we_have, orderby=db.question.id)
     if questions:
         some_ready = False
         status_rows = []
         for q in questions:
             cls = 'list-group-item '
-            if q.answered:
+            if q.duration is not None:
                 cls += 'list-group-item-success active'
                 some_ready = True
             else:
@@ -64,12 +64,14 @@ def find_worker():
     """
     question_id = int(request.args[0])
     question = db.question[question_id]  # we could avoid this db access (giving value to browser and back),
-                                         # however this has better security (int, not answered) and no need for dig.signat.
-    if question and not question.answered:
+                                         # however this has better security (int, duration is None) and no need for dig.signat.
+    if question and question.duration is None:
         warning, results = get_from_large_library(question.question)
         if not warning:
             #    response.flash = warning
             #else:
             retrieved, inserted = parse_Marc_and_updatedb(results)
-            db.question[int(question_id)] = {'answered': datetime.datetime.now(), 'retrieved': retrieved, 'inserted': inserted}
+
+            db.question[question_id] = {'duration': (datetime.datetime.utcnow() - question.asked).seconds + 1,
+                                             'retrieved': retrieved, 'inserted': inserted}
     return ''  # dummy result here

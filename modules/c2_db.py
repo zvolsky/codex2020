@@ -59,7 +59,7 @@ def truncate_idxs():
 
 def create_idxs(answer_id, marcrec, record, old_fastinfo=''):
     fastinfo = 'T' + marcrec.title + '\nA' + marcrec.author + '\nP' + marcrec.publisher + '\nY' + marcrec.pubyear
-    if fastinfo != old_fastinfo:
+    if fastinfo.encode('utf8') != old_fastinfo:
         db = current.db
         db.answer[answer_id] = {'fastinfo': fastinfo}
 
