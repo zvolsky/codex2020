@@ -11,14 +11,14 @@ from c2_marc import parse_Marc_and_updatedb
 def retrieve_status():
     find_status = ''
     questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
-            db.question.id, db.question.question, db.question.duration,
+            db.question.id, db.question.question, db.question.duration_marc,
             db.question.known, db.question.we_have, orderby=db.question.id)
     if questions:
         some_ready = False
         status_rows = []
         for q in questions:
             cls = 'list-group-item '
-            if q.duration is not None:
+            if q.duration_marc is not None:
                 cls += 'list-group-item-success active'
                 some_ready = True
             else:
@@ -65,14 +65,15 @@ def find_worker():
     question_id = int(request.args[0])
     question = db.question[question_id]  # we could avoid this db access (giving value to browser and back),
                                          # however this has better security (int, duration is None) and no need for dig.signat.
-    if question and question.duration is None:
+    if question and question.duration_total is None:
         warning, results = get_from_large_library(question.question)
+        duration_z39 = datetime.datetime.utcnow()
         if not warning:
-            #    response.flash = warning
-            #else:
-            retrieved, inserted = parse_Marc_and_updatedb(results)
+            retrieved, inserted, duration_marc = parse_Marc_and_updatedb(results)
 
             db.question[question_id] = {
-                    'duration': round((datetime.datetime.utcnow() - question.asked).total_seconds(), 0),
+                    'duration_z39': round((duration_z39 - question.asked).total_seconds(), 0),
+                    'duration_marc': round((duration_marc - question.asked).total_seconds(), 0),
+                    'duration_total': round((datetime.datetime.utcnow() - question.asked).total_seconds(), 0),
                     'retrieved': retrieved, 'inserted': inserted}
     return ''  # dummy result here
