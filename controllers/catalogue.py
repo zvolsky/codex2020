@@ -35,5 +35,6 @@ def find():
     form = SQLFORM(db.question)
     if form.process(onvalidation=onvalidation).accepted:
         scheduler.queue_task(task_catalogize,
-                pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)})
+                pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
+                timeout=300)
     return dict(form=form)

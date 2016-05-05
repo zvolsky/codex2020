@@ -10,6 +10,7 @@ def task_catalogize(question_id, question, asked):
     """the time consuming retrieve/parse/db-save action
     called from catalogue/find
     """
+    asked = datetime.datetime.strptime(asked, '%Y-%m-%d %H:%M:%S.%f')  # JSON unpack str()
     warning, results = get_from_large_library(question)
     duration_z39 = datetime.datetime.utcnow()
     if warning:
@@ -19,7 +20,6 @@ def task_catalogize(question_id, question, asked):
         retrieved, inserted, duration_marc = parse_Marc_and_updatedb(results)
         duration_marc = round((duration_marc - asked).total_seconds(), 0)
 
-    asked = datetime.datetime.strptime(asked, '%Y-%m-%d %H:%M:%S.%f')  # JSON unpack str()
     db.question[question_id] = {
             'duration_z39': round((duration_z39 - asked).total_seconds(), 0),
             'duration_marc': duration_marc,
