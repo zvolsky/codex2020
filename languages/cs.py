@@ -166,6 +166,7 @@
 'enter a number between %(min)g and %(max)g': 'zadejte číslo mezi %(min)g a %(max)g',
 'Enter an integer between %(min)g and %(max)g': 'Enter an integer between %(min)g and %(max)g',
 'enter an integer between %(min)g and %(max)g': 'zadejte celé číslo mezi %(min)g a %(max)g',
+'Enter an integer greater than or equal to %(min)g': 'Enter an integer greater than or equal to %(min)g',
 'Enter from %(min)g to %(max)g characters': 'Enter from %(min)g to %(max)g characters',
 'Error': 'Chyba',
 'Error logs for "%(app)s"': 'Seznam výskytu chyb pro aplikaci "%(app)s"',

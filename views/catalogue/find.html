@@ -2,7 +2,6 @@
 
 {{=form}}
 
-<input id="need_find" class="hidden" value="{{=need_find}}">
 <div id="retrieve_status"></div>
 
 <script>
@@ -15,15 +14,5 @@ $(document).ready(function() {
         interval = 1.2 * interval;  // make server load less for the page without user interaction
     }
     getRetrieveStatus();
-
-    /*
-    retrieve/parse/save query from previous submit
-        in single threaded server (which queues queries) like rocket.py,
-            this must be after getRetrieveStatus() to see the functionality
-    */
-    var needFind = $('#need_find').val();
-    if (needFind) {
-        $.ajax('{{=URL('find_worker')}}/' + needFind);
-    }
 });
 </script>

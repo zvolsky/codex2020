@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from c2_z39 import get_from_large_library
-from c2_marc import parse_Marc_and_updatedb
-
-
 # ajax
 #   called via setTimeout/ajax
 #   maybe this can be redesigned as a component, using LOAD() and web2py_component(url,id) function
@@ -33,47 +29,11 @@ def retrieve_status():
 
 @auth.requires_login()
 def find():
+    def onvalidation(form):
+        form.vars.asked = datetime.datetime.utcnow()
+
     form = SQLFORM(db.question)
-    if form.process().accepted:
-        need_find = form.vars.id
-    else:
-        need_find = ''
-    return dict(form=form, need_find=need_find)
-
-# ajax
-@auth.requires_login()
-def find_worker():
-    """the time consuming retrieve/parse/db-save action
-    in fact we call 2 actions from find():
-        - via form submit: same action find() will repeat here (finished fast),
-        - via data in hidden .html element/on-document-ready/ajax (time consuming action)
-
-    we use ajax instead of real threading because threading is not good idea from inside the web server
-        (because not we but web server has full control over creating/destroying processes/threads)
-
-    maybe web server timeout need to be increased like for nginx (increase from 60s):
-        http
-        {
-          server
-          {
-            …
-            location /
-            {
-                 …
-                 proxy_read_timeout 180s;
-    """
-    question_id = int(request.args[0])
-    question = db.question[question_id]  # we could avoid this db access (giving value to browser and back),
-                                         # however this has better security (int, duration is None) and no need for dig.signat.
-    if question and question.duration_total is None:
-        warning, results = get_from_large_library(question.question)
-        duration_z39 = datetime.datetime.utcnow()
-        if not warning:
-            retrieved, inserted, duration_marc = parse_Marc_and_updatedb(results)
-
-            db.question[question_id] = {
-                    'duration_z39': round((duration_z39 - question.asked).total_seconds(), 0),
-                    'duration_marc': round((duration_marc - question.asked).total_seconds(), 0),
-                    'duration_total': round((datetime.datetime.utcnow() - question.asked).total_seconds(), 0),
-                    'retrieved': retrieved, 'inserted': inserted}
-    return ''  # dummy result here
+    if form.process(onvalidation=onvalidation).accepted:
+        scheduler.queue_task(task_catalogize,
+                pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)})
+    return dict(form=form)
