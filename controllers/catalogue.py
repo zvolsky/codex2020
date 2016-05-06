@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import simplejson
+
+
 @auth.requires_login()
 def find():
     def onvalidation(form):
@@ -30,20 +33,20 @@ def retrieve_status():
                 cls += 'list-group-item-success active'
                 some_ready = True
             status_rows.append(A(SPAN(q.we_have or 0, _class="badge"), SPAN(q.known or 0, _class="badge"),
-                                 q.question, _href='#', _class=cls, _data-id='{{=q.id}}'))
+                                 q.question, _href='#', _class=cls, _id='aa%s' % q.id, _data_id='%s' % q.id))
         if some_ready:
             hint = T("Vyber vyhledanou knihu ke katalogizaci nebo zadej další")
         else:
             hint = T("Počkej na vyhledání předchozího zadání nebo zadej další knihu ke zpracování")
         find_status = SPAN(hint, _class="help-block") + DIV(*status_rows, _class="list-group", _style="max-width: 500px;")
-    return find_status
+    return simplejson.dumps(find_status.xml())
 
 # ajax
 #   called via question click
 #   maybe this can be redesigned as a component, using LOAD() and web2py_component(url,id) function
 @auth.requires_login()
 def retrieve_books():
-    return request.args(0)
+    return 'bbbbb'  #request.args(0)
     questions = xxx
     find_status = ''
     questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
