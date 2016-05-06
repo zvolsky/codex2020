@@ -1,17 +1,23 @@
 {{extend 'layout.html'}}
 
-{{=form}}
-
+<div>{{=form}}</div>
 <div id="retrieve_status"></div>
+<div id="retrieve_status"></div>
+
 
 <script>
 $(document).ready(function() {
     // get current status
     var interval = 2000;
     function getRetrieveStatus() {
+        $('#retrieve_status .list-group-item').removeListener('click');  // can be omitted?
         ajax('{{=URL('retrieve_status')}}', [], 'retrieve_status');
         window.setTimeout(getRetrieveStatus, interval);
         interval = 1.2 * interval;  // make server load less for the page without user interaction
+
+        $('#retrieve_status .list-group-item').click(function() {
+            ajax('{{=URL('retrieve_books', args=)}}', [], 'retrieve_books');
+        });
     }
     getRetrieveStatus();
 });
