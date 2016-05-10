@@ -10,25 +10,31 @@ $(document).ready(function() {
     // get current status
     var interval = 2000;
     var resolvedQuestion = null;
-    function questionIdAndStatus(questionEl) {
-        return questionEl.getAttribute('data_id') +
-                'active' in questionEl.className FIX;
+    function questionStatusAndId(jqEl) {
+        return (jqEl.hasClass('active') ? '+' : '-') + jqEl.attr('data_id');
+    }
+    function getBooksForQuestionEl(jqEl) {
+        var wishQuestion = questionStatusAndId(jqEl);
+        if (wishQuestion !== resolvedQuestion) {
+            ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion, [], 'retrieve_books');
+        }
+        return wishQuestion;
     }
     function getRetrieveStatus() {
         $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {
             $('#retrieve_status .list-group-item').off('click');
             $('#retrieve_status').html(result);
             $('#retrieve_status .list-group-item').click(function(event) {
-                var wishQuestion = questionIdAndStatus(event.target);
-                if (wishQuestion !== resolvedQuestion) {
-                    resolvedQuestion = wishQuestion;
-                    ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion, [], 'retrieve_books');
-                }
+                resolvedQuestion = getBooksForQuestionEl($(event.target));
             });
         });
         window.setTimeout(getRetrieveStatus, interval);
         interval = 1.2 * interval;  // make server load less for the page without user interaction
     }
     getRetrieveStatus();
+    var wishList = $('.list-group-item');
+    if (wishList) {
+        resolvedQuestion = getBooksForQuestionEl(wishList[0]);
+    }
 });
 </script>
