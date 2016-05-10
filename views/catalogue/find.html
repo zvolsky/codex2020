@@ -9,12 +9,21 @@
 $(document).ready(function() {
     // get current status
     var interval = 2000;
+    var resolvedQuestion = null;
+    function questionIdAndStatus(questionEl) {
+        return questionEl.getAttribute('data_id') +
+                'active' in questionEl.className FIX;
+    }
     function getRetrieveStatus() {
         $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {
             $('#retrieve_status .list-group-item').off('click');
             $('#retrieve_status').html(result);
-            $('#retrieve_status .list-group-item').click(function() {
-                ajax('{{=URL('retrieve_books')}}', [], 'retrieve_books');
+            $('#retrieve_status .list-group-item').click(function(event) {
+                var wishQuestion = questionIdAndStatus(event.target);
+                if (wishQuestion !== resolvedQuestion) {
+                    resolvedQuestion = wishQuestion;
+                    ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion, [], 'retrieve_books');
+                }
             });
         });
         window.setTimeout(getRetrieveStatus, interval);
