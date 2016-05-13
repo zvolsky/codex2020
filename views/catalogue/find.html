@@ -1,8 +1,10 @@
 {{extend 'layout.html'}}
 
 <div>{{=form}}</div>
-<div id="retrieve_status"></div>
-<div id="retrieve_books"></div>
+<div class="row">
+  <div id="retrieve_status" class="col-sm-4"></div>
+  <div id="retrieve_books" class="col-sm-8"></div>
+</div>
 
 
 <script>
@@ -16,7 +18,7 @@ $(document).ready(function() {
     function getBooksForQuestionEl(jqEl) {
         var wishQuestion = questionStatusAndId(jqEl);
         if (wishQuestion !== resolvedQuestion) {
-            ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion, [], 'retrieve_books');
+            ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion.substr(1), [], 'retrieve_books');
         }
         return wishQuestion;
     }
