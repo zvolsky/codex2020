@@ -22,7 +22,7 @@ def find():
 #   maybe this can be redesigned as a component, using LOAD() and web2py_component(url,id) function
 @auth.requires_login()
 def retrieve_status():
-    find_status = ''
+    find_status = CAT()
     questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
             db.question.id, db.question.question, db.question.duration_marc,
             db.question.known, db.question.we_have, orderby=db.question.id)
