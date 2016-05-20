@@ -49,7 +49,7 @@ def retrieve_status():
 @auth.requires_login()
 def retrieve_books():
     question = db(db.question.id == request.args(0)).select(db.question.question).first().question
-    books = db((db.idx_long.item.startswith(slugify(question))) & (db.idx_long.category == 'T')).select(
+    books = db((db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category == 'T')).select(
         db.answer.fastinfo,
         join=[db.idx_join.on(db.idx_join.idx_long_id == db.idx_long.id),
                 db.answer.on(db.answer.id == db.idx_join.answer_id)],
