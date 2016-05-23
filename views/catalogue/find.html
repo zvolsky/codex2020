@@ -40,17 +40,19 @@ $(document).ready(function() {
         $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {
             $('#retrieve_status .list-group-item').off('click');
             $('#retrieve_status').html(result);
-            $('#retrieve_status .list-group-item').click(function(event) {
-                resolvedQuestion = getBooksForQuestionEl($(event.target));
-            });
+            var wishList = $('#retrieve_status .list-group-item');
+            if (wishList.length > 0) {
+                wishList.click(function(event) {
+                    resolvedQuestion = getBooksForQuestionEl($(event.target));
+                });
+                if (resolvedQuestion === null) {
+                    resolvedQuestion = getBooksForQuestionEl($(wishList[0]));
+                }
+            }
         });
         window.setTimeout(getRetrieveStatus, interval);
         interval = 1.2 * interval;  // make server load less for the page without user interaction
     }
     getRetrieveStatus();
-    var wishList = $('.list-group-item');
-    if (wishList) {
-        resolvedQuestion = getBooksForQuestionEl(wishList[0]);
-    }
 });
 </script>

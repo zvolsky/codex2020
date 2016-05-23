@@ -84,4 +84,12 @@ def retrieve_books():
     locale.setlocale(locale.LC_ALL, COLLATING)
     book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))
     book_rows = [row[0] for row in book_rows]
+
+    if book_rows:
+        book_rows.append(SPAN(T("Vyber publikaci"), _class="alert alert-info"))
+        book_rows.append(SPAN(T("nebo"), _class="alert alert-info"))
+    else:
+        book_rows.append(SPAN(T("Publikace nebyla nalezena"), _class="alert alert-info"))
+    book_rows.append(SPAN(T("Popiš ručně (není v seznamu)"), _class="alert alert-success"))
+    book_rows.append(A(XML(T('<b>Nezpracovávat</b> %s') % question), _class="btn btn-info"))
     return DIV(*book_rows, _class="list-group")
