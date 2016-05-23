@@ -2,10 +2,14 @@
 
 import datetime
 
+from plugin_mz import link
+
+
 if request.is_local:
     from gluon.custom_import import track_changes
     track_changes(True)    # auto-reload modules
 
+link('css/mz-bootstrap3.css')
 
 '''
 from mzm import accept, link

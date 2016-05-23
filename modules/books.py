@@ -56,3 +56,7 @@ def isxn_to_ean(isxn):
     else:
         return ''
     return ean + check_digit_ean(ean)
+
+def is_isxn(txt):
+    txt = txt.replace('-', '').replace(' ', '')
+    return len(txt) >= 8 and (txt.replace('X', '').isdigit() or txt[:1] == 'M' and txt[1:].isdigit())

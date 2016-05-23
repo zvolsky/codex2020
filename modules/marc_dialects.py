@@ -121,7 +121,7 @@ class MarcFrom(object):
                     self.title_ignore_chars = int(marc_title.indicator2)
                 except:
                     self.title_ignore_chars = 0
-            self.title = marc_title.value().strip()
+            self.title = marc_title.value().split(' / ', 1)[0].strip()
             parts.append(self.title)
             if self.title_ignore_chars:
                 part2 = self.title[self.title_ignore_chars:].lstrip()

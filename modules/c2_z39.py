@@ -8,7 +8,9 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
         # originální asl2/ chyba instalace,
         # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
 
-from books import ean2isbn10, ean2issn
+from gluon import current
+
+from books import ean2isbn10, ean2issn, is_isxn
 
 
 def get_from_large_library(fnd):
@@ -17,7 +19,7 @@ def get_from_large_library(fnd):
         conn = zoom.Connection ('aleph.nkp.cz', 9991)
         warning = None
     except ConnectionError:
-        warning = T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?")
+        warning = current.T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?")
     if warning is None:
         conn.databaseName = 'SKC-UTF'  # AUT-UTF # http://aleph.nkp.cz/F/?func=file&file_name=base-list
         conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
@@ -36,7 +38,7 @@ def get_from_large_library(fnd):
         try:
             results = conn.search(query)
         except Exception:
-            warning = T("Spojení se souhrnným katalogem bylo navázáno, ale dotaz selhal.")
+            warning = current.T("Spojení se souhrnným katalogem bylo navázáno, ale dotaz selhal.")
     return warning, results
 
 class PQFConfig(object):
@@ -62,20 +64,20 @@ def smartquery(txt, config=PQFConfig()):
     """
     txt = txt.strip()
     nodashes = txt.replace('-', '').replace(' ', '')
-    if len(nodashes) >= 8 and (nodashes.isdigit() or nodashes[:1] == 'M' and nodashes[1:].isdigit()):
+    if is_isxn(nodashes):
         # ISBN / ISSN / ISMN
         if len(txt) > len(nodashes):  # i.e. '-' or ' ' in txt:  <=> manual writing
-            pqf = '@attr 1=%s @attr 3=1 %s' % (config.isbn if len(nodashes) > 9 else config.issn, nodashes)
+            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn if len(nodashes) > 9 else config.issn, nodashes)
         elif len(txt) >= 13 and txt[:3] == '977':  # ISSN
-            pqf = '@attr 1=%s @attr 3=1 %s' % (config.issn, ean2issn(nodashes))
-            pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.issn, nodashes[:13]))  # no idea if 977.. can be in ISSN index, but lets try it
+            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.issn, ean2issn(nodashes))
+            pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.issn, nodashes[:13]))  # no idea if 977.. can be in ISSN index, but lets try it
         else:
-            pqf = '@attr 1=%s @attr 3=1 %s' % (config.isbn, nodashes)
+            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn, nodashes)
             if len(txt) == 13 and txt[:3] == '978':  # can have old ISBN (10-char)
-                pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.isbn, ean2isbn10(nodashes)))
+                pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn, ean2isbn10(nodashes)))
     else:
         txt = re.sub('\s+', ' ', txt)
-        pqf = '@attr 1=%s @attr 3=1 "%s"' % (config.title, txt)
+        pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=1 @attr 6=1 "%s"' % (config.title, txt)
         if ',' in txt:
-            pqf = '@or ' + pqf + (' @attr 1=%s @attr 3=1 %s' % (config.author, txt))
+            pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=1 @attr 6=1 "%s"' % (config.author, txt))
     return pqf

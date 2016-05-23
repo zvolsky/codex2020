@@ -1,0 +1,13 @@
+.list-group-item {
+    height: 30px;
+    padding: 5px 15px;
+}
+
+.well-small {
+    padding: 9px 19px 2px 19px;
+}
+
+
+.smaller {
+    font-size: 90%;
+}
