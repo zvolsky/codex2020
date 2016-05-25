@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+@auth.requires_login()
 def readers():
     db.reader.id.readable = False
     grid = SQLFORM.smartgrid(db.reader,
@@ -8,6 +9,7 @@ def readers():
             )
     return dict(grid=grid)
 
+@auth.requires_login()
 def groups():
     db.rgroup.id.readable = False
     db.reader.id.readable = False
