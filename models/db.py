@@ -18,6 +18,7 @@ myconf = AppConfig(reload=True)
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     db = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+                            # fake_migrate_all=True
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore+ndb')
@@ -56,6 +57,12 @@ from gluon.tools import Auth, Service, PluginManager
 auth = Auth(db)
 service = Service()
 plugins = PluginManager()
+
+auth.settings.extra_fields['auth_user']= [
+    Field('introduce', 'text',
+          label=T("Představte se"),
+          comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně pracujete-li s knihami profesionálně, když uvedete, kde pracujete ... děkujeme")),
+    ]
 
 ## create all tables needed by auth if not custom tables
 auth.define_tables(username=False, signature=False)
