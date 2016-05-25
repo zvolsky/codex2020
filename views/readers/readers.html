@@ -1,0 +1,13 @@
+
+{{extend 'layout.html'}}
+
+<h2>{{=T("Čtenáři")}}</h2>
+{{if len(request.args) <= 1:}}
+    <div class="alert alert-warning">{{=T("Nové položky lze přidat pomocí [+].")}}</div>
+{{pass}}
+
+{{=grid}}
+
+<script>
+    $('#w2p_query_panel').remove();
+</script>

@@ -1,0 +1,23 @@
+
+{{extend 'layout.html'}}
+
+<h2>{{=T("Skupiny čtenářů")}}</h2>
+{{if len(request.args) <= 1:}}
+    <div class="alert alert-warning">
+        {{=T("Nové položky lze přidat pomocí [+].")}}<br />
+        {{=T("Skupiny lze smazat - do skupiny zařazení čtenáři zůstanou v databázi.")}}<br />
+        {{=T("Čtenáře můžete přidat i odtud (proklikem: Čtenáři), ale jen tehdy, když je ještě v databázi nemáte. Pokud máte, vznikly by duplicity: Raději přejděte do seznamu čtenářů, najděte a editujte čtenáře a zvolte jeho skupinu.")}}
+    </div>
+{{pass}}
+
+{{=grid}}
+
+{{if len(request.args) <= 1:}}
+    <div class="alert alert-info"><mark>{{=T("Doporučení pro školní knihovny:")}}</mark><br />
+        {{=T("Jako skupiny můžete zavést jednotlivé třídy. Se začátkem nového školního roku přejmenujte třídy o číslo výš (např. 7.B -> 8.B), začněte nejvyššími ročníky a pokračujte k nižším. Ukončené třídy můžete přejmenovat např. 'bývalá 9.B' a zrušit je až poté, co vám všichni žáci vrátí vypůjčené knihy.")}}
+    </div>
+{{pass}}
+
+<script>
+    $('#w2p_query_panel').remove();
+</script>

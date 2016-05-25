@@ -11,6 +11,8 @@
 def index():
     redirect(URL('catalogue', 'find'))
 
+def wiki():
+    return auth.wiki()
 
 def user():
     """

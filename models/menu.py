@@ -5,9 +5,7 @@
 ## Customize your APP title, subtitle and menus here
 #########################################################################
 
-response.logo = A(B('web',SPAN(2),'py'),XML('&trade;&nbsp;'),
-                  _class="navbar-brand",_href="http://www.web2py.com/",
-                  _id="web2py-logo")
+response.logo = A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index'))
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 
@@ -25,10 +23,15 @@ response.google_analytics_id = None
 #########################################################################
 
 response.menu = [
-    (T('Home'), False, URL('default', 'index'), [])
+    (T('Návod'), False, URL('default', 'wiki'), []),
+    (T('Katalogizace'), False, URL('catalogue', 'find'), []),
+    (T('Čtenáři'), False, '#', [
+        (T('skupiny čtenářů'), False, URL('readers', 'groups'), []),
+        (T('čtenáři'), False, URL('readers', 'readers'), []),
+    ]),
 ]
 
-DEVELOPMENT_MENU = True
+DEVELOPMENT_MENU = request.is_local
 
 #########################################################################
 ## provide shortcuts for development. remove in production

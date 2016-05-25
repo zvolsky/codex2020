@@ -3,11 +3,20 @@
 
 from gluon import current
 
+from plugin_mz import IS_NOT_EMPTY_
+
 from c2_db import PublLengths
 
 # export for modules
 current.auth = auth
 current.db = db
+
+auth.settings.create_user_groups = None
+
+# dočasně, dokud ladíme první knihovnu
+auth.settings.registration_requires_approval = True  # TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
+auth.library_id = 1
+
 
 
 class UNIQUE_QUESTION(object):
@@ -20,9 +29,51 @@ class UNIQUE_QUESTION(object):
         else:
             return (value, None)
 
+
+db.define_table('library',
+        Field('library', 'string', length=128,
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        format='%(library)s'
+        )
+
+db.define_table('rgroup',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=True, writable=False,
+              ondelete='CASCADE',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('rgroup', 'string', length=48,
+              notnull=True, requires=IS_NOT_EMPTY_(),
+              label=T("Skupina"), comment=T("skupina čtenářů (např. pro školní knihovny školní třída")),
+        singular=T("skupina čtenářů"), plural=T("skupiny čtenářů"),
+        format='%(rgroup)s'
+        )
+
+db.define_table('reader',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              ondelete='CASCADE',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('lastname', 'string', length=32,
+              notnull=True, requires=IS_NOT_EMPTY_(),
+              label=T("Příjmení"), comment=T("příjmení čtenáře")),
+        Field('firstname', 'string', length=32,
+              label=T("Jméno"), comment=T("křestní jméno čtenáře (a případně jeho/její další jména)")),
+        Field('rgroup_id', db.rgroup,
+              ondelete='SET NULL',
+              #represent = lambda rgroup_id, row: db.rgroup.id or '',
+              label=T("Skupina"), comment=T("skupina čtenářů")),
+        Field('email', 'string', length=64,
+              label=T("E-mail"), comment=T("e-mail")),
+        singular=T("čtenář"), plural=T("čtenáři"),
+        format='%(lastname)s %(firstname)s'
+        )
+
 db.define_table('question',
         Field('auth_user_id', db.auth_user, default=auth.user_id,
               readable=False, writable=False,
+              ondelete='CASCADE',
               label=T("Uživatel"), comment=T("zadavatel dotazu")),
         Field('question', 'string', length=PublLengths.question,
               requires=[IS_LENGTH(minsize=PublLengths.question_min, maxsize=PublLengths.question,
@@ -88,8 +139,10 @@ db.define_table('idx_long',
 
 db.define_table('idx_join',
         Field('answer_id', db.answer,
+              ondelete='CASCADE',
               label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
         Field('idx_long_id', db.idx_long,
+              ondelete='CASCADE',
               label=T("Vyhledávací řetězec"), comment=T("příslušnost k vyhledávacímu řetězci")),
         Field('role', 'string', length=PublLengths.irole,
               label=T("Role"), comment=T("role, pořadí v sérii, apod.")),
@@ -97,6 +150,7 @@ db.define_table('idx_join',
 
 db.define_table('idx_short',
         Field('answer_id', db.answer,
+              ondelete='CASCADE',
               label=T("Publikace"), comment=T("příslušnost k publikaci")),
         Field('category', 'string', length=1,
               label=T("Kategorie"), comment=T("kategorie (typ) vyhledávacího údaje")),
@@ -106,6 +160,7 @@ db.define_table('idx_short',
 
 db.define_table('idx_word',
         Field('answer_id', db.answer,
+              ondelete='CASCADE',
               label=T("Publikace"), comment=T("příslušnost k publikaci")),
         Field('word', 'string', length=PublLengths.iword,
               label=T("Vyhledávací údaj"), comment=T("údaj publikace (krátký)")),

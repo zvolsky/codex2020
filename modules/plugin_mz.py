@@ -1,9 +1,29 @@
 # -*- coding: utf-8 -*-
 
+# mz support for Web2py application
+# version 0.2 (current; the older versions can probably be rewritten by this one)
+# TODO: change to git sub-repo
+
+
 from gluon import current
 
 from gluon.html import URL, SPAN, DIV, CAT, UL, TEXTAREA, INPUT, LABEL, SELECT, P
 from gluon.sqlhtml import add_class
+from gluon.validators import IS_NOT_EMPTY, IS_IN_DB
+
+
+class FormTxt(object):
+    ctrl = current.T('(Ctrl+click vybere více možností současně)')
+    err_vyber = current.T('Vyber jednu nebo více možností')
+    err_neco = current.T('Údaj je povinný')
+
+class IS_NOT_EMPTY_(IS_NOT_EMPTY):
+    def __init__(self):
+        super(IS_NOT_EMPTY_, self).__init__(error_message=FormTxt.err_neco)
+
+class IS_IN_DB_(IS_IN_DB):
+    def __init__(self, *args, **kwargs):
+        super(IS_IN_DB_, self).__init__(*args, error_message=FormTxt.err_vyber, **kwargs)
 
 
 def link(filename):
