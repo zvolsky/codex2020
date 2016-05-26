@@ -1,6 +1,7 @@
 .list-group-item {
     height: 30px;
     padding: 5px 15px;
+    overflow: hidden;
 }
 
 .well-small {

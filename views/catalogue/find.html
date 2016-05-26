@@ -25,7 +25,9 @@ $(document).ready(function() {
             if (wishQuestionInfo[1]) {
                 ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], [], 'retrieve_books');
                 $('#erase_question').click(function(event) {
-                    alert($(event.target).parent().attr('#data_id'));
+                    event.preventDefault();
+                    console.log(111);
+                    //alert($(this).parent().attr('#data_id'));/
                 });
             } else {
                 $('#retrieve_books').html('<em>' + $('#question', jqEl).text() + '</em> ... ' + "Vyhledává se ..."); //JT("Vyhledává se ...")
@@ -40,7 +42,8 @@ $(document).ready(function() {
             var wishList = $('#retrieve_status .list-group-item');
             if (wishList.length > 0) {
                 wishList.click(function(event) {
-                    resolvedQuestion = getBooksForQuestionEl($(event.target));
+                    event.preventDefault();
+                    resolvedQuestion = getBooksForQuestionEl($(this));
                 });
                 if (resolvedQuestion === null) {
                     resolvedQuestion = getBooksForQuestionEl($(wishList[0]));
