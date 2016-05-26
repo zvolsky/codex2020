@@ -12,18 +12,13 @@ from gluon.sqlhtml import add_class
 from gluon.validators import IS_NOT_EMPTY, IS_IN_DB
 
 
-class FormTxt(object):
-    ctrl = current.T('(Ctrl+click vybere více možností současně)')
-    err_vyber = current.T('Vyber jednu nebo více možností')
-    err_neco = current.T('Údaj je povinný')
-
 class IS_NOT_EMPTY_(IS_NOT_EMPTY):
     def __init__(self):
-        super(IS_NOT_EMPTY_, self).__init__(error_message=FormTxt.err_neco)
+        super(IS_NOT_EMPTY_, self).__init__(error_message=current.T('Údaj je povinný'))
 
 class IS_IN_DB_(IS_IN_DB):
     def __init__(self, *args, **kwargs):
-        super(IS_IN_DB_, self).__init__(*args, error_message=FormTxt.err_vyber, **kwargs)
+        super(IS_IN_DB_, self).__init__(*args, error_message=current.T('Vyber jednu nebo více možností'), **kwargs)
 
 
 def link(filename):
