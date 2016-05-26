@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from itertools import groupby
 
 from gluon import current
 
@@ -18,7 +19,7 @@ auth.settings.registration_requires_approval = True  # TODO: nahradit mechanisme
 auth.library_id = 1
 
 
-
+"""deaktivovano
 class UNIQUE_QUESTION(object):
     def __init__(self, error_message=T('dotaz už je ve frontě')):
         self.error_message = error_message
@@ -28,7 +29,7 @@ class UNIQUE_QUESTION(object):
             return (value, self.error_message)
         else:
             return (value, None)
-
+"""
 
 db.define_table('library',
         Field('library', 'string', length=128,
@@ -40,11 +41,12 @@ db.define_table('rgroup',
         Field('library_id', db.library,
               default=auth.library_id,
               readable=True, writable=False,
-              ondelete='CASCADE',
+              ondelete='RESTRICT',
               label=T("Knihovna"), comment=T("jméno knihovny")),
         Field('rgroup', 'string', length=48,
               notnull=True, requires=IS_NOT_EMPTY_(),
               label=T("Skupina"), comment=T("skupina čtenářů (např. pro školní knihovny školní třída")),
+        common_filter = lambda query: db.rgroup.library_id == auth.library_id,
         singular=T("skupina čtenářů"), plural=T("skupiny čtenářů"),
         format='%(rgroup)s'
         )
@@ -66,6 +68,7 @@ db.define_table('reader',
               label=T("Skupina"), comment=T("skupina čtenářů")),
         Field('email', 'string', length=64,
               label=T("E-mail"), comment=T("e-mail")),
+        common_filter = lambda query: db.reader.library_id == auth.library_id,
         singular=T("čtenář"), plural=T("čtenáři"),
         format='%(lastname)s %(firstname)s'
         )
@@ -76,9 +79,9 @@ db.define_table('question',
               ondelete='CASCADE',
               label=T("Uživatel"), comment=T("zadavatel dotazu")),
         Field('question', 'string', length=PublLengths.question,
-              requires=[IS_LENGTH(minsize=PublLengths.question_min, maxsize=PublLengths.question,
+              requires=IS_LENGTH(minsize=PublLengths.question_min, maxsize=PublLengths.question,
                             error_message=T("zadej %s až %s znaků") % (PublLengths.question_min, PublLengths.question)),
-                        UNIQUE_QUESTION()],
+                        #UNIQUE_QUESTION()],
               label=T("Dotaz"), comment=T("zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN")),
         Field('asked', 'datetime',
               readable=False, writable=False,
@@ -165,3 +168,53 @@ db.define_table('idx_word',
         Field('word', 'string', length=PublLengths.iword,
               label=T("Vyhledávací údaj"), comment=T("údaj publikace (krátký)")),
         )
+
+db.define_table('lib_descr',
+        Field('answer_id', db.answer,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('descr', 'text',
+              label=T("Popis"), comment=T("bibliografický popis, pozměněný pro potřeby knihovny")),
+        )
+
+db.define_table('owned_book',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('answer_id', db.answer,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('lib_descr_id', db.lib_descr,
+              ondelete='RESTRICT',
+              label=T("Popis"), comment=T("bibliografický popis, pozměněný pro potřeby knihovny")),
+        Field('cnt', 'integer',
+              default=0,
+              label=T("Výtisků"), comment=T("počet výtisků v knihovně")),
+        common_filter = lambda query: db.owned_book.library_id == auth.library_id,
+        )
+
+db.define_table('impression',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('answer_id', db.answer,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('owned_book_id', db.owned_book,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        common_filter = lambda query: db.impression.library_id == auth.library_id,
+        )
+
+def book_cnt_plus(flds, id):
+    db(db.owned_book.id == flds['owned_book_id']).update(cnt=db.owned_book.cnt + 1)
+def book_cnt_minus(w2set):
+    books = db(w2set).select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
+    for key, group in groupby(books, lambda impression: impression.owned_book_id):
+        db(db.owned_book.id == key).update(cnt=max(0, db.owned_book.cnt - len(group)))
+db.impression._after_insert.append(book_cnt_plus)
+db.impression._before_delete.append(book_cnt_minus)

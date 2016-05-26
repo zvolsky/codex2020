@@ -34,7 +34,7 @@ def retrieve_status():
     find_status = CAT()
     questions = db((db.question.live == True) & (db.question.auth_user_id == auth.user_id)).select(
             db.question.id, db.question.question, db.question.duration_marc,
-            db.question.known, db.question.we_have, orderby=db.question.id)
+            db.question.retrieved, db.question.we_have, orderby=db.question.id)
     if questions:
         some_ready = False
         status_rows = []
@@ -43,8 +43,8 @@ def retrieve_status():
             if q.duration_marc is not None:
                 cls += 'list-group-item-success active'
                 some_ready = True
-            status_rows.append(A(SPAN(q.we_have or 0, _class="badge"), SPAN(q.known or 0, _class="badge"),
-                                 q.question, _href='#', _class=cls, _data_id='%s' % q.id))
+            status_rows.append(A(SPAN(q.retrieved or 0, _class="badge"), # první SPAN: SPAN(q.we_have or 0, _class="badge"),
+                                 SPAN(q.question, _id="question"), _href='#', _class=cls, _data_id='%s' % q.id))
         if some_ready:
             hint = T("Vyber vyhledanou knihu ke katalogizaci nebo zadej další")
         else:
@@ -57,7 +57,8 @@ def retrieve_status():
 #   maybe this can be redesigned as a component, using LOAD() and web2py_component(url,id) function
 @auth.requires_login()
 def retrieve_books():
-    question = db(db.question.id == request.args(0)).select(db.question.question).first().question
+    question_id = request.args(0)
+    question = db(db.question.id == question_id).select(db.question.question).first().question
     if is_isxn(question):
         ean = isxn_to_ean(question)
         books = db(db.answer.ean == ean).select(db.answer.fastinfo)
@@ -86,10 +87,21 @@ def retrieve_books():
     book_rows = [row[0] for row in book_rows]
 
     if book_rows:
-        book_rows.append(SPAN(T("Vyber publikaci"), _class="alert alert-info"))
-        book_rows.append(SPAN(T("nebo"), _class="alert alert-info"))
+        res_info = T("Vyber z nalezených publikací nebo ..")
     else:
-        book_rows.append(SPAN(T("Publikace nebyla nalezena"), _class="alert alert-info"))
-    book_rows.append(SPAN(T("Popiš ručně (není v seznamu)"), _class="alert alert-success"))
-    book_rows.append(A(XML(T('<b>Nezpracovávat</b> %s') % question), _class="btn btn-info"))
+        res_info = SPAN(EM(question), ' ... ', T("Publikace nebyla nalezena."))
+    book_rows.append(DIV(
+            DIV(res_info),
+            DIV(
+                A(T("Doplním popis (protože není v seznamu)"), _class="btn btn-info"),
+                ' ',
+                A(T('Zahodit (nekatalogizovat'), _class="btn btn-info", _id="erase_question"),
+                _data_id="%s" % question_id),
+            _class="well well-small"))
     return DIV(*book_rows, _class="list-group")
+
+# ajax
+#   called via button Zahodit click
+@auth.requires_login()
+def erase_question():
+    del db.question[request.args(0)]

@@ -6,35 +6,32 @@
 
 <div class="row">
   <div id="retrieve_status" class="col-sm-4"></div>
-  <div id="retrieve_books" class="col-sm-8"></div>
+  <div id="retrieve_books" class="col-sm-8"></div>POZOR: Proklik na KNIHY zatím není funkční.
 </div>
-
-<form method="get" action="http://info.jib.cz/informace-pro-uzivatele/firefox/deeplink" name="jib" target="_blank">
-  <div style="width: 158px; height: 151px; text-align:left">
-    <img src="http://info.jib.cz/obrazky/hledej.gif" usemap="#mapa" border="0">
-    <input size="15" name="dotaz" style="width:128px; height:20px; position:relative; top:-58px;
-    right:-15px; border:0px" type="text">
-    <input name="sada" value="utf8" type="hidden">
-  </div>
-</form>
-<map name="mapa">
-  <area shape="rect" alt="hledej" coords="20,121,137,139" href="javascript:document.jib.submit();">
-</map>
 
 <script>
 $(document).ready(function() {
     // get current status
     var interval = 2000;
     var resolvedQuestion = null;
-    function questionStatusAndId(jqEl) {
-        return (jqEl.hasClass('active') ? '+' : '-') + jqEl.attr('data_id');
+    function questionIdAndStatus(jqEl) {
+        return [jqEl.attr('data_id'), jqEl.hasClass('active')];
     }
     function getBooksForQuestionEl(jqEl) {
-        var wishQuestion = questionStatusAndId(jqEl);
-        if (wishQuestion !== resolvedQuestion) {
-            ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestion.substr(1), [], 'retrieve_books');
+        var wishQuestionInfo = questionIdAndStatus(jqEl);
+        var wishQuestionFull = (wishQuestionInfo[1] ? '+' : '-') + wishQuestionInfo[0];
+        if (wishQuestionFull !== resolvedQuestion) {
+            $('#erase_question').off('click');
+            if (wishQuestionInfo[1]) {
+                ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], [], 'retrieve_books');
+                $('#erase_question').click(function(event) {
+                    alert($(event.target).parent().attr('#data_id'));
+                });
+            } else {
+                $('#retrieve_books').html('<em>' + $('#question', jqEl).text() + '</em> ... ' + "Vyhledává se ..."); //JT("Vyhledává se ...")
+            }
         }
-        return wishQuestion;
+        return wishQuestionFull;
     }
     function getRetrieveStatus() {
         $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {
