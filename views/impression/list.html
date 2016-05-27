@@ -1,0 +1,26 @@
+{{extend 'layout.html'}}
+
+<div class="well well-small">
+  <div>{{=form}}</div>
+</div>
+
+<div class="well well-small">
+{{if impressions:}}
+    <table>
+        <thead>
+            <th>{{=T("Evidován")}}</th>
+            <th />
+            <th>{{=T("Čís.")}}</th>
+        </thead>
+    {{for impression in impressions:}}
+        <tr>
+            <td>{{=impression.registered.strftime('%d.%m.%y')}}</td>
+            <td>{{=A(T("vyřadit"), user_signature=True, _href='%s' % URL('delete', args=(impression.id)))}}</td>
+            <td>{{=impression.iorder}}</td>
+        </tr>
+    {{pass}}
+    </table>
+{{else:}}
+    {{=T("Zatím nemáme žádné výtisky.")}}
+{{pass}}
+</div>

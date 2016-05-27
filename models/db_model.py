@@ -203,16 +203,26 @@ db.define_table('impression',
               label=T("Knihovna"), comment=T("jméno knihovny")),
         Field('answer_id', db.answer,
               notnull=True, ondelete='RESTRICT',
+              readable=False, writable=False,
               label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
         Field('owned_book_id', db.owned_book,
               notnull=True, ondelete='RESTRICT',
+              readable=False, writable=False,
               label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('iorder', 'integer',
+              notnull=True, writable=False,
+              label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
+        Field('registered', 'date', default=datetime.date.today(),
+              notnull=True, writable=False,
+              label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
         common_filter = lambda query: db.impression.library_id == auth.library_id,
         )
 
 def book_cnt_plus(flds, id):
     db(db.owned_book.id == flds['owned_book_id']).update(cnt=db.owned_book.cnt + 1)
 def book_cnt_minus(w2set):
+    import pdb;pdb.set_trace()
+    
     books = db(w2set).select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
     for key, group in groupby(books, lambda impression: impression.owned_book_id):
         db(db.owned_book.id == key).update(cnt=max(0, db.owned_book.cnt - len(group)))

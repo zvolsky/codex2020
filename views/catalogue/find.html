@@ -6,36 +6,45 @@
 
 <div class="row">
   <div id="retrieve_status" class="col-sm-4"></div>
-  <div id="retrieve_books" class="col-sm-8"></div>POZOR: Proklik na KNIHY zatím není funkční.
+  <div class="col-sm-8">
+      <div id="retrieve_books"></div>
+      {{=cancel_search}}
+      POZOR: Proklik na KNIHY zatím není funkční.
+  </div>
 </div>
 
 <script>
 $(document).ready(function() {
-    // get current status
     var interval = 2000;
     var resolvedQuestion = null;
-    function questionIdAndStatus(jqEl) {
-        return [jqEl.attr('data_id'), jqEl.hasClass('active')];
-    }
     function getBooksForQuestionEl(jqEl) {
-        var wishQuestionInfo = questionIdAndStatus(jqEl);
-        var wishQuestionFull = (wishQuestionInfo[1] ? '+' : '-') + wishQuestionInfo[0];
+        var wishQuestionId = jqEl.attr('data_id');
+        var wishQuestionStatus = jqEl.hasClass('active');
+        var wishQuestionFull = (wishQuestionStatus ? '+' : '-') + wishQuestionId;
         if (wishQuestionFull !== resolvedQuestion) {
-            if (wishQuestionInfo[1]) {
-        $.getJSON('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], function(result, status) {
-            $('#erase_question').off('click');
-            $('#retrieve_books').html(result);
-            $('#erase_question').click(function(event) {
-                event.preventDefault();
-                alert($(this).html());  //.attr('#data_id')
-            });
-        });
-//                ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], [], 'retrieve_books');
+            if (wishQuestionStatus) {
+                $.getJSON('{{=URL('retrieve_books')}}' + '/' + wishQuestionId, function(result, status) {
+                    $('#erase_question').hide().off('click');
+                    $('#retrieve_books').show().html(result);
+                    $('#erase_question').click(function(event) {
+                        eraseQuestion(event, $(this).parent().attr('data_id')); // double erase button - see eraseQuestion()
+                    });
+                });
             } else {
                 $('#retrieve_books').html('<em>' + $('#question', jqEl).text() + '</em> ... ' + "Vyhledává se ..."); //JT("Vyhledává se ...")
+                $('#erase_question').off('click').show().click(function(event) {
+                    eraseQuestion(event, wishQuestionId);  // double erase button - see eraseQuestion()
+                    $(this).fadeOut();
+                });
             }
         }
         return wishQuestionFull;
+    }
+    function eraseQuestion(event, questionId) {
+        event.preventDefault();
+        $.getJSON("{{=URL('erase_question')}}" + '/' + questionId);
+        $('[data_id="' + questionId + '"]', '#retrieve_status').slideUp();
+        $('#retrieve_books').fadeOut();
     }
     function getRetrieveStatus() {
         $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {

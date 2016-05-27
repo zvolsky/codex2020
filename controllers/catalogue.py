@@ -24,7 +24,7 @@ def find():
         scheduler.queue_task(task_catalogize,
                 pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
                 timeout=300)
-    return dict(form=form)
+    return dict(form=form, cancel_search=__btnCancelSearch())
 
 # ajax
 #   called via setTimeout/ajax
@@ -61,10 +61,10 @@ def retrieve_books():
     question = db(db.question.id == question_id).select(db.question.question).first().question
     if is_isxn(question):
         ean = isxn_to_ean(question)
-        books = db(db.answer.ean == ean).select(db.answer.fastinfo)
+        books = db(db.answer.ean == ean).select(db.answer.id, db.answer.fastinfo)
     else:
         books = db((db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category == 'T')).select(
-            db.answer.fastinfo,
+            db.answer.id, db.answer.fastinfo,
             join=[db.idx_join.on(db.idx_join.idx_long_id == db.idx_long.id),
                     db.answer.on(db.answer.id == db.idx_join.answer_id)],
         )
@@ -80,7 +80,7 @@ def retrieve_books():
             pub = '; '.join(book_dict['P'])
             puy = '; '.join(book_dict['Y'])
             book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-info"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
-                                _class="list-group-item"),
+                                _class="list-group-item", _href=URL('impression', 'list', args=(book.id))),
                              tit, aut, pub, puy])
     locale.setlocale(locale.LC_ALL, COLLATING)
     book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))
@@ -95,13 +95,18 @@ def retrieve_books():
             DIV(
                 A(T("Doplním popis (protože není v seznamu)"), _class="btn btn-info"),
                 ' ',
-                A(T('Zahodit (nekatalogizovat)'), _class="btn btn-info", _id="erase_question", _href="#"),
+                __btnCancelSearch(),
                 _data_id="%s" % question_id),
             _class="well well-small"))
-    return DIV(*book_rows, _class="list-group")
+    retrieved_books = DIV(*book_rows, _class="list-group")
+    return simplejson.dumps(retrieved_books.xml())
 
 # ajax
 #   called via button Zahodit click
 @auth.requires_login()
 def erase_question():
-    del db.question[request.args(0)]
+    db.question[request.args(0)] = dict(live=False)
+
+def __btnCancelSearch(hidden=False):
+    return A(T('Zahodit (nekatalogizovat)'), _id="erase_question", _href="#",
+             _class="btn btn-info%s" % (' hidden' if hidden else ''))
