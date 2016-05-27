@@ -217,6 +217,7 @@ db.define_table('impression',
               label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
+              represent=lambda registered, row=None: registered.strftime(T('%d.%m.%y')),
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
         common_filter = lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
         format=T('čís.') + ' %(iorder)s'

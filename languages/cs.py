@@ -8,6 +8,7 @@
 '%%{Row} in Table': '%%{řádek} v tabulce',
 '%%{Row} selected': 'označených %%{řádek}',
 '%(nrows)s records found': '%(nrows)s records found',
+'%d.%m.%y': '%d.%m.%y',
 '%s %%{row} deleted': '%s smazaných %%{záznam}',
 '%s %%{row} updated': '%s upravených %%{záznam}',
 '%s selected': '%s označených',

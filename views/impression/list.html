@@ -10,20 +10,22 @@
 
 <div class="well well-small">
 {{if impressions:}}
-    <table>
+    <table class="table table-stripped table-hover">
         <thead>
             <th>{{=T("Evidován")}}</th>
             <th />
             <th>{{=T("Čís.")}}</th>
         </thead>
         <tbody>
+            {{T.lazy = False}}
             {{for impression in impressions:}}
                 <tr>
-                    <td>{{=impression.registered.strftime('%d.%m.%y')}}</td>
+                    <td>{{=db.impression.registered.represent(impression.registered)}}</td>
                     <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id), user_signature=True))}}</td>
                     <td>{{=impression.iorder}}</td>
                 </tr>
             {{pass}}
+            {{T.lazy = True}}
         </tbody>
     </table>
 {{else:}}
