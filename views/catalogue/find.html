@@ -21,12 +21,15 @@ $(document).ready(function() {
         var wishQuestionInfo = questionIdAndStatus(jqEl);
         var wishQuestionFull = (wishQuestionInfo[1] ? '+' : '-') + wishQuestionInfo[0];
         if (wishQuestionFull !== resolvedQuestion) {
-            $('#erase_question').off('click');
             if (wishQuestionInfo[1]) {
-                ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], [], 'retrieve_books');
-                $('#erase_question').click(function(event) {
-                    alert($(event.target).parent().attr('#data_id'));
-                });
+        $.getJSON('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], function(result, status) {
+            $('#erase_question').off('click');
+            $('#retrieve_books').html(result);
+            $('#erase_question').click(function(event) {
+                alert($(this).html());  //.attr('#data_id')
+            });
+        });
+//                ajax('{{=URL('retrieve_books')}}' + '/' + wishQuestionInfo[0], [], 'retrieve_books');
             } else {
                 $('#retrieve_books').html('<em>' + $('#question', jqEl).text() + '</em> ... ' + "Vyhledává se ..."); //JT("Vyhledává se ...")
             }
