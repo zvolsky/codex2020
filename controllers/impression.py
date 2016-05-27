@@ -23,11 +23,18 @@ def list():
         last_order = db(current_book).select(max).first()[max] or 0
         for ii in xrange(form.vars.new):
             last_order += 1
-            db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=last_order)
+            impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=last_order)
+            db.impr_hist.insert(impression_id=impression_id, haction=1)
 
-    return dict(form=form, impressions=db(current_book).select())
+    fastinfo = db(db.answer.id == answer_id).select(db.answer.fastinfo).first().fastinfo
+    return dict(form=form, impressions=db(current_book).select(), title=fastinfo.splitlines()[0][1:])
 
 @auth.requires_login()
 def delete():
-    db(db.impression.id == request.args(0)).delete()
-    redirect(URL('list'))
+    answer_id = request.args(0)
+    impression_id = request.args(1)
+    if not impression_id:
+        redirect(URL('default', 'index'))
+    db.impr_hist.insert(impression_id=impression_id, haction=2)
+    db(db.impression.id == impression_id).update(live=False)
+    redirect(URL('list', args=(answer_id)))

@@ -1,7 +1,11 @@
 {{extend 'layout.html'}}
 
 <div class="well well-small">
-  <div>{{=form}}</div>
+  {{=title}}
+</div>
+
+<div class="well well-small">
+  {{=form}}
 </div>
 
 <div class="well well-small">
@@ -12,13 +16,15 @@
             <th />
             <th>{{=T("Čís.")}}</th>
         </thead>
-    {{for impression in impressions:}}
-        <tr>
-            <td>{{=impression.registered.strftime('%d.%m.%y')}}</td>
-            <td>{{=A(T("vyřadit"), user_signature=True, _href='%s' % URL('delete', args=(impression.id)))}}</td>
-            <td>{{=impression.iorder}}</td>
-        </tr>
-    {{pass}}
+        <tbody>
+            {{for impression in impressions:}}
+                <tr>
+                    <td>{{=impression.registered.strftime('%d.%m.%y')}}</td>
+                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id)))}}</td>
+                    <td>{{=impression.iorder}}</td>
+                </tr>
+            {{pass}}
+        </tbody>
     </table>
 {{else:}}
     {{=T("Zatím nemáme žádné výtisky.")}}

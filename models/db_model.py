@@ -209,22 +209,46 @@ db.define_table('impression',
               notnull=True, ondelete='RESTRICT',
               readable=False, writable=False,
               label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+        Field('live', 'boolean', default=True,
+              readable=False, writable=False,
+              label=T("Platný výtisk"), comment=T("platný (nevyřazený) výtisk")),
         Field('iorder', 'integer',
               notnull=True, writable=False,
               label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
-        common_filter = lambda query: db.impression.library_id == auth.library_id,
+        common_filter = lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
+        format=T('čís.') + ' %(iorder)s'
+        )
+
+db.define_table('impr_hist',
+        Field('impression_id', db.impression,
+              writable=False,
+              notnull=True, ondelete='CASCADE',
+              label=T("Výtisk"), comment=T("výtisk publikace")),
+        Field('auth_user_id', db.auth_user, default=auth.user_id,
+              writable=False,
+              notnull=True, ondelete='SET NULL',
+              label=T("Provedl"), comment=T("uživatel, který provedl akci")),
+        Field('reader_id', db.reader,
+              writable=False,
+              ondelete='SET NULL',
+              label=T("Čtenář"), comment=T("čtenář")),
+        Field('htime', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True, writable=False,
+              label=T("Čas"), comment=T("čas akce (v UTC)")),
+        Field('haction', 'integer',
+              requires=IS_IN_SET(((1, T("zaevidován")), (2, T("vyřazen")), (3, ''))),
+              notnull=True, writable=False,
+              label=T("Akce"), comment=T("provedená činnost")),
         )
 
 def book_cnt_plus(flds, id):
     db(db.owned_book.id == flds['owned_book_id']).update(cnt=db.owned_book.cnt + 1)
 def book_cnt_minus(w2set):
-    import pdb;pdb.set_trace()
-    
-    books = db(w2set).select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
+    books = w2set.select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
     for key, group in groupby(books, lambda impression: impression.owned_book_id):
-        db(db.owned_book.id == key).update(cnt=max(0, db.owned_book.cnt - len(group)))
+        db(db.owned_book.id == key).update(cnt=max(0, db.owned_book.cnt - len([bk for bk in group])))
 db.impression._after_insert.append(book_cnt_plus)
 db.impression._before_delete.append(book_cnt_minus)

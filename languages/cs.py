@@ -592,6 +592,7 @@
 'Vyber vyhledanou knihu ke katalogizaci nebo zadej další': 'Vyber vyhledanou knihu ke katalogizaci nebo zadej další',
 'Vyber z nalezených publikací nebo ..': 'Vyber z nalezených publikací nebo ..',
 'vyřadit': 'vyřadit',
+'vyřazen': 'vyřazen',
 'Web Framework': 'Webový framework',
 'web2py is up to date': 'Máte aktuální verzi web2py.',
 'web2py online debugger': 'Ladící online web2py program',
@@ -615,6 +616,7 @@
 'zadej %s až %s znaků': 'zadej %s až %s znaků',
 'zadej počet nových výtisků': 'zadej počet nových výtisků',
 'zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN': 'zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN',
+'zaevidován': 'zaevidován',
 'Zahodit (nekatalogizovat': 'Zahodit (nekatalogizovat',
 'Zahodit (nekatalogizovat)': 'Zahodit (nekatalogizovat)',
 'Zatím nemáme žádné výtisky.': 'Zatím nemáme žádné výtisky.',
@@ -626,5 +628,6 @@
 'Čtenáře můžete přidat i odtud (proklikem: Čtenáři), ale jen tehdy, když je ještě v databázi nemáte. Pokud máte, vznikly by duplicity: V tom případě přejděte do seznamu čtenářů, najděte a editujte čtenáře a zvolte jeho skupinu.': 'Čtenáře můžete přidat i odtud (proklikem: Čtenáři), ale jen tehdy, když je ještě v databázi nemáte. Pokud máte, vznikly by duplicity: V tom případě přejděte do seznamu čtenářů, najděte a editujte čtenáře a zvolte jeho skupinu.',
 'čtenáři': 'čtenáři',
 'Čtenáři': 'Čtenáři',
+'čís.': 'čís.',
 'Čís.': 'Čís.',
 }
