@@ -26,6 +26,7 @@ $(document).ready(function() {
             $('#erase_question').off('click');
             $('#retrieve_books').html(result);
             $('#erase_question').click(function(event) {
+                event.preventDefault();
                 alert($(this).html());  //.attr('#data_id')
             });
         });
@@ -43,7 +44,8 @@ $(document).ready(function() {
             var wishList = $('#retrieve_status .list-group-item');
             if (wishList.length > 0) {
                 wishList.click(function(event) {
-                    resolvedQuestion = getBooksForQuestionEl($(event.target));
+                    event.preventDefault();
+                    resolvedQuestion = getBooksForQuestionEl($(this));
                 });
                 if (resolvedQuestion === null) {
                     resolvedQuestion = getBooksForQuestionEl($(wishList[0]));

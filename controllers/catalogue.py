@@ -95,7 +95,7 @@ def retrieve_books():
             DIV(
                 A(T("Doplním popis (protože není v seznamu)"), _class="btn btn-info"),
                 ' ',
-                A(T('Zahodit (nekatalogizovat'), _class="btn btn-info", _id="erase_question"),
+                A(T('Zahodit (nekatalogizovat)'), _class="btn btn-info", _id="erase_question", _href="#"),
                 _data_id="%s" % question_id),
             _class="well well-small"))
     return DIV(*book_rows, _class="list-group")

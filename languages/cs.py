@@ -609,6 +609,7 @@
 'zadej %s až %s znaků': 'zadej %s až %s znaků',
 'zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN': 'zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN',
 'Zahodit (nekatalogizovat': 'Zahodit (nekatalogizovat',
+'Zahodit (nekatalogizovat)': 'Zahodit (nekatalogizovat)',
 'Zkus najít podle': 'Zkus najít podle',
 'Údaj je povinný': 'Údaj je povinný',
 'čtenář': 'čtenář',
