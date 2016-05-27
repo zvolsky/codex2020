@@ -16,8 +16,8 @@ auth.settings.create_user_groups = None
 
 # dočasně, dokud ladíme první knihovnu
 auth.settings.registration_requires_approval = True  # TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
-auth.library_id = auth.user and getattr(auth.user, 'library_id', None)[0] or 1  # první z předvolených or zkušební
-
+#auth.library_id = auth.user and getattr(auth.user, 'library_id', None)[0] or 1  # první z předvolených or zkušební
+auth.library_id = 1
 
 """deaktivovano
 class UNIQUE_QUESTION(object):
