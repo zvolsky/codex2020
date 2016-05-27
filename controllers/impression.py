@@ -30,6 +30,7 @@ def list():
     return dict(form=form, impressions=db(current_book).select(), title=fastinfo.splitlines()[0][1:])
 
 @auth.requires_login()
+@auth.requires_signature()
 def delete():
     answer_id = request.args(0)
     impression_id = request.args(1)

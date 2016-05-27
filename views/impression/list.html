@@ -20,7 +20,7 @@
             {{for impression in impressions:}}
                 <tr>
                     <td>{{=impression.registered.strftime('%d.%m.%y')}}</td>
-                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id)))}}</td>
+                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id), user_signature=True))}}</td>
                     <td>{{=impression.iorder}}</td>
                 </tr>
             {{pass}}
