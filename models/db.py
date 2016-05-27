@@ -58,11 +58,26 @@ auth = Auth(db)
 service = Service()
 plugins = PluginManager()
 
-auth.settings.extra_fields['auth_user']= [
+#mz +++z
+from plugin_mz import IS_IN_DB_
+
+db.define_table('library',
+        Field('library', 'string', length=128,
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        format='%(library)s'
+        )
+
+auth.settings.extra_fields['auth_user'] = [
+    Field('library_id', 'list:reference library',
+          readable=False, writable=False, default=1,
+          requires=IS_IN_DB_(db, db.library.id, '%(library)s', multiple=(1,9999999)),
+          ondelete='SET NULL',
+          label=T("Knihovna"), comment=T("přístup do knihoven")),
     Field('introduce', 'text',
           label=T("Představte se"),
           comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně pracujete-li s knihami profesionálně, když uvedete, kde pracujete ... děkujeme")),
     ]
+#mz +++k
 
 ## create all tables needed by auth if not custom tables
 auth.define_tables(username=False, signature=False)

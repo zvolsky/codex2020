@@ -16,7 +16,7 @@ auth.settings.create_user_groups = None
 
 # dočasně, dokud ladíme první knihovnu
 auth.settings.registration_requires_approval = True  # TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
-auth.library_id = 1
+auth.library_id = auth.user and getattr(auth.user, 'library_id', None)[0] or 1  # první z předvolených or zkušební
 
 
 """deaktivovano
@@ -30,12 +30,6 @@ class UNIQUE_QUESTION(object):
         else:
             return (value, None)
 """
-
-db.define_table('library',
-        Field('library', 'string', length=128,
-              label=T("Knihovna"), comment=T("jméno knihovny")),
-        format='%(library)s'
-        )
 
 db.define_table('rgroup',
         Field('library_id', db.library,
@@ -217,7 +211,6 @@ db.define_table('impression',
               label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
-              represent=lambda registered, row=None: registered.strftime(T('%d.%m.%y')),
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
         common_filter = lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
         format=T('čís.') + ' %(iorder)s'

@@ -20,7 +20,7 @@
             {{T.lazy = False}}
             {{for impression in impressions:}}
                 <tr>
-                    <td>{{=db.impression.registered.represent(impression.registered)}}</td>
+                    <td>{{=impression.registered.strftime(T('%d.%m.%y')))}}</td>
                     <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id), user_signature=True))}}</td>
                     <td>{{=impression.iorder}}</td>
                 </tr>
