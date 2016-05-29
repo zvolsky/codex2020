@@ -1,7 +1,7 @@
 {{extend 'layout.html'}}
 
 <div class="well well-small">
-    {{=B(title)}}
+    {{=SPAN(B(nnn), _title="%s" % T("RYCHLÁ IDENTIFIKACE KNIHY: Když se nepoužívají vlastní čarové kódy, vepiš čísla %s-1, %s-2,.. do výtisků knihy" % (nnn, nnn)), _style="font-size: 130%; padding-right: 10px;")}} {{=B(title)}}
 </div>
 
 <div class="well well-small">
@@ -22,14 +22,16 @@
             <th>{{=T("Evidován")}}</th>
             <th />
             <th>{{=T("Čís.")}}</th>
+            <th>{{=SPAN(T("Hledat jako"), _title="%s" % fastid_title)}}</th>
         </thead>
         <tbody>
             {{T.lazy = False}}
             {{for impression in impressions:}}
                 <tr>
                     <td>{{=impression.registered.strftime(T('%d.%m.%y'))}}</td>
-                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(impression.answer_id, impression.id), user_signature=True))}}</td>
+                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(question_id, impression.answer_id, impression.id), user_signature=True))}}</td>
                     <td>{{=impression.iorder}}</td>
+                    <td>{{=SPAN(impression.fastid, _title="%s" % fastid_title)}}</td>
                 </tr>
             {{pass}}
             {{T.lazy = True}}

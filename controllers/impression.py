@@ -35,16 +35,21 @@ def list():
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=last_order)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
 
-    fastinfo = db(db.answer.id == answer_id).select(db.answer.fastinfo).first().fastinfo
-    return dict(form=form, impressions=db(current_book).select(), title=fastinfo.splitlines()[0][1:])
+    answer = db(db.answer.id == answer_id).select(db.answer.ean, db.answer.fastinfo).first()
+    ean = answer.ean[-3:]
+    db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
+    return dict(form=form, impressions=db(current_book).select(), question_id=question_id,
+                nnn=ean, title=answer.fastinfo.splitlines()[0][1:],
+                fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Když se nepoužívají vlastní čarové kódy, vepiš toto číslo do výtisku - pak podle něj lze výtisk najít"))
 
 @auth.requires_login()
 @auth.requires_signature()
 def delete():
-    answer_id = request.args(0)
-    impression_id = request.args(1)
+    question_id = request.args(0)
+    answer_id = request.args(1)
+    impression_id = request.args(2)
     if not impression_id:
         redirect(URL('default', 'index'))
     db.impr_hist.insert(impression_id=impression_id, haction=2)
     db(db.impression.id == impression_id).update(live=False)
-    redirect(URL('list', args=(answer_id)))
+    redirect(URL('list', args=(question_id, answer_id)))
