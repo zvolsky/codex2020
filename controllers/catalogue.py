@@ -12,14 +12,23 @@ from books import is_isxn, isxn_to_ean
 
 
 COLLATING = 'cs_CZ.utf8'
+EAN1 = '97880'
+EAN2 = '97980'
 
 
 @auth.requires_login()
 def find():
     def onvalidation(form):
+        if EAN1 and request.vars.question.isdigit() and len(EAN1 + request.vars.question) == 13:
+            form.vars.question = EAN1 + request.vars.question
         form.vars.asked = datetime.datetime.utcnow()
 
-    form = SQLFORM(db.question, formstyle=formstyle_bootstrap3_compact_factory())
+    comment = T("zadej **počáteční 2-3 slova názvu** nebo sejmi **prodejní čarový kód EAN**")
+    if EAN1:
+        comment += ' ' + "''" + T('(tip: stiskni F8 (F9) nebo jen opiš posledních %s číslic za %s)') % (13 - len(EAN1), EAN1) + "''"
+    db.question.question.comment = MARKMIN(comment)
+
+    form = SQLFORM(db.question, hidden=dict(f8=EAN1, f9=EAN2), formstyle=formstyle_bootstrap3_compact_factory())
     if form.process(onvalidation=onvalidation).accepted:
         scheduler.queue_task(task_catalogize,
                 pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
@@ -80,7 +89,7 @@ def retrieve_books():
             pub = '; '.join(book_dict['P'])
             puy = '; '.join(book_dict['Y'])
             book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-info"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
-                                _class="list-group-item", _href=URL('impression', 'list', args=(book.id))),
+                                _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
                              tit, aut, pub, puy])
     locale.setlocale(locale.LC_ALL, COLLATING)
     book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))

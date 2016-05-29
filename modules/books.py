@@ -16,7 +16,8 @@ def ean2issn(ean):
     return significant + check_digit_isbn10(significant)
 
 def check_digit_isbn10(firstninedigits):
-    """Check sum ISBN-10"""
+    """Check sum ISBN-10 (works for ISSN too)"""
+    firstninedigits = firstninedigits.replace('-', '').replace(' ', '')
     val = sum((i + 2) * int(x)
               for i, x in enumerate(reversed(firstninedigits)))
     remainder = int(val % 11)

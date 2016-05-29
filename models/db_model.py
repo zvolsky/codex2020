@@ -77,7 +77,7 @@ db.define_table('question',
               requires=IS_LENGTH(minsize=PublLengths.question_min, maxsize=PublLengths.question,
                             error_message=T("zadej %s až %s znaků") % (PublLengths.question_min, PublLengths.question)),
                         #UNIQUE_QUESTION()],
-              label=T("Dotaz"), comment=T("zadej počáteční 2-3 slova názvu, nebo sejmi prodejní čarový kód EAN")),
+              label=T("Dotaz")),  # comment is dynamic in controller
         Field('asked', 'datetime',
               readable=False, writable=False,
               label=T("Zadáno"), comment=T("čas zadání dotazu")),

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from plugin_mz import formstyle_bootstrap3_compact_factory
+
+
 @auth.requires_login()
 def list():
-    answer_id = request.args(0)
+    question_id = request.args(0)
+    answer_id = request.args(1)
     if not answer_id:
         redirect(URL('default', 'index'))
 
@@ -10,9 +14,14 @@ def list():
 
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
+            hidden=dict(question_id=question_id),
+            formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
             )
+    form.add_button(T('Zpět ke katalogizaci'), URL('catalogue', 'find'))
     if form.process().accepted:
+        db.question[question_id] = dict(live=False)  # question used: no longer display it
+
         owned_book = db(db.owned_book.answer_id == answer_id).select(db.owned_book.id).first()
         if owned_book:
             owned_book_id = owned_book.id

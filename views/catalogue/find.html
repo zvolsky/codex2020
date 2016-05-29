@@ -65,5 +65,17 @@ $(document).ready(function() {
         interval = 1.2 * interval;  // make server load less for the page without user interaction
     }
     getRetrieveStatus();
+    $('#question_question').focus().keydown(function(event) {
+        if(event.which == 119) { //F8
+            $('#question_question').val($('[name="f8"]').val());
+            return false;
+        }
+        else if(event.which == 120) { //F9
+            $('#question_question').val($('[name="f9"]').val());
+            return false;
+        }
+    });
+
+    $('label').css('text-align', 'right');
 });
 </script>

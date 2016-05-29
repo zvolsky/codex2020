@@ -8,6 +8,22 @@
     padding: 9px 19px 2px 19px;
 }
 
+form .btn {
+    margin-right: 4px;
+    border: 1px solid darkgrey;
+}
+form .btn-primary {
+    border: 1px solid darkblue;
+}
+form .btn-default {
+    color: darkblue;
+    background-color: #aad;
+    border: 1px solid blue;
+}
+form .btn-default:hover {
+    color: white;
+    background-color: #447;
+}
 
 .smaller {
     font-size: 90%;
