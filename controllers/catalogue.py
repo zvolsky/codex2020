@@ -25,7 +25,7 @@ def find():
 
     comment = T("zadej **počáteční 2-3 slova názvu** nebo sejmi **prodejní čarový kód EAN**")
     if EAN1:
-        comment += ' ' + "''" + T('(tip: stiskni F8 (F9) nebo jen opiš posledních %s číslic za %s)') % (13 - len(EAN1), EAN1) + "''"
+        comment += ' ' + "''" + T('(z klávesnice: stiskni F8 (F9) nebo jen opiš posledních %s číslic za %s)') % (13 - len(EAN1), EAN1) + "''"
     db.question.question.comment = MARKMIN(comment)
 
     form = SQLFORM(db.question, hidden=dict(f8=EAN1, f9=EAN2), formstyle=formstyle_bootstrap3_compact_factory())
