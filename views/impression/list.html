@@ -28,10 +28,15 @@
             {{T.lazy = False}}
             {{for impression in impressions:}}
                 <tr>
-                    <td>{{=impression.registered.strftime(T('%d.%m.%y'))}}</td>
-                    <td>{{=A(T("vyřadit"), _href='%s' % URL('delete', args=(question_id, impression.answer_id, impression.id), user_signature=True))}}</td>
-                    <td>{{=impression.iorder}}</td>
-                    <td>{{=SPAN(impression.fastid, _title="%s" % fastid_title)}}</td>
+                    <td>{{=impression.impression.registered.strftime(T('%d.%m.%y'))}}</td>
+                    <td>{{
+                        =A(T("vyřadit"), _href='%s' % URL('displace', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True))
+                        if impression.impr_hist.id is None:
+                            =A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))
+                        pass
+                        }}</td>
+                    <td>{{=impression.impression.iorder}}</td>
+                    <td>{{=SPAN(impression.impression.fastid, _title="%s" % fastid_title)}}</td>
                 </tr>
             {{pass}}
             {{T.lazy = True}}

@@ -203,7 +203,7 @@ db.define_table('impression',
         Field('owned_book_id', db.owned_book,
               notnull=True, ondelete='RESTRICT',
               readable=False, writable=False,
-              label=T("Odpověď"), comment=T("příslušnost k odpovědi")),
+              label=T("Publikace (vlastní)"), comment=T("publikace - záznam, specifický pro tuto knihovnu")),
         Field('live', 'boolean', default=True,
               readable=False, writable=False,
               label=T("Platný výtisk"), comment=T("platný (nevyřazený) výtisk")),
@@ -213,7 +213,7 @@ db.define_table('impression',
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
-        common_filter = lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
+        common_filter=lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
         format=T('čís.') + ' %(iorder)s'
         )
 
@@ -239,11 +239,19 @@ db.define_table('impr_hist',
               label=T("Akce"), comment=T("provedená činnost")),
         )
 
-def book_cnt_plus(flds, id):
+def book_cnt_insert(flds, id):
     db(db.owned_book.id == flds['owned_book_id']).update(cnt=db.owned_book.cnt + 1)
-def book_cnt_minus(w2set):
-    books = w2set.select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
-    for key, group in groupby(books, lambda impression: impression.owned_book_id):
+def book_cnt_update(w2set, flds):
+    impressions = w2set.select(db.impression.owned_book_id, db.impression.live)
+    for impression in impressions:
+        if impression.live is True and flds['live'] is False:
+            db(db.owned_book.id == impression.owned_book_id).update(cnt=max(0, db.owned_book.cnt - 1))
+        elif impression.live is False and flds['live'] is True:
+            db(db.owned_book.id == impression.owned_book_id).update(cnt=db.owned_book.cnt + 1)
+def book_cnt_delete(w2set):
+    impressions = w2set.select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
+    for key, group in groupby(impressions, lambda impression: impression.owned_book_id):
         db(db.owned_book.id == key).update(cnt=max(0, db.owned_book.cnt - len([bk for bk in group])))
-db.impression._after_insert.append(book_cnt_plus)
-db.impression._before_delete.append(book_cnt_minus)
+db.impression._after_insert.append(book_cnt_insert)
+db.impression._before_update.append(book_cnt_update)
+db.impression._before_delete.append(book_cnt_delete)
