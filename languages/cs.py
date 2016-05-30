@@ -422,6 +422,7 @@
 'Pořadové číslo': 'Pořadové číslo',
 'pořadové číslo výtisku': 'pořadové číslo výtisku',
 'Preface': 'Předmluva',
+'previous %s rows': 'previous %s rows',
 'previous 100 rows': 'předchozích 100 řádků',
 'Private files': 'Soukromé soubory',
 'private files': 'soukromé soubory',

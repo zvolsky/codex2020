@@ -77,12 +77,12 @@ def updatedb(record, touched):
             row = db(db.answer.ean == ean).select(*flds).first()
         if exists_update():   # row exists...
             return False      # ...do not continue to find (using significant data) and do not insert
-    # no isbn/ean
+    # not found by isbn/ean
     row = db(db.answer.md5publ == md5publ).select(*flds).first()
     if exists_update():
         return False
     else:                                    # row doesn't exist...
-        answer['rik'] = ''.join(random.choice(string.digits) for _ in range(5))
+        answer['rik'] = ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
         row_id = db.answer.insert(**answer)  # ...insert it
         touched.append((row_id, marcrec, record, None))
         return True  # True -> + 1 into inserted count
