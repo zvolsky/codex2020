@@ -55,6 +55,7 @@ def formstyle_bootstrap3_compact_factory(col_label_size=2, col_help_size=6,
         form.add_class('form-horizontal')
         label_col_class = "col-sm-%d" % col_label_size
         col_class = "col-sm-%d" % (12 - col_label_size - col_help_size)
+        col_class_rest = "col-sm-%d" % (12 - col_label_size)
         offset_class = "col-sm-offset-%d" % col_label_size
         help_class = "col-sm-%d" % col_help_size
         parent = CAT()
@@ -66,7 +67,7 @@ def formstyle_bootstrap3_compact_factory(col_label_size=2, col_help_size=6,
             if isinstance(controls, INPUT):
                 if controls['_type'] == 'submit':
                     controls.add_class('btn btn-primary')
-                    _controls = DIV(controls, _class="%s %s" % (col_class, offset_class))
+                    _controls = DIV(DIV(controls, _class="btn-group-sm"), _class="%s %s" % (col_class_rest, offset_class))
                 if controls['_type'] == 'button':
                     controls.add_class('btn btn-default')
                 elif controls['_type'] == 'file':

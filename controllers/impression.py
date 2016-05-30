@@ -28,12 +28,12 @@ def list():
         else:
             owned_book_id = db.owned_book.insert(answer_id=answer_id)
 
-        rows = db(db.impression.library_id == auth.library_id, ignore_common_filters=True).select(db.impression.id,
-                                                                                    orderby=db.impression.id)
-        ids = [row.id for row in rows]
+        rows = db((db.impression.library_id == auth.library_id) & (db.impression.answer_id == answer_id),
+                    ignore_common_filters=True).select(db.impression.iorder, orderby=db.impression.iorder)
+        iorders = [row.iorder for row in rows]
         iorder_candidate = 1
         for ii in xrange(form.vars.new):
-            while iorder_candidate in ids:
+            while iorder_candidate in iorders:
                 iorder_candidate += 1
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=iorder_candidate)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
@@ -42,13 +42,14 @@ def list():
     answer = db(db.answer.id == answer_id).select(db.answer.ean, db.answer.fastinfo).first()
     ean = answer.ean[-3:]
     db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
-    impressions = db(current_book & (db.impr_hist.haction > 1)).select(db.impression.ALL, db.impr_hist.id,
+    db.impr_hist._common_filter = lambda query: db.impr_hist.haction > 1
+        # impressions with other manipulations as taking into db will have: db.impr_hist.id is not None
+    impressions = db(current_book).select(db.impression.ALL, db.impr_hist.id,
                         orderby=db.impression.iorder,
                         left=db.impr_hist.on(db.impr_hist.impression_id == db.impression.id))
-                        # impressions with other manipulations as taking into db will have: db.impr_hist.id is not None
     return dict(form=form, impressions=impressions, question_id=question_id,
                 nnn=ean, title=answer.fastinfo.splitlines()[0][1:],
-                fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Když se nepoužívají vlastní čarové kódy, vepiš toto číslo do výtisku - pak podle něj lze výtisk najít"))
+                fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
 @auth.requires_signature()

@@ -1,7 +1,7 @@
 {{extend 'layout.html'}}
 
 <div class="well well-small">
-    {{=SPAN(B(nnn), _title="%s" % T("RYCHLÁ IDENTIFIKACE KNIHY: Když se nepoužívají vlastní čarové kódy, vepiš čísla %s-1, %s-2,.. do výtisků knihy" % (nnn, nnn)), _style="font-size: 130%; padding-right: 10px;")}} {{=B(title)}}
+    {{=SPAN(B(nnn), _title="%s" % T("RYCHLÁ IDENTIFIKACE pro rychlé nalezení knihy; má-li kniha více výtisků, nabídnou se k dourčení"), _style="font-size: 130%; padding-right: 10px;")}} {{=B(title)}}
 </div>
 
 <div class="well well-small">
@@ -22,19 +22,17 @@
             <th>{{=T("Evidován")}}</th>
             <th />
             <th>{{=T("Čís.")}}</th>
-            <th>{{=SPAN(T("Hledat jako"), _title="%s" % fastid_title)}}</th>
+            <th>{{=SPAN(T("Rychlá identifikace"), _title="%s" % fastid_title)}}</th>
         </thead>
         <tbody>
             {{T.lazy = False}}
             {{for impression in impressions:}}
                 <tr>
                     <td>{{=impression.impression.registered.strftime(T('%d.%m.%y'))}}</td>
-                    <td>{{
-                        =A(T("vyřadit"), _href='%s' % URL('displace', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True))
-                        if impression.impr_hist.id is None:
-                            =A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))
-                        pass
-                        }}</td>
+                    <td>{{=A(T("vyřadit"), _href='%s' % URL('displace', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True))}}
+                        {{if impression.impr_hist.id is None:}},
+                            {{=A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))}}
+                        {{pass}}</td>
                     <td>{{=impression.impression.iorder}}</td>
                     <td>{{=SPAN(impression.impression.fastid, _title="%s" % fastid_title)}}</td>
                 </tr>
@@ -42,6 +40,16 @@
             {{T.lazy = True}}
         </tbody>
     </table>
+
+    <span id="info_rik_btn" class="label label-info right">{{=T('Co znamená "Rychlá identifikace" ?')}}</span>
+    <div id="info_rik" style="display: none;">
+        <div class="alert alert-info">
+            {{=T("Rychlou identifikaci použijte pro hledání knih bez snímače čarového kódu.")}}<br />
+            {{=T("Systém najde knihu/výtisk podle celé identifikace nebo podle čísla před pomlčkou a v případě pochybnosti vám nabídne výběr.")}}<br /><br />
+            {{=T("Do výtisku (na vždy stejné místo) zapište uvedené číslo.")}}<br />
+            {{=T("U knih s EANem (vytištěným čarovým kódem) to není potřeba, protože jako Rychlou identifikaci jednoduše opíšete poslední číslice čarového kódu (jen v případě, že máte více výtisků knihy a chcete je rozlišovat o něco rychleji, můžete čísla také vepsat do výtisků).")}}
+        </div>
+    </div>
 {{else:}}
     {{=T("Zatím nemáme žádné výtisky.")}}
 {{pass}}
@@ -62,5 +70,8 @@ $(document).ready(function() {
     });
 
     $('label').css('text-align', 'right');
+    $('#info_rik_btn').click(function() {
+        $('#info_rik').fadeIn();
+    });
 });
 </script>

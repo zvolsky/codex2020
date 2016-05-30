@@ -2,6 +2,8 @@
 
 import datetime
 import hashlib
+import random
+import string
 
 from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 
@@ -80,6 +82,7 @@ def updatedb(record, touched):
     if exists_update():
         return False
     else:                                    # row doesn't exist...
+        answer['rik'] = ''.join(random.choice(string.digits) for _ in range(5))
         row_id = db.answer.insert(**answer)  # ...insert it
         touched.append((row_id, marcrec, record, None))
         return True  # True -> + 1 into inserted count
