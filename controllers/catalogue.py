@@ -102,10 +102,11 @@ def retrieve_books():
     book_rows.append(DIV(
             DIV(res_info),
             DIV(
-                A(T("Doplním popis (protože není v seznamu)"), _class="btn btn-info"),
+                A(T("Doplním popis (protože není v seznamu)"), _class="btn btn-info",
+                        _href="%s" % URL('impression', 'description', args=(question_id))),
                 ' ',
                 __btnCancelSearch(),
-                _data_id="%s" % question_id),
+                _data_id="%s" % question_id),  # maybe can be a level down by the Cancel btn, but let this working solution
             _class="well well-small"))
     retrieved_books = DIV(*book_rows, _class="list-group")
     return simplejson.dumps(retrieved_books.xml())

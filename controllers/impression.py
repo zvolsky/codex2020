@@ -4,6 +4,29 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
 @auth.requires_login()
+def description():
+    question_id = request.args(0)
+    form = SQLFORM.factory(
+            Field('title', 'text',
+                    label=T("Název"), comment=T("název knihy (titul)")),
+            Field('subtitle', 'text',
+                    label=T("Podnázev"), comment=T("podnázev (doplňující část názvu)")),
+            Field('EAN', 'string', length=18,
+                    label=T("EAN/ISBN"), comment=T("EAN (čarový kód, vytištěný na knize) nebo ISBN")),
+            Field('authority', 'text',
+                    label=T("Autor"), comment="Uveď KAŽDÉHO autora na VLASTNÍM řádku takto: Příjmení, Jméno"),
+            Field('publisher', 'text',
+                    label=T("Nakladatel"), comment="Uveď nakladatele takto: Jméno, Sídlo (dalšího nakladatele můžeš uvést na další řádek)"),
+            Field('pubyear', 'text',
+                    label=T("Rok vydání"), comment=T("rok vydání")),
+            Field('edition', 'text',
+                    label=T("Vydání"), comment=T("číslo vydání (a případně podrobnější informace)")),
+    )
+    if form.process().accepted:
+        pass
+    return dict(form=form)
+
+@auth.requires_login()
 def list():
     question_id = request.args(0)
     answer_id = request.args(1)

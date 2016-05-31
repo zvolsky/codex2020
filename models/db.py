@@ -12,8 +12,9 @@
 ## app configuration made easy. Look inside private/appconfig.ini
 from gluon.contrib.appconfig import AppConfig
 ## once in production, remove reload=True to gain full speed
-myconf = AppConfig(reload=True)
-
+#mz ++z
+myconf = AppConfig(reload=request.is_local)
+#mz ++k
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
@@ -58,7 +59,7 @@ auth = Auth(db)
 service = Service()
 plugins = PluginManager()
 
-#mz +++z
+#mz ++z
 from plugin_mz import IS_IN_DB_
 
 db.define_table('library',
@@ -77,7 +78,7 @@ auth.settings.extra_fields['auth_user'] = [
           label=T("Představte se"),
           comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně pracujete-li s knihami profesionálně, když uvedete, kde pracujete ... děkujeme")),
     ]
-#mz +++k
+#mz ++k
 
 ## create all tables needed by auth if not custom tables
 auth.define_tables(username=False, signature=False)
