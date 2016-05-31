@@ -52,23 +52,6 @@ def updatedb(record, touched):
                   country=marcrec.country[:PublLengths.country],
                   year_from=marcrec.pubyears[0], year_to=marcrec.pubyears[1])
 
-    '''#---------
-    new = dict(ean=ean, title=marcrec.title[:PublLengths.title], isbn=isbn[:PublLengths.isbn],
-            uniformtitle=(record.uniformtitle() or '')[:PublLengths.uniformtitle],
-            series=marcrec.series[:PublLengths.series],
-            subjects='; '.join(marcrec.subjects)[:PublLengths.subjects],
-            categories='; '.join(map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories))[:PublLengths.categories],
-            addedentries='; '.join(fld.value() for fld in (record.addedentries() or []))[:PublLengths.addedentries],
-            publ_location='; '.join(fld.value() for fld in (record.location() or []))[:PublLengths.publ_location],
-            notes='; '.join(fld.value() for fld in (record.notes() or []))[:PublLengths.notes],
-            physicaldescription='; '.join(fld.value() for fld in (record.physicaldescription() or []))[:PublLengths.physicaldescription],
-            publisher=marcrec.publisher[:PublLengths.publisher],
-            pubyear=marcrec.pubyear[:PublLengths.pubyear],
-            author=marcrec.author[:PublLengths.author],
-            )
-    db.publication.insert(**new)
-    #---------'''
-
     flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo)
     if ean:
         if ean[:3] == '977':  # can have everything in [10:12] position
