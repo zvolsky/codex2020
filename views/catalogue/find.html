@@ -9,7 +9,6 @@
   <div class="col-sm-8">
       <div id="retrieve_books"></div>
       {{=cancel_search}}
-      POZOR: Tlačítko DOPLNÍM POPIS zatím není funkční.
   </div>
 </div>
 
@@ -66,11 +65,19 @@ $(document).ready(function() {
     }
     getRetrieveStatus();
     $('#question_question').focus().keydown(function(event) {
-        if(event.which == 119) { //F8
+        if (event.which == 117) { //F6
+            $('#question_question').val($('[name="f6"]').val());
+            return false;
+        }
+        else if (event.which == 118) { //F7
+            $('#question_question').val($('[name="f7"]').val());
+            return false;
+        }
+        else if (event.which == 119) { //F8
             $('#question_question').val($('[name="f8"]').val());
             return false;
         }
-        else if(event.which == 120) { //F9
+        else if (event.which == 120) { //F9
             $('#question_question').val($('[name="f9"]').val());
             return false;
         }

@@ -10,7 +10,7 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
 
 from gluon import current
 
-from books import ean2isbn10, ean2issn, is_isxn
+from books import ean2isbn10, ean2issn, can_be_isxn, add_missing_control
 
 
 def get_from_large_library(fnd):
@@ -64,20 +64,21 @@ def smartquery(txt, config=PQFConfig()):
     """
     txt = txt.strip()
     nodashes = txt.replace('-', '').replace(' ', '')
-    if is_isxn(nodashes):
+    if can_be_isxn(nodashes):
         # ISBN / ISSN / ISMN
-        if len(txt) > len(nodashes):  # i.e. '-' or ' ' in txt:  <=> manual writing
-            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn if len(nodashes) > 9 else config.issn, nodashes)
-        elif len(txt) >= 13 and txt[:3] == '977':  # ISSN
-            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.issn, ean2issn(nodashes))
-            pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.issn, nodashes[:13]))  # no idea if 977.. can be in ISSN index, but lets try it
+        isxn = add_missing_control(nodashes)
+        mask = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"'
+        if len(isxn) >= 13 and isxn[:3] == '977':  # ISSN
+            pqf = mask % (config.issn, ean2issn(isxn))
+            pqf = '@or ' + pqf + (' ' + mask % (config.issn, isxn[:13]))
         else:
-            pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn, nodashes)
+            pqf = mask % (config.isbn if len(isxn) >= 10 else config.issn, isxn)
             if len(txt) == 13 and txt[:3] == '978':  # can have old ISBN (10-char)
-                pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=100 @attr 6=1 "%s"' % (config.isbn, ean2isbn10(nodashes)))
+                pqf = '@or ' + pqf + (' ' + mask % (config.isbn, ean2isbn10(isxn)))
     else:
         txt = re.sub('\s+', ' ', txt)
-        pqf = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=1 @attr 6=1 "%s"' % (config.title, txt)
+        mask = '@attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=1 @attr 6=1 "%s"'
+        pqf = mask % (config.title, txt)
         if ',' in txt:
-            pqf = '@or ' + pqf + (' @attr 1=%s @attr 2=3 @attr 3=1 @attr 4=1 @attr 5=1 @attr 6=1 "%s"' % (config.author, txt))
+            pqf = '@or ' + pqf + (' ' + mask % (config.author, txt))
     return pqf

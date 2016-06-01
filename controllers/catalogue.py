@@ -8,10 +8,12 @@ from gluon.contrib import simplejson
 from mzutils import slugify
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-from books import is_isxn, isxn_to_ean
+from books import can_be_isxn, isxn_to_ean
 
 
 COLLATING = 'cs_CZ.utf8'
+ISMN1 = '979-0-'
+ISBN1 = '80-'
 EAN1 = '97880'
 EAN2 = '97980'
 
@@ -23,12 +25,12 @@ def find():
             form.vars.question = EAN1 + request.vars.question
         form.vars.asked = datetime.datetime.utcnow()
 
-    comment = T("zadej **počáteční 2-3 slova názvu** nebo sejmi **prodejní čarový kód EAN**")
+    comment = T("sejmi **prodejní čarový kód EAN**, chybí-li, stiskni **F7** a opiš **ISBN** nebo zadej **počáteční 2-3 slova názvu**")
     if EAN1:
-        comment += ' ' + "''" + T('(z klávesnice: stiskni F8 (F9) nebo jen opiš posledních %s číslic za %s)') % (13 - len(EAN1), EAN1) + "''"
+        comment += ' ' + "''" + T('(EAN z klávesnice: stiskni F8 (F9) nebo jen opiš posledních %s číslic za %s)') % (13 - len(EAN1), EAN1) + "''"
     db.question.question.comment = MARKMIN(comment)
 
-    form = SQLFORM(db.question, hidden=dict(f8=EAN1, f9=EAN2), formstyle=formstyle_bootstrap3_compact_factory())
+    form = SQLFORM(db.question, hidden=dict(f6=ISMN1, f7=ISBN1, f8=EAN1, f9=EAN2), formstyle=formstyle_bootstrap3_compact_factory())
     if form.process(onvalidation=onvalidation).accepted:
         scheduler.queue_task(task_catalogize,
                 pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
@@ -68,7 +70,7 @@ def retrieve_status():
 def retrieve_books():
     question_id = request.args(0)
     question = db(db.question.id == question_id).select(db.question.question).first().question
-    if is_isxn(question):
+    if can_be_isxn(question):
         ean = isxn_to_ean(question)
         books = db(db.answer.ean == ean).select(db.answer.id, db.answer.fastinfo)
     else:

@@ -8,22 +8,26 @@ def description():
     question_id = request.args(0)
     form = SQLFORM.factory(
             Field('title', 'text',
+                    requires = IS_NOT_EMPTY(),
                     label=T("Název"), comment=T("název knihy (titul)")),
             Field('subtitle', 'text',
                     label=T("Podnázev"), comment=T("podnázev (doplňující část názvu)")),
             Field('EAN', 'string', length=18,
-                    label=T("EAN/ISBN"), comment=T("EAN (čarový kód, vytištěný na knize) nebo ISBN")),
+                    label=T("EAN/ISBN"), comment=T("EAN (čarový kód, vytištěný na knize) případně ISBN, není-li EAN vytištěn")),
             Field('authority', 'text',
-                    label=T("Autor"), comment="Uveď KAŽDÉHO autora na VLASTNÍM řádku (přejít pomocí Enter) takto: Příjmení, Jméno"),
+                    label=T("Autor"), comment="autor (Příjmení, Jméno); PŘI VÍCE AUTORECH ČTI POKYN NAHOŘE !"),
             Field('publisher', 'text',
-                    label=T("Nakladatel"), comment="nakladatel (bez sídla) (případného dalšího nakladatele uveď na další řádek (přejít pomocí Enter))"),
+                    label=T("Nakladatel"), comment="nakladatel (bez sídla); PŘI VÍCE NAKLADATELÍCH ČTI POKYN NAHOŘE !"),
             Field('pubplace', 'text',
                     label=T("Místo vydání"), comment="místo vydání"),
             Field('pubyear', 'text',
                     label=T("Rok vydání"), comment=T("rok vydání")),
             Field('edition', 'text',
                     label=T("Vydání"), comment=T("číslo vydání (a případně podrobnější informace)")),
+            submit_button = "Uložit a zadat výtisky",
+            formstyle=formstyle_bootstrap3_compact_factory()
     )
+    __btn_catalogue(form)
     if form.process().accepted:
         pass
     return dict(form=form)
@@ -43,7 +47,7 @@ def list():
             formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
             )
-    form.add_button(T('Zpět ke katalogizaci'), URL('catalogue', 'find'))
+    __btn_catalogue(form)
     if form.process().accepted:
         db.question[question_id] = dict(live=False)  # question used: no longer display it
 
@@ -98,3 +102,6 @@ def mistake():
         redirect(URL('default', 'index'))
     db(db.impression.id == impression_id).delete()
     redirect(URL('list', args=(question_id, answer_id)))
+
+def __btn_catalogue(form):
+    form.add_button(T('Zpět ke katalogizaci'), URL('catalogue', 'find'))

@@ -1,5 +1,26 @@
 {{extend 'layout.html'}}
 
+<div class="alert alert-warning">
+Kniha může mít více autorů a případně také 2 a více nakladatelů.<br>
+Pro zadání je plánován složitější prvek s ověřením/přidáním do seznamu autorit (resp.nakladatelů).<br>
+Dokud tento prvek chybí, zadejte další autory (nebo nakladatele) zvláště pečlivě, PŘESNĚ TAKTO:<br>
+<pre>
+Novák, Jiří<i>(tady stiskni Enter)</i>
+Nováková, Martina
+</pre>
+</div>
+
+<div class="alert alert-danger">
+POZOR: Uložení zatím nefunguje.
+</div>
+
 <div class="well well-small">
     {{=form}}
 </div>
+
+<script>
+$(document).ready(function() {
+    $('textarea').attr('rows', 2);
+    $('#no_table_authority').attr('rows', 3);
+});
+</script>

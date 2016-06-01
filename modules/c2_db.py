@@ -57,50 +57,68 @@ def truncate_idxs():
         db.executesql('CREATE INDEX idx_long_item ON idx_long (item);')
     db.commit()
 
-def create_idxs(answer_id, marcrec, record, old_fastinfo=''):
-    fastinfo = 'T' + marcrec.title + '\nA' + marcrec.author + '\nP' + marcrec.publisher + '\nY' + marcrec.pubyear
+def get_idx(answer_id):
+    db = current.db
+    join_rows = db(db.idx_join.answer_id == answer_id).select()
+    word_rows = db(db.idx_word.answer_id == answer_id).select()
+    short_rows = db(db.idx_short.answer_id == answer_id).select()
+    return join_rows, word_rows, short_rows
+
+def create_idxs(answer_id, c2_parsed, marc_obj, old_fastinfo='', updating=False):
+    if updating:
+        join_rows, word_rows, short_rows = get_idx(row.id)
+    else:
+        join_rows, word_rows, short_rows = []
+
+    #TODO: fix rest for updating
+
+    fastinfo = 'T' + c2_parsed.title + '\nA' + c2_parsed.author + '\nP' + c2_parsed.publisher + '\nY' + c2_parsed.pubyear
     if fastinfo.encode('utf8') != old_fastinfo:
         db = current.db
         db.answer[answer_id] = {'fastinfo': fastinfo}
 
-    data = get_idx_data(marcrec, record)
+    if marc_obj:
+        data = get_idx_data(c2_parsed, marc_obj)
+    else:   # TODO: improve indexing for user descriptions (add author,..) / couldn't we run through get_idx_data() too?
+        data = {'title_parts': c2_parsed.title}
+
     added_words = []
     parts = data['title_parts']
     if parts:
-        add_title(answer_id, added_words, parts[0], ign_chars=data['title_ignore_chars'])  # 'T'
+        add_title(answer_id, added_words, parts[0], ign_chars=data.get('title_ignore_chars', 0))  # 'T'
         add_titles(answer_id, added_words, parts[1:])  # 'T'
-    add_title(answer_id, added_words, data['uniformtitle'])      # 'T'
-    add_long2(answer_id, data['series'], 'S')
-    add_short(answer_id, data['language_orig'], 'l')
+    add_title(answer_id, added_words, data.get('uniformtitle'))      # 'T'
+    add_long2(answer_id, data.get('series'), 'S')
+    add_short(answer_id, data.get('language_orig'), 'l')
     # iterables
-    for lang in data['languages']:
+    for lang in data.get('languages', ()):
         add_short(answer_id, lang, 'L')
-    add_long_iter(answer_id, data['subjects'], 'K')
-    add_long_iter(answer_id, data['categories'], 'C')
-    add_auth(answer_id, data['authorities'])  # 'A'
-    add_long_iter(answer_id, data['addedentries'], 'a')
-    add_long_iter(answer_id, data['locations'], 'O')
-    add_long_iter(answer_id, data['publishers_by_name'], 'P')
-    add_long_iter(answer_id, data['publishers_by_place'], 'P')
+    add_long_iter(answer_id, data.get('subjects', ()), 'K')
+    add_long_iter(answer_id, data.get('categories', ()), 'C')
+    add_auth(answer_id, data.get('authorities', ()))  # 'A'
+    add_long_iter(answer_id, data.get('addedentries', ()), 'a')
+    add_long_iter(answer_id, data.get('locations', ()), 'O')
+    add_long_iter(answer_id, data.get('publishers_by_name', ()), 'P')
+    add_long_iter(answer_id, data.get('publishers_by_place', ()), 'P')
 
-def get_idx_data(marcrec, record):
+def get_idx_data(c2_parsed, marc_obj):
     """get data for indexes as a dictionary
     """
-    return {
-        'title_ignore_chars': marcrec.title_ignore_chars,
-        'title_parts': marcrec.title_parts,
-        'uniformtitle': record.uniformtitle(),
-        'series': marcrec.series,
-        'language_orig': marcrec.language_orig,
+    return {           # TODO: couldn't we stay at (modified) c2_parsed object instead of creating new dict here?
+        'title_ignore_chars': c2_parsed.title_ignore_chars,
+        'title_parts': c2_parsed.title_parts,
+        'uniformtitle': marc_obj.uniformtitle(),
+        'series': c2_parsed.series,
+        'language_orig': c2_parsed.language_orig,
         # iterables
-        'subjects': marcrec.subjects,
-        'categories': map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), marcrec.categories),
-        'authorities': marcrec.authorities,
-        'addedentries': [fld.value() for fld in (record.addedentries() or [])],  # puvodci, TODO: improve format
-        'locations': [fld.value() for fld in (record.location() or [])],  # TODO: does exist? meaning? improve format
-        'publishers_by_place': marcrec.publishers_by_place,
-        'publishers_by_name': marcrec.publishers_by_name,
-        'languages': marcrec.languages,
+        'subjects': c2_parsed.subjects,
+        'categories': map(lambda r:r[0] + (' ('+r[1]+')' if r[1] else ''), c2_parsed.categories),
+        'authorities': c2_parsed.authorities,
+        'addedentries': [fld.value() for fld in (marc_obj.addedentries() or ())],  # puvodci, TODO: improve format
+        'locations': [fld.value() for fld in (marc_obj.location() or ())],  # TODO: does exist? meaning? improve format
+        'publishers_by_place': c2_parsed.publishers_by_place,
+        'publishers_by_name': c2_parsed.publishers_by_name,
+        'languages': c2_parsed.languages,
     }
 
 def add_titles(answer_id, added_words, titles):

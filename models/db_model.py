@@ -4,8 +4,6 @@ from itertools import groupby
 
 from gluon import current
 
-from plugin_mz import IS_NOT_EMPTY_
-
 from c2_db import PublLengths
 
 # export for modules
@@ -39,7 +37,7 @@ db.define_table('rgroup',
               ondelete='RESTRICT',
               label=T("Knihovna"), comment=T("jméno knihovny")),
         Field('rgroup', 'string', length=48,
-              notnull=True, requires=IS_NOT_EMPTY_(),
+              notnull=True, requires=IS_NOT_EMPTY(),
               label=T("Skupina"), comment=T("skupina čtenářů (např. pro školní knihovny školní třída")),
         common_filter=lambda query: db.rgroup.library_id == auth.library_id,
         singular=T("skupina čtenářů"), plural=T("skupiny čtenářů"),
@@ -53,7 +51,7 @@ db.define_table('reader',
               ondelete='CASCADE',
               label=T("Knihovna"), comment=T("jméno knihovny")),
         Field('lastname', 'string', length=32,
-              notnull=True, requires=IS_NOT_EMPTY_(),
+              notnull=True, requires=IS_NOT_EMPTY(),
               label=T("Příjmení"), comment=T("příjmení čtenáře")),
         Field('firstname', 'string', length=32,
               label=T("Jméno"), comment=T("křestní jméno čtenáře (a případně jeho/její další jména)")),

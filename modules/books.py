@@ -47,17 +47,31 @@ def isxn_to_ean(isxn):
     digits = ''.join(i for i in isxn if i.isdigit())
     cnt = len(digits)
     if cnt >= 12:
-        return digits[:12] + check_digit_ean(digits)   # check_digit_ean will slice to [:12]
-    if isxn[-1:] == 'X' and cnt == 9 or len(digits) >= 10:
-        ean = '978' + digits[:9]
-    elif len(digits) >= 9 and 'M' in isxn:
+        ean = digits[:12]
+    elif cnt >= 8 and isxn[:1] == 'M':
         ean = '9790' + digits[:8]
-    elif len(digits) >= 7:
+    elif cnt >= 9:
+        ean = '978' + digits[:9]
+    elif cnt >= 7:
         ean = '977' + digits[:7] + '00'
     else:
         return ''
     return ean + check_digit_ean(ean)
 
-def is_isxn(txt):
+def can_be_isxn(txt):
+    """to distinguish if the string can be ISxN or not
+    warning: this returns True too: without control number and with invalid control number
+    """
     txt = txt.replace('-', '').replace(' ', '')
-    return len(txt) >= 8 and (txt.replace('X', '').isdigit() or txt[:1] == 'M' and txt[1:].isdigit())
+    if txt[-1:] == 'X':
+        txt = txt[:-1]    # check it without control digit which will give same result
+    if txt[:1] == 'M':
+        return 9 <= len(txt) <= 10 and txt[1:].isdigit()
+    return len(txt) >= 7 and txt.isdigit() and len(txt) != 11
+
+def add_missing_control(isxn):
+    if len(isxn) in (7, 9):
+        isxn += check_digit_isbn10(isxn)
+    elif len(isxn) == 12:
+        isxn += check_digit_ean(isxn)
+    return isxn
