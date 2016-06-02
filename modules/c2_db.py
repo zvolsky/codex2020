@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import hashlib
 import random
 import string
 
@@ -191,9 +192,12 @@ def ean_to_rik(ean):
     return ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
 
 def publ_hash(title, author, publisher, pubyear):
-    return hashlib.md5(('%s|%s|%s|%s' % (title, author, publisher, pubyear)).encode('utf-8')).hexdigest()
+    src = '%s|%s|%s|%s' % (title, author, publisher, pubyear)
+    if type(src) == unicode:
+        src = src.encode('utf-8')
+    return hashlib.md5(src).hexdigest()
 
-def answer_by_ean(ean, flds):
+def answer_by_ean(db, ean, flds):
     """return: row or None
     """
     if ean[:3] == '977':  # can have everything in [10:12] position
@@ -201,7 +205,7 @@ def answer_by_ean(ean, flds):
     else:
         return db(db.answer.ean == ean).select(*flds).first()
 
-def answer_by_hash(md5publ, flds):
+def answer_by_hash(db, md5publ, flds):
     """return: row or None
     """
     return db(db.answer.md5publ == md5publ).select(*flds).first()

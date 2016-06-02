@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import re
+
+
 def ean2isbn10(ean):
     """convert EAN to old version (10-char) ISBN
     before the call test if EAN is 978... EAN (no need to call with 979..)

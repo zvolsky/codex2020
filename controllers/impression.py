@@ -30,14 +30,14 @@ def description():
             Field('pubyear', 'text',
                     label=T("Rok vydání"), comment=T("rok vydání")),
             Field('edition', 'text',
-                    label=T("Vydání"), comment=T("číslo vydání (a případně podrobnější informace)")),
+                    label=T("Vydání"), comment=T("číslo vydání (např.: 2.rozš.vyd. nebo: 3.vyd., v Odeonu 2.)")),
             submit_button = "Uložit a zadat výtisky",
             formstyle=formstyle_bootstrap3_compact_factory()
     )
     __btn_catalogue(form)
     if form.process().accepted:
         session.addbook = ['T' + eof_out(form.vars.title),   # title first (at least as it is displayed in impression/list)
-                           't' + eof_out(form.vars.title),
+                           't' + eof_out(form.vars.subtitle),
                            'E' + eof_out(form.vars.EAN),
                            'A' + eof_out(form.vars.authority, joiner='; '),
                            'P' + eof_out(form.vars.publisher, joiner='; '),
@@ -45,7 +45,7 @@ def description():
                            'Y' + eof_out(form.vars.pubyear),
                            'D' + eof_out(form.vars.edition),
                            ]
-        redirect(URL('list', args(question_id)))
+        redirect(URL('list', args=(question_id)))
     return dict(form=form)
 
 @auth.requires_login()
@@ -53,11 +53,11 @@ def list():
     def existing_answer():
         flds = (db.answer.id,)
         if ean:
-            row = answer_by_ean(ean, flds)
+            row = answer_by_ean(db, ean, flds)
             if row:   # row exists...
                 return row.id      # ...do not continue to find (using significant data) and do not insert
         # not found by isbn/ean
-        row = answer_by_hash(md5publ, flds)
+        row = answer_by_hash(db, md5publ, flds)
         if row:   # row exists...
             return row.id      # ...do not continue to find (using significant data) and do not insert
         return None
@@ -68,7 +68,7 @@ def list():
         descr_dict = {item[0]: item[1:].strip() for item in descr if len(item) > 1}
         ean = descr_dict.get('E', '')
         if ean:
-            ean = isxn_to_ean(question) if can_be_isxn(ean) else ''
+            ean = isxn_to_ean(ean) if can_be_isxn(ean) else ''
         title = ' : '.join(filter(lambda a: a, (descr_dict.get('T', ''), descr_dict.get('t', ''))))
         author = descr_dict.get('A', '')
         publisher = ' : '.join(filter(lambda a: a, (descr_dict.get('p', ''), descr_dict.get('P', ''))))
@@ -98,10 +98,10 @@ def list():
             )
     __btn_catalogue(form)
     if form.process().accepted:
-        del session.addbook   # we have this in fastinfo
         db.question[question_id] = dict(live=False)  # question used: no longer display it
 
         if answer_id:   # found in internet
+            force_redirect = False
             owned_book = db(db.owned_book.answer_id == answer_id).select(db.owned_book.id).first()
             if owned_book:
                 owned_book_id = owned_book.id
@@ -117,13 +117,15 @@ def list():
                 answer_id = db.answer.insert(md5publ=md5publ, ean=ean, rik=ean_to_rik(ean), fastinfo=fastinfo,
                                              year_from=pubyears[0], year_to=pubyears[1])
             # do we have this library description?
-            lib_descr = db((db.lib_descr.answer_id == answer_id) & (db.lib_descr.descr == descr)).select(db.lib_descr.id).first()
+            lib_descr = db((db.lib_descr.answer_id == answer_id) & (db.lib_descr.descr == session.addbook)).select(db.lib_descr.id).first()
             if lib_descr:
                 lib_descr_id = lib_descr.id
             else:
-                lib_descr_id = db.lib_descr.insert(answer_id=answer_id, descr=descr)
+                lib_descr_id = db.lib_descr.insert(answer_id=answer_id, descr=session.addbook)
             # now we have both (answer, library description) and we can create library instance for this book
             owned_book_id = db.owned_book.insert(answer_id=answer_id, lib_descr_id=lib_descr_id)
+            force_redirect = True  # because session.addbook was replaced with answer_id and URL need to change
+        del session.addbook   # used, no need later for this
 
         rows = db((db.impression.library_id == auth.library_id) & (db.impression.answer_id == answer_id),
                     ignore_common_filters=True).select(db.impression.iorder, orderby=db.impression.iorder)
@@ -135,6 +137,9 @@ def list():
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=iorder_candidate)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
             iorder_candidate += 1
+
+        if force_redirect:
+            redirect(URL(args=(question_id, answer_id)))
 
     db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
     db.impr_hist._common_filter = lambda query: db.impr_hist.haction > 1

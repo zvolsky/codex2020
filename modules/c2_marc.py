@@ -52,11 +52,11 @@ def updatedb(record, touched):
 
     flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo)
     if ean:
-        row = answer_by_ean(ean, flds)
+        row = answer_by_ean(db, ean, flds)
         if exists_update():   # row exists...
             return False      # ...do not continue to find (using significant data) and do not insert
     # not found by isbn/ean
-    row = answer_by_hash(md5publ, flds)
+    row = answer_by_hash(db, md5publ, flds)
     if exists_update():
         return False
     else:                                    # row doesn't exist...

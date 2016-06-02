@@ -700,5 +700,6 @@
 'čís.': 'čís.',
 'Čís.': 'Čís.',
 'číslo vydání (a případně podrobnější informace)': 'číslo vydání (a případně podrobnější informace)',
+'číslo vydání (např.: 2.rozš.vyd. nebo: 3.vyd., v Odeonu 2.)': 'číslo vydání (např.: 2.rozš.vyd. nebo: 3.vyd., v Odeonu 2.)',
 'žena': 'žena',
 }
