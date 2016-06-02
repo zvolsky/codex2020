@@ -2,15 +2,13 @@
 
 import datetime
 import hashlib
-import random
-import string
 
 from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 
 from gluon import current
 
 from books import isxn_to_ean
-from c2_db import PublLengths, create_idxs, del_idxs
+from c2_db import PublLengths, create_idxs, del_idxs, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash
 from marc_dialects import MarcFrom_AlephCz
 
 
@@ -43,7 +41,7 @@ def updatedb(record, touched):
     md5marc = hashlib.md5(marc).hexdigest()
 
     marcrec = MarcFrom_AlephCz(record)
-    md5publ = hashlib.md5(('%s|%s|%s|%s' % (marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)).encode('utf-8')).hexdigest()
+    md5publ = publ_hash(marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)
 
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
@@ -54,18 +52,15 @@ def updatedb(record, touched):
 
     flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo)
     if ean:
-        if ean[:3] == '977':  # can have everything in [10:12] position
-            row = db(db.answer.ean.startswith(ean[:10])).select(*flds).first()
-        else:
-            row = db(db.answer.ean == ean).select(*flds).first()
+        row = answer_by_ean(ean, flds)
         if exists_update():   # row exists...
             return False      # ...do not continue to find (using significant data) and do not insert
     # not found by isbn/ean
-    row = db(db.answer.md5publ == md5publ).select(*flds).first()
+    row = answer_by_hash(md5publ, flds)
     if exists_update():
         return False
     else:                                    # row doesn't exist...
-        answer['rik'] = ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
+        answer['rik'] = ean_to_rik(ean)
         row_id = db.answer.insert(**answer)  # ...insert it
         touched.append((row_id, marcrec, record, None))
         return True  # True -> + 1 into inserted count

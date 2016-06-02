@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import random
+import string
+
 from gluon import current
 
 from mzutils import slugify
@@ -70,9 +73,9 @@ def create_idxs(answer_id, c2_parsed, marc_obj, old_fastinfo='', updating=False)
     else:
         join_rows, word_rows, short_rows = []
 
-    #TODO: fix rest for updating
+    #TODO: fix rest for index updating
 
-    fastinfo = 'T' + c2_parsed.title + '\nA' + c2_parsed.author + '\nP' + c2_parsed.publisher + '\nY' + c2_parsed.pubyear
+    fastinfo = make_fastinfo(c2_parsed.title, c2_parsed.author, c2_parsed.publisher, c2_parsed.pubyear)
     if fastinfo.encode('utf8') != old_fastinfo:
         db = current.db
         db.answer[answer_id] = {'fastinfo': fastinfo}
@@ -180,3 +183,28 @@ def add_short(answer_id, item, category):
         db = current.db
         db.idx_short[0] = {'answer_id': answer_id, 'category': category, 'item': item[:PublLengths.ishort]}
         # we ignore slugify, as long as we have only languages here
+
+def ean_to_rik(ean):
+    """convert last numbers of EAN into (reverted) rik or creates a random one
+    rik is designed to find books easier without barcode readers
+    """
+    return ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
+
+def publ_hash(title, author, publisher, pubyear):
+    return hashlib.md5(('%s|%s|%s|%s' % (title, author, publisher, pubyear)).encode('utf-8')).hexdigest()
+
+def answer_by_ean(ean, flds):
+    """return: row or None
+    """
+    if ean[:3] == '977':  # can have everything in [10:12] position
+        return db(db.answer.ean.startswith(ean[:10])).select(*flds).first()
+    else:
+        return db(db.answer.ean == ean).select(*flds).first()
+
+def answer_by_hash(md5publ, flds):
+    """return: row or None
+    """
+    return db(db.answer.md5publ == md5publ).select(*flds).first()
+
+def make_fastinfo(title, author, publisher, pubyear):
+    return 'T' + title + '\nA' + author + '\nP' + publisher + '\nY' + pubyear
