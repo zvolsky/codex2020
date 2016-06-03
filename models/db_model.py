@@ -6,6 +6,10 @@ from gluon import current
 
 from c2_db import PublLengths
 
+
+DEFAULT_CURRENCY = 'CZK'
+
+
 # export for modules
 current.auth = auth
 current.db = db
@@ -61,9 +65,41 @@ db.define_table('reader',
               label=T("Skupina"), comment=T("skupina čtenářů")),
         Field('email', 'string', length=64,
               label=T("E-mail"), comment=T("e-mail")),
-        common_filter = lambda query: db.reader.library_id == auth.library_id,
+        common_filter=lambda query: db.reader.library_id == auth.library_id,
         singular=T("čtenář"), plural=T("čtenáři"),
         format='%(lastname)s %(firstname)s'
+        )
+
+db.define_table('place',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              ondelete='CASCADE',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('place', 'string', length=48,
+              notnull=True, requires=IS_NOT_EMPTY(),
+              label=T("Umístění"), comment=T("umístění výtisků (např. regál, místnost nebo případně oddělení)")),
+        common_filter=lambda query: db.place.library_id == auth.library_id,
+        singular=T("umístění##singular"), plural=T("umístění##plural"),
+        format='%(place)s'
+        )
+
+db.define_table('stat_group',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              ondelete='CASCADE',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('tbl', 'string', length=1, default='I',
+              notnull=True, requires=IS_IN_SET((('I', T("výtisky (exempláře)")), ('T', T("publikace (tituly)")),
+                                                ('R', T("čtenáři")))),  #, ('B', T("výpůjčky"))
+              label=T("Účel"), comment=T("ve kterém seznamu umožnit výběr této statistiky")),
+        Field('stat_group', 'string', length=48,
+              notnull=True, requires=IS_NOT_EMPTY(),
+              label=T("Kategorie"), comment=T("statistická skupina, která se bude vyhodnocovat")),
+        common_filter=lambda query: (db.stat_group.library_id == auth.library_id) & (db.stat_group.tbl == 'I'),
+        singular=T("statistická skupina"), plural=T("statistická skupiny"),
+        format='%(stat_group)s'
         )
 
 db.define_table('question',
@@ -241,6 +277,55 @@ db.define_table('owned_book',
         common_filter=lambda query: db.owned_book.library_id == auth.library_id,
         )
 
+db.define_table('partner',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('name', 'string', length=48,
+              notnull=True, requires=IS_NOT_EMPTY(),
+              label=T("Název"), comment=T("název nebo jméno obchodního partnera")),
+        Field('state_reg', 'string', length=16,
+              label=T("IČO"), comment=T("IČO/rč (státní identifikátor organizace nebo osoby)")),
+        Field('vat_reg', 'string', length=18,
+              label=T("DIČ"), comment=T("DIČ (daňový identifikátor organizace nebo osoby)")),
+        Field('street', 'string', length=48,
+              label=T("Ulice"), comment=T("adresa: ulice a č.domu")),
+        Field('place', 'string', length=48,
+              label=T("Místo"), comment=T("adresa: místo (město, obec)")),
+        Field('plz', 'string', length=8,
+              label=T("PSČ"), comment=T("poštovní směrovací číslo")),
+        Field('email', 'string', length=64,
+              label=T("EMail"), comment=T("hlavní emailová adresa")),
+        Field('link', 'string', length=92,
+              label=T("Odkaz"), comment=T("URL adresa (webové stránky, www)")),
+        Field('contact', 'text',
+              label=T("Kontakt"), comment=T("kontaktní osoba, telefony, další e-mailové adresy, apod.")),
+        common_filter=lambda query: db.partner.library_id == auth.library_id,
+        )
+
+db.define_table('bill',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('partner_id', db.partner,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Partner"), comment=T("obchodní partner (např. dodavatel)")),
+        Field('htime', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True,
+              label=T("Čas"), comment=T("čas nákupu (převodu, apod.); i když doklad obsahuje jen datum, je dobré zadat i přibližný čas, který se zapíše v historii výtisků")),
+        Field('btotal', 'decimal(12,2)',
+              notnull=True,
+              label=T("Částka"), comment=T("celková částka na dokladu")),
+        Field('bcurrency', 'string', length=3, default=DEFAULT_CURRENCY,
+              notnull=True,
+              label=T("Měna"), comment=T("měna")),
+        common_filter=lambda query: db.owned_book.library_id == auth.library_id,
+        )
+
 db.define_table('impression',
         Field('library_id', db.library,
               default=auth.library_id,
@@ -261,10 +346,12 @@ db.define_table('impression',
         Field('iorder', 'integer',
               notnull=True, writable=False,
               label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
+        Field('barcode', 'string', length=16,
+              label=T("Čarový kód"), comment=T("čarový kód výtisku")),
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
-        common_filter=lambda query: (db.impression.live == True) & (db.impression.library_id == auth.library_id),
+        common_filter=lambda query: (db.impression.library_id == auth.library_id) & (db.impression.live == True),
         format=T('čís.') + ' %(iorder)s'
         )
 
@@ -281,6 +368,10 @@ db.define_table('impr_hist',
               writable=False,
               ondelete='SET NULL',
               label=T("Čtenář"), comment=T("čtenář")),
+        Field('bill_id', db.bill,
+              writable=False,
+              ondelete='SET NULL',
+              label=T("Doklad"), comment=T("doklad (např. útenka, převodní doklad)")),
         Field('htime', 'datetime', default=datetime.datetime.utcnow(),
               notnull=True, writable=False,
               label=T("Čas"), comment=T("čas akce (v UTC)")),

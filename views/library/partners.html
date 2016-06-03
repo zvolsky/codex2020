@@ -1,0 +1,18 @@
+
+{{extend 'layout.html'}}
+
+<h2>{{=T("Obchodní partneři")}}</h2>
+
+<div class="alert alert-info">
+    {{=T("Vaši obchodní partneři, např dodavatelé.")}}<br>
+    {{=EM(T("Můžete zadat i další organizace nebo osoby, s nimiž často komunikujete nebo na jejichž webu hledáte."))}}
+</div>
+
+<div class="well well-sm">
+    {{=grid}}
+</div>
+
+<script>
+    $('#w2p_query_panel').remove();
+    $('label').css('text-align', 'right');
+</script>

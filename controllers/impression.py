@@ -92,6 +92,7 @@ def list():
 
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
+            Field('barcode', 'string', length=16, label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
             hidden=dict(question_id=question_id),
             formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
@@ -125,16 +126,29 @@ def list():
             # now we have both (answer, library description) and we can create library instance for this book
             owned_book_id = db.owned_book.insert(answer_id=answer_id, lib_descr_id=lib_descr_id)
             force_redirect = True  # because session.addbook was replaced with answer_id and URL need to change
-        del session.addbook   # used, no need later for this
+        if 'addbook' in session:
+            del session.addbook   # used, no need later for this
 
         rows = db((db.impression.library_id == auth.library_id) & (db.impression.answer_id == answer_id),
                     ignore_common_filters=True).select(db.impression.iorder, orderby=db.impression.iorder)
         iorders = [row.iorder for row in rows]
         iorder_candidate = 1
+        barcode = form.vars.barcode.strip()
+        incr_from = None
+        for pos, _char in enumerate(barcode):
+            if barcode[pos:].isdigit():
+                incr_from = pos
+                len_digits = len(barcode) - pos
+                next_no = int(barcode[pos:])
+                break
         for ii in xrange(form.vars.new):
             while iorder_candidate in iorders:
                 iorder_candidate += 1
-            impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id, iorder=iorder_candidate)
+            if ii > 0 and incr_from is not None:
+                next_no += 1
+                barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
+            impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
+                                                 iorder=iorder_candidate, barcode=barcode)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
             iorder_candidate += 1
 

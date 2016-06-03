@@ -22,6 +22,7 @@
             <th>{{=T("Evidován")}}</th>
             <th />
             <th>{{=T("Čís.")}}</th>
+            <th>{{=T("Čar.kód")}}</th>
             <th>{{=SPAN(T("Rychlá identifikace"), _title="%s" % fastid_title)}}</th>
         </thead>
         <tbody>
@@ -34,6 +35,7 @@
                             {{=A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))}}
                         {{pass}}</td>
                     <td>{{=impression.impression.iorder}}</td>
+                    <td>{{=impression.impression.barcode}}</td>
                     <td>{{=SPAN(impression.impression.fastid, _title="%s" % fastid_title)}}</td>
                 </tr>
             {{pass}}

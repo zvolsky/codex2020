@@ -1,0 +1,14 @@
+
+{{extend 'layout.html'}}
+
+<h2>{{=T("Statistické skupiny pro výtisky")}}</h2>
+
+<div class="alert alert-info">
+    {{=T("Zadej statistické skupiny, které chceš vyhodnocovat.")}}<br>
+    {{=EM(T("Např. u knihovny, která provozuje oddělení pro děti a pro dospělé, vytvořte tyto 2 skupiny, jestliže můžete mít titul vícekrát a zařadit jeho výtisky do různých oddělení."))}}<br>
+    {{=EM(T("Statistika podle umístění výtisků je vytvořena nezávisle, není potřeba pro ni definovat skupinu."))}}
+</div>
+
+<div class="well well-sm">
+    {{=grid}}
+</div>

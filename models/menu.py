@@ -35,7 +35,15 @@ response.menu = [
     (T('Čtenáři'), False, '#', [
         (T('skupiny čtenářů'), False, URL('readers', 'groups'), []),
         (T('čtenáři'), False, URL('readers', 'readers'), []),
-    ]),
+        ]),
+    (T('Knihovna'), False, '#', [
+        (T('obchodní partneři'), False, URL('library', 'partners'), []),
+        (T('umístění výtisků'), False, URL('library', 'places'), []),
+        (T('statistické skupiny výtisků'), False, URL('library', 'stgri'), []),  # uses default common filter
+        #(T('statistické skupiny titulů'), False, URL('library', 'stgrt'), []),
+        #(T('statistické skupiny čtenářů'), False, URL('library', 'stgrr'), []),
+        ###?? (T('statistické skupiny výpůjček'), False, URL('library', 'stgrb'), []),
+        ]),
 ]
 
 DEVELOPMENT_MENU = request.is_local
