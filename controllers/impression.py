@@ -6,6 +6,23 @@ from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fas
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
+if not session.libstyle:
+    session.libstyle = 'IO.BPg...GsS'  # character position IS important
+            ## 0 I impression uses incremental ID (prirustkove cislo)
+            #  1 O impression show order of the impression
+            ## 2   if digit 2..5: impression show Rapid identification (rychla identifikace knihy), 2..5 characters long
+            #  3 B impression uses barcodes
+            #  4 P impression uses places
+            ## 5 g impression uses signature
+            ## 6   separating of signature modifier, if any, default is: empty
+            ## 7   signature modifier for the 1-st impression, if any, default is: empty
+            ## 8   signature modifier for the 2-nd impression, digit or letter, default is: b
+            ##          (next impressions will receive the incremented value)
+            ## 9 G title uses signature
+            ##10 s impression uses statistics
+            ##11 S title uses statistics
+
+
 @auth.requires_login()
 def description():
     def eof_out(txt, joiner=' '):
@@ -187,6 +204,21 @@ def mistake():
         redirect(URL('default', 'index'))
     db(db.impression.id == impression_id).delete()
     redirect(URL('list', args=(question_id, answer_id)))
+
+@auth.requires_login()
+@auth.requires_signature()
+def edit():
+    impression_id = request.args(0)
+    if not impression_id:
+        redirect(URL('list'))
+    db.impression.id.readable = False
+    db.impression.iorder.readable = session.libstyle[1] == 'O'
+    db.impression.barcode.readable = db.impression.barcode.writable = session.libstyle[3] == 'B'
+    db.impression.place_id.readable = db.impression.place_id.writable = session.libstyle[4] == 'P'
+    form = SQLFORM(db.impression, impression_id)
+    if form.process().accepted:
+        redirect(URL('list'))
+    return dict(form=form)
 
 def __btn_catalogue(form):
     form.add_button(T('Zpět ke katalogizaci'), URL('catalogue', 'find'))
