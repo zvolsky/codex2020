@@ -86,6 +86,7 @@ db.define_table('place',
         singular=T("umístění##singular"), plural=T("umístění##plural"),
         format='%(place)s'
         )
+# TODO: čti on_define (book 6) při přechodu na lazy_tables
 db.place.place_id.requires = IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s'))
 db.place.place_id.represent = lambda id, row: id and id.place or ''
 
