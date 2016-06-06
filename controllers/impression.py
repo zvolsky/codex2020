@@ -110,6 +110,9 @@ def list():
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
             Field('barcode', 'string', length=16, label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
+            Field('place_id', db.place,
+                  requires=IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s')),
+                  label=T("Umístění"), comment=T("umístění výtisku")),
             hidden=dict(question_id=question_id),
             formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
@@ -165,7 +168,7 @@ def list():
                 next_no += 1
                 barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
-                                                 iorder=iorder_candidate, barcode=barcode)
+                                                 iorder=iorder_candidate, barcode=barcode, place_id=form.vars.place_id)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
             iorder_candidate += 1
 

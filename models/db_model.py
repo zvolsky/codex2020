@@ -75,17 +75,18 @@ db.define_table('place',
               readable=False, writable=False,
               ondelete='CASCADE',
               label=T("Knihovna"), comment=T("jméno knihovny")),
-        Field('place_id', 'reference place',
-              ondelete='RESTRICT',
-              label=T("Nadřazené"), comment=T("patří do (širšího) umístění: takto lze vytvořit hierarchickou strukturu (oddělení, místnost, regál)")),
         Field('place', 'string', length=64,
               notnull=True, requires=IS_NOT_EMPTY(),
               label=T("Umístění"),
               comment=T("umístění výtisků (např. regál, místnost nebo případně oddělení)")),
+        Field('place_id', 'reference place',
+              ondelete='RESTRICT',
+              label=T("Nadřazené"), comment=T("patří do (širšího) umístění: takto lze vytvořit hierarchickou strukturu (oddělení, místnost, regál)")),
         common_filter=lambda query: db.place.library_id == auth.library_id,
         singular=T("umístění##singular"), plural=T("umístění##plural"),
         format='%(place)s'
         )
+db.place.place_id.requires = IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s'))
 
 db.define_table('stat_group',
         Field('library_id', db.library,
