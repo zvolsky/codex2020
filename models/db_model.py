@@ -87,6 +87,7 @@ db.define_table('place',
         format='%(place)s'
         )
 db.place.place_id.requires = IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s'))
+db.place.place_id.represent = lambda id, row: id and id.place or ''
 
 db.define_table('stat_group',
         Field('library_id', db.library,
