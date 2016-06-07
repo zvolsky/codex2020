@@ -31,13 +31,19 @@ response.google_analytics_id = None
 #mz +++z
 response.menu = [
     (T('Návod'), False, URL('default', 'wiki'), []),
-    (T('Katalogizace'), False, URL('catalogue', 'find'), []),
+    (T('Fond'), False, URL('catalogue', 'find'), [
+        (T('katalogizace'), False, URL('catalogue', 'find'), []),
+        (T('revize'), False, URL('pool', 'review'), []),
+        ]),
     (T('Čtenáři'), False, '#', [
         (T('skupiny čtenářů'), False, URL('readers', 'groups'), []),
         (T('čtenáři'), False, URL('readers', 'readers'), []),
         ]),
-    (T('Knihovna'), False, '#', [
-        (T('obchodní partneři'), False, URL('library', 'partners'), []),
+    (T('Provoz'), False, '#', [
+        (T('obchodní partneři'), False, URL('manage', 'partners'), []),
+        ]),
+    (T('Nastavení'), False, '#', [
+        (T('údaje o knihovně'), False, URL('library', 'library'), []),
         (T('umístění výtisků'), False, URL('library', 'places'), []),
         (T('statistické skupiny výtisků'), False, URL('library', 'stgri'), []),  # uses default common filter
         #(T('statistické skupiny titulů'), False, URL('library', 'stgrt'), []),

@@ -19,7 +19,7 @@ myconf = AppConfig(reload=request.is_local)
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     db = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
-                            # fake_migrate_all=True
+                            #, fake_migrate_all=True)
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore+ndb')
@@ -60,9 +60,33 @@ service = Service()
 plugins = PluginManager()
 
 #mz ++z
+LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
+                 ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
+                 ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
+                 ('oth', T("jiné, nelze zařadit")),
+                )
 db.define_table('library',
         Field('library', 'string', length=128,
-              label=T("Knihovna"), comment=T("jméno knihovny")),
+              label=T("Jméno knihovny"), comment=T("jméno vaší knihovny")),
+        Field('street', 'string', length=48,
+              label=T("Ulice"), comment=T("ulice (nepovinné)")),
+        Field('city', 'string', length=48,
+              label=T("Místo"), comment=T("město nebo obec")),
+        Field('plz', 'string', length=8,
+              label=T("PSČ"), comment=T("poštovní směrovací číslo obce")),
+        Field('ltype', 'string', length=3,
+              notnull=True, requires=IS_IN_SET(LIBRARY_TYPES),
+              label=T("Typ knihovny"), comment=T("typ knihovny")),
+        Field('old_system', 'string', length=48,
+              label=T("Jiný systém"), comment=T("předchozí nebo hlavní evidenční knihovnický systém")),
+        Field('created', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True, writable=False,
+              label=T("Vytvořeno"), comment=T("čas vytvoření evidence")),
+        Field('completed', 'date',
+              label=T("Dokončeno"), comment=T("datum dokončení zápisu fondu knihovny")),
+        Field('review_date', 'date', default=datetime.date.today(),
+              notnull=True, requires=[IS_NOT_EMPTY(), IS_DATE(format=T('%d.%m.%Y'))],
+              label=T("Zahájení revize"), comment=T("den zahájení revize (vypíší se výtisky, nenalezené od tohoto data)")),
         format='%(library)s'
         )
 

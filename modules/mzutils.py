@@ -24,3 +24,15 @@ def slugify(value, defaultIfEmpty='name', removeAccents=True, stringCoding='utf-
     if connectChar != '-':
         value = value.replace('-', connectChar).strip()
     return value
+
+def shortened(txt, maxlen=12, tail='..'):
+    if txt is None:
+        return ''
+    txt = txt.lstrip()[:maxlen + 10].replace('\n', '').replace('\r', '').replace('\t', ' ').strip()
+    shorter = txt[:maxlen]
+    if len(shorter) < len(txt):
+        candidate = shorter.rsplit(' ', 1)[0]
+        if maxlen > 6 and len(candidate) <= 3:
+            candidate = shorter
+        shorter = candidate + tail
+    return shorter

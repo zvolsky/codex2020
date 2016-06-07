@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from mzutils import shortened
+
 from books import can_be_isxn, isxn_to_ean, parse_pubyear
 
 from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo
@@ -113,6 +115,8 @@ def list():
             Field('place_id', db.place,
                   requires=IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s')),
                   label=T("Umístění"), comment=T("umístění výtisku")),
+            Field('price_in', 'decimal(12,2)',
+                  label=db.impression.price_in.label, comment=db.impression.price_in.comment),
             hidden=dict(question_id=question_id),
             formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
@@ -168,7 +172,8 @@ def list():
                 next_no += 1
                 barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
-                                                 iorder=iorder_candidate, barcode=barcode, place_id=form.vars.place_id)
+                                                 iorder=iorder_candidate, barcode=barcode,
+                                                 place_id=form.vars.place_id, price_in=form.vars.price_in)
             db.impr_hist.insert(impression_id=impression_id, haction=1)
             iorder_candidate += 1
 
@@ -178,11 +183,12 @@ def list():
     db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
     db.impr_hist._common_filter = lambda query: db.impr_hist.haction > 1
         # impressions with other manipulations as taking into db will have: db.impr_hist.id is not None
-    impressions = db(current_book).select(db.impression.ALL, db.impr_hist.id,
+    impressions = db(current_book).select(db.impression.ALL, db.impr_hist.id, db.place.place,
                         orderby=db.impression.iorder,
-                        left=db.impr_hist.on(db.impr_hist.impression_id == db.impression.id))
-    return dict(form=form, impressions=impressions, question_id=question_id,
-                nnn=ean, title=title,
+                        left=[db.impr_hist.on(db.impr_hist.impression_id == db.impression.id),
+                            db.place.on(db.place.id == db.impression.place_id)])
+    return dict(form=form, impressions=impressions, question_id=question_id, answer_id=answer_id,
+                shortened=shortened, nnn=ean, title=title,
                 fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
@@ -211,16 +217,17 @@ def mistake():
 @auth.requires_login()
 @auth.requires_signature()
 def edit():
-    impression_id = request.args(0)
+    impression_id = request.args(2)
     if not impression_id:
         redirect(URL('list'))
     db.impression.id.readable = False
     db.impression.iorder.readable = session.libstyle[1] == 'O'
     db.impression.barcode.readable = db.impression.barcode.writable = session.libstyle[3] == 'B'
     db.impression.place_id.readable = db.impression.place_id.writable = session.libstyle[4] == 'P'
-    form = SQLFORM(db.impression, impression_id)
+    form = SQLFORM(db.impression, impression_id, submit_button=T("Uložit"), formstyle=formstyle_bootstrap3_compact_factory())
+    form.add_button(T('Zpět (storno)'), URL('list', args=(request.args(0), request.args(1))))
     if form.process().accepted:
-        redirect(URL('list'))
+        redirect(URL('list', args=(request.args(0), request.args(1))))
     return dict(form=form)
 
 def __btn_catalogue(form):

@@ -24,7 +24,17 @@ form .btn-default:hover {
     color: white;
     background-color: #447;
 }
+form .row .small {
+    color: #222;
+    padding: 5px 0 0 26px;
+}
 
 .smaller {
     font-size: 90%;
+}
+.larger {
+    font-size: 120%;
+}
+.weak {
+    color: #555;
 }

@@ -1,0 +1,22 @@
+
+{{extend 'layout.html'}}
+
+<div class="well well-sm">
+    <span style="padding-right: 10px;">{{=T("V knihovně evidujete")}}</span>
+    <mark>{{=T("titulů:")}} <span class="larger"><strong>{{=cnt_t}}</strong></span></mark> ,
+    <mark>{{=T("výtisků (exemplářů):")}} <span class="larger"><strong>{{=cnt_i}}</strong></span></mark>
+</div>
+
+<h2>{{=T("Revize")}} <small>{{=T("vyhledání výtisků, které nebyly fyzicky nalezeny od data zahájení revize")}}</small>
+    {{T.lazy = False}}{{=review_date.strftime(T('%d.%m.%Y'))}}{{T.lazy = True}}
+    <a class="btn btn-sm btn-info right" href="{{=URL('library', 'library')}}">změnit datum</a>
+</h2>
+
+<div class="well well-sm">
+    Tady se ještě pracuje ...
+</div>
+
+<script>
+    $('#w2p_query_panel').remove();
+    $('label').css('text-align', 'right');
+</script>

@@ -84,6 +84,10 @@ def formstyle_bootstrap3_compact_factory(col_label_size=2, col_help_size=6,
             elif isinstance(controls, UL):
                 for e in controls.elements("input"):
                     e.add_class('form-control')
+
+            else:
+                _controls = DIV(controls, _class="small %s" % (col_class))
+
             if isinstance(label, LABEL):
                 label['_class'] = add_class(label.get('_class'), '%s %s' % (control_label, label_col_class))
 

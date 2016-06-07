@@ -8,6 +8,7 @@ from c2_db import PublLengths
 
 
 DEFAULT_CURRENCY = 'CZK'
+SUPPORTED_CURRENCIES = ('CZK', 'EUR', 'PLZ', 'USD')
 
 
 # export for modules
@@ -33,6 +34,7 @@ class UNIQUE_QUESTION(object):
         else:
             return (value, None)
 """
+
 
 db.define_table('rgroup',
         Field('library_id', db.library,
@@ -279,7 +281,7 @@ db.define_table('owned_book',
         Field('cnt', 'integer',
               default=0,
               label=T("Výtisků"), comment=T("počet výtisků v knihovně")),
-        common_filter=lambda query: db.owned_book.library_id == auth.library_id,
+        common_filter=lambda query: (db.owned_book.library_id == auth.library_id) & (db.owned_book.cnt > 0),
         )
 
 db.define_table('partner',
@@ -326,7 +328,7 @@ db.define_table('bill',
               notnull=True,
               label=T("Částka"), comment=T("celková částka na dokladu")),
         Field('bcurrency', 'string', length=3, default=DEFAULT_CURRENCY,
-              notnull=True,
+              notnull=True, requires=IS_IN_SET(SUPPORTED_CURRENCIES),
               label=T("Měna"), comment=T("měna")),
         common_filter=lambda query: db.owned_book.library_id == auth.library_id,
         )
@@ -359,6 +361,11 @@ db.define_table('impression',
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
+        Field('price_in', 'decimal(12,2)',
+              label=T("Nákupní cena"),
+              comment=T("nákupní nebo pořizovací cena výtisku (přepočtená na %s)") % (DEFAULT_CURRENCY)),
+        Field('icondition', 'text',
+              label=T("Stav"), comment=T("stav výtisku, poškození")),
         common_filter=lambda query: (db.impression.library_id == auth.library_id) & (db.impression.live == True),
         format=T('čís.') + ' %(iorder)s'
         )
