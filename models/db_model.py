@@ -15,7 +15,7 @@ HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), (
             ('--', T("vyřazen (bez dalších podrobností)")),
                 ('-d', T("vyřazen (likvidován)")), ('-b', T("předán ke svázání (vyřazen)")),
                 ('-g', T("vyřazen (darován)")), ('-n', T("odprodán")), ('-?', T("nezvěstný vyřazen")),
-            ('+f', T("cizí dočasně zařazen (zapůjčený získán)")), ('-f', T("zapůjčený cizí vyřazen (vrácen zpět - odevzdán)")),
+            ('+f', T("cizí dočasně zařazen (zapůjčený výtisk)")), ('-f', T("zapůjčený cizí vyřazen (vrácen zpět - odevzdán)")),
             ('o+', T("náš zapůjčený zařazen (byl vrácen zpět)")), ('o-', T("náš dočasně vyřazen (zapůjčen - předán)")),
             ('l+', T("vrácen")), ('l-', T("vypůjčen")),
             ('l!', T("upomínka")), ('ll', T("prodloužen vzdáleně")), ('lL', T("prodloužen fyzicky")),
@@ -28,8 +28,8 @@ HACTIONS_MVS = (('+f', T("získali jsme cizí knihy odjinud")),
                 ('o-', T("zapůjčili jsme naše knihy jinam")),
                 ('o+', T("vrátily se nám naše knihy")))
 HACTIONS_MVS_HINT = (('+f', T("cizí knihy dočasně získávám (současně označte Příjem)")),
-                ('-f', T("cizí knihy vracím zpět - odevzdávám)")),
-                ('o-', T("naše knihy zapůjčuji - předávám)")),
+                ('-f', T("cizí knihy vracím zpět - odevzdávám")),
+                ('o-', T("naše knihy zapůjčuji - předávám")),
                 ('o+', T("naše knihy se vrátily - zařazuji je zpět (je doporučeno označit Příjem)")))
 
 
