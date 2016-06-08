@@ -4,7 +4,7 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear
 
-from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, HACTION_IN
+from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
