@@ -112,7 +112,7 @@ def list():
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
             Field('haction', 'string', length=2, default='+o',
-                  requires=IS_IN_SET(HACTION_IN),
+                  requires=IS_IN_SET(HACTIONS_IN),
                   label=T("Získáno"), comment=T("jak byl/y výtisk/y pořízen/y")),
             Field('gift', 'boolean', default=False,
                   label=T("Dar"), comment=T("získáno darem")),
