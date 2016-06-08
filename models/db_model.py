@@ -10,6 +10,28 @@ from c2_db import PublLengths
 DEFAULT_CURRENCY = 'CZK'
 SUPPORTED_CURRENCIES = ('CZK', 'EUR', 'PLZ', 'USD')
 
+# impressions history
+HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),
+            ('--', T("vyřazen (bez dalších podrobností)")),
+                ('-d', T("vyřazen (likvidován)")), ('-b', T("předán ke svázání (vyřazen)")),
+                ('-g', T("vyřazen (darován)")), ('-n', T("odprodán")), ('-?', T("nezvěstný vyřazen")),
+            ('+f', T("cizí dočasně zařazen (zapůjčený získán)")), ('-f', T("zapůjčený cizí vyřazen (vrácen zpět - odevzdán)")),
+            ('o+', T("náš zapůjčený zařazen (byl vrácen zpět)")), ('o-', T("náš dočasně vyřazen (zapůjčen - předán)")),
+            ('l+', T("vrácen")), ('l-', T("vypůjčen")),
+            ('l!', T("upomínka")), ('ll', T("prodloužen vzdáleně")), ('lL', T("prodloužen fyzicky")),
+            ('r*', T("revidován")), ('r?', T("označen jako nezvěstný")),
+            )
+HACTIONS_IN = tuple(filter(lambda ha: ha[0][0] == '+', HACTIONS))
+HACTIONS_OUT = tuple(filter(lambda ha: ha[0][0] == '-', HACTIONS))
+HACTIONS_MVS = (('+f', T("získali jsme cizí knihy odjinud")),
+                ('-f', T("vrátili jsme cizí knihy")),
+                ('o-', T("zapůjčili jsme naše knihy jinam")),
+                ('o+', T("vrátily se nám naše knihy")))
+HACTIONS_MVS_HINT = (('+f', T("cizí knihy dočasně získávám (současně označte Příjem)")),
+                ('-f', T("cizí knihy vracím zpět - odevzdávám)")),
+                ('o-', T("naše knihy zapůjčuji - předávám)")),
+                ('o+', T("naše knihy se vrátily - zařazuji je zpět (je doporučeno označit Příjem)")))
+
 
 # export for modules
 current.auth = auth
@@ -310,6 +332,7 @@ db.define_table('partner',
         Field('contact', 'text',
               label=T("Kontakt"), comment=T("kontaktní osoba, telefony, další e-mailové adresy, apod.")),
         common_filter=lambda query: db.partner.library_id == auth.library_id,
+        format=lambda row: ', '.join((row.name, row.place))
         )
 
 db.define_table('bill',
@@ -321,16 +344,31 @@ db.define_table('bill',
         Field('partner_id', db.partner,
               notnull=True, ondelete='RESTRICT',
               label=T("Partner"), comment=T("obchodní partner (např. dodavatel)")),
+        Field('take_in', 'boolean', notnull=True, default=True,
+              label=T("Příjem"), comment=T("nákup, získaný dar nebo přijatá MVS/zápůjčka (naskladňuji knihy)")),
+        Field('gift', 'boolean', notnull=True, default=False,
+              label=T("Dar"), comment=T("knihy trvale získané (nebo poskytnuté) darem")),
+        Field('loan', 'string', length=2,
+              requires=IS_EMPTY_OR(IS_IN_SET(HACTIONS_MVS_HINT)),
+              label=T("Zápůjčka"), comment=T("(dočasná) meziknihovní výměna (MVS) nebo zápůjčka)")),
+        Field('no_our', 'string', length=16,
+              label=T("Naše číslo"), comment=T("naše číslo dokladu (nepovinné)")),
+        Field('no_partner', 'string', length=18,
+              label=T("Jejich číslo"), comment=T("číslo dokladu dodavatele nebo odběratele (nepovinné)")),
         Field('htime', 'datetime', default=datetime.datetime.utcnow(),
               notnull=True,
               label=T("Čas"), comment=T("čas nákupu (převodu, apod.); i když doklad obsahuje jen datum, je dobré zadat i přibližný čas, který se zapíše v historii výtisků")),
+        Field('cnt_imp', 'integer', notnull=True, default=0, writable=False,
+              label=T("Výtisků"), comment=T("počet výtisků, zadaných při zápisu dokladu")),
         Field('btotal', 'decimal(12,2)',
               notnull=True,
               label=T("Částka"), comment=T("celková částka na dokladu")),
         Field('bcurrency', 'string', length=3, default=DEFAULT_CURRENCY,
               notnull=True, requires=IS_IN_SET(SUPPORTED_CURRENCIES),
               label=T("Měna"), comment=T("měna")),
-        common_filter=lambda query: db.owned_book.library_id == auth.library_id,
+        Field('imp_added', 'datetime', writable=False,
+              label=T("Zpracován"), comment=T("kdy byly zaznamenány všechny položky dokladu")),
+        common_filter=lambda query: db.bill.library_id == auth.library_id,
         )
 
 db.define_table('impression',
@@ -353,6 +391,11 @@ db.define_table('impression',
         Field('live', 'boolean', default=True,
               readable=False, writable=False,
               label=T("Platný výtisk"), comment=T("platný (nevyřazený) výtisk")),
+        Field('gift', 'boolean', notnull=True, default=False,
+              label=T("Dar"), comment=T("získáno darem")),
+        Field('loan', 'boolean', default=False,
+              readable=False, writable=False,
+              label=T("Dočasná zápůjčka"), comment=T("meziknihovní výměna (MVS) nebo zápůjčka")),
         Field('iorder', 'integer',
               notnull=True, writable=False,
               label=T("Pořadové číslo"), comment=T("pořadové číslo výtisku")),
@@ -385,14 +428,15 @@ db.define_table('impr_hist',
               label=T("Čtenář"), comment=T("čtenář")),
         Field('bill_id', db.bill,
               writable=False,
-              ondelete='SET NULL',
-              label=T("Doklad"), comment=T("doklad (např. útenka, převodní doklad)")),
+              ondelete='RESTRICT',
+              label=T("Doklad"), comment=T("doklad (např. účtenka, faktura, soupiska zápůjčky)")),
         Field('htime', 'datetime', default=datetime.datetime.utcnow(),
               notnull=True, writable=False,
               label=T("Čas"), comment=T("čas akce (v UTC)")),
-        Field('haction', 'integer',
-              requires=IS_IN_SET(((1, T("zaevidován")), (2, T("vyřazen")), (3, ''))),
-              notnull=True, writable=False,
+        Field('haction', 'integer'),
+        Field('htmp', 'integer'),
+        Field('hactionx', 'string', length=2, default='+o',
+              notnull=True, requires=IS_IN_SET(HACTIONS), writable=False,
               label=T("Akce"), comment=T("provedená činnost")),
         )
 

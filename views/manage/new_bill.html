@@ -1,0 +1,14 @@
+{{extend 'layout.html'}}
+
+<div class="well well-small">
+    {{=form}}
+</div>
+
+<div class="alert alert-info">
+    {{=T("Pokud vytvoříte doklad s označením Příjem, budou následně katalogizované výtisky připisovány k tomuto dokladu.")}}
+</div>
+
+<script>
+    $('label').css('text-align', 'right');
+    $('textarea').attr('rows', 3);
+</script>

@@ -4,7 +4,7 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear
 
-from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo
+from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, HACTION_IN
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
@@ -111,6 +111,18 @@ def list():
 
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
+            Field('haction', 'string', length=2, default='+o',
+                  requires=IS_IN_SET(HACTION_IN),
+                  label=T("Získáno"), comment=T("jak byl/y výtisk/y pořízen/y")),
+            Field('gift', 'boolean', default=False,
+                  label=T("Dar"), comment=T("získáno darem")),
+            Field('bill_id', db.bill,
+                  requires=IS_EMPTY_OR(IS_IN_DB(db, db.bill.id, lambda row: row.htime.strftime('%d.%m.%Y %H:%M') + (', ' + no_our) if no_our else '')),
+                  readable=False, writable=False,
+                  label=T("Doklad"), comment=T("doklad o pořízení (doklad lze změnit volbou Nový nákup/doklad)")),
+            Field('not_this_bill', 'boolean', default=False,
+                  readable=False, writable=False,
+                  label=T("Nneí z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
             Field('barcode', 'string', length=16, label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
             Field('place_id', db.place,
                   requires=IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s')),
@@ -121,7 +133,20 @@ def list():
             formstyle=formstyle_bootstrap3_compact_factory(),
             submit_button=T('Zařaď nové výtisky do knihovny')
             )
-    __btn_catalogue(form)
+
+    if session.bill:
+        form.vars.bill_id.readable = True
+        form.vars.not_this_bill.readable = True
+        form.vars.not_this_bill.writable = True
+
+        form.vars.bill_id = session.bill['id']
+        if session.bill['gift']:
+            form.vars.gift = True
+            form.vars.haction = '+d'
+        else:
+            form.vars.haction = '+n'
+        form.vars.loan = session.bill['loan'] and True or False
+
     if form.process().accepted:
         db.question[question_id] = dict(live=False)  # question used: no longer display it
 
@@ -172,16 +197,22 @@ def list():
                 next_no += 1
                 barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
-                                                 iorder=iorder_candidate, barcode=barcode,
+                                                 iorder=iorder_candidate, gift=form.vars.gift, barcode=barcode,
                                                  place_id=form.vars.place_id, price_in=form.vars.price_in)
-            db.impr_hist.insert(impression_id=impression_id, haction=1)
+            db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction,
+                                bill_id=None if form.vars.not_this_bill else form.vars.bill_id)
             iorder_candidate += 1
 
         if force_redirect:
             redirect(URL(args=(question_id, answer_id)))
 
+        form.add_button(T('Najít a zapsat další knihu z dokladu'), URL('catalogue', 'find'))
+        form.add_button(T('Doklad je zpracován'), URL('bill_finished'))
+    else:
+        __btn_catalogue(form)
+
     db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
-    db.impr_hist._common_filter = lambda query: db.impr_hist.haction > 1
+    db.impr_hist._common_filter = lambda query: ~(db.impr_hist.haction.startswith('+'))
         # impressions with other manipulations as taking into db will have: db.impr_hist.id is not None
     impressions = db(current_book).select(db.impression.ALL, db.impr_hist.id, db.place.place,
                         orderby=db.impression.iorder,
@@ -192,6 +223,15 @@ def list():
                 fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
+def bill_finished():
+    if 'bill' in session:
+        bill_id = session.bill['id']
+        cnt_imp = db(db.impression.bill_id == bill_id).count()   # after removing impression as Mistake later, this count can stay higher
+        db.bill[bill_id] = dict(cnt_imp=cnt_imp, imp_added=datetime.datetime.utcnow())
+        del session.bill
+    redirect(URL('manage', 'bills'))
+
+@auth.requires_login()
 @auth.requires_signature()
 def displace():
     question_id = request.args(0)
@@ -199,7 +239,7 @@ def displace():
     impression_id = request.args(2)
     if not impression_id:
         redirect(URL('default', 'index'))
-    db.impr_hist.insert(impression_id=impression_id, haction=2)
+    db.impr_hist.insert(impression_id=impression_id, haction='--')
     db(db.impression.id == impression_id).update(live=False)
     redirect(URL('list', args=(question_id, answer_id)))
 

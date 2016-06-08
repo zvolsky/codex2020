@@ -41,6 +41,8 @@ response.menu = [
         ]),
     (T('Provoz'), False, '#', [
         (T('obchodní partneři'), False, URL('manage', 'partners'), []),
+        (T('přehled dokladů'), False, URL('manage', 'bills'), []),
+        (T('nový nákup/doklad'), False, URL('manage', 'new_bill'), []),
         ]),
     (T('Nastavení'), False, '#', [
         (T('údaje o knihovně'), False, URL('library', 'library'), []),
