@@ -1,7 +1,36 @@
 # -*- coding: utf-8 -*-
 
 def index():
-    redirect(URL('wiki'))
+    if __active_theme():
+        redirect(URL('wiki'))
+    else:
+        redirect(URL('theme'))
+
+def theme():
+    """requires:
+    - xxx.min.css in static/css/bootstrap/ (themes from https://bootswatch.com/)
+    - added BOOTSTRAP_DEFAULT='slate' in db.py
+    - added Field('theme', 'string', length=16, default=BOOTSTRAP_DEFAULT) in db.py, auth.settings.extra_fields['auth_user']
+    - patched layout.html
+    - redirect in default/index based on: not __active_theme()
+    - link in menu
+    """
+    themes = ('bootstrap', 'cerulean', 'cosmo', 'cyborg', 'darkly', 'flatly', 'journal', 'lumen', 'paper', 'readable',
+               'sandstone', 'simplex', 'slate', 'spacelab', 'superhero', 'united', 'yeti')
+    wish = request.args(0)
+    if wish and wish in themes:
+        if auth.user:
+            db.auth_user[auth.user_id] = dict(theme=wish)
+            auth.user.theme = wish
+        else:
+            session.theme = wish  # warning: admin/ app uses similar session.themes
+        redirect(URL())
+    active = __active_theme() or BOOTSTRAP_DEFAULT
+    themes = [LI(A(B(theme) if theme == active else theme, _href=URL(args=(theme)))) for theme in themes]
+    return dict(themes=UL(*themes, _class="list-group"))
+
+def __active_theme():
+    return auth.user and auth.user.theme or session.theme
 
 def wiki():
     return auth.wiki()

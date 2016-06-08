@@ -51,6 +51,7 @@ response.menu = [
         #(T('statistické skupiny titulů'), False, URL('library', 'stgrt'), []),
         #(T('statistické skupiny čtenářů'), False, URL('library', 'stgrr'), []),
         ###?? (T('statistické skupiny výpůjček'), False, URL('library', 'stgrb'), []),
+        (T('vzhled'), False, URL('default', 'theme'), []),
         ]),
 ]
 
