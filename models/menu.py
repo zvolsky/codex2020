@@ -54,7 +54,7 @@ response.menu = [
         ]),
 ]
 
-DEVELOPMENT_MENU = request.is_local
+DEVELOPMENT_MENU = False  # request.is_local
 #mz +++k
 
 #########################################################################
