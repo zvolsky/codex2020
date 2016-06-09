@@ -47,7 +47,6 @@ def wiki():
 
 def welcome():
     return {}
-#mz ++k
 
 def user():
     """
@@ -65,8 +64,22 @@ def user():
     to decorate functions that need access control
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
-    return dict(form=auth())
+    #from mail_send import mail_send
+    def onaccept(form):
+        session.flash = T("Děkujeme. Registrace bude nyní čekat na schválení. Dostanete zprávu mailem.")
+        mail.send('zvolsky@seznam.cz',
+                  subject='%s - %s' % (request.env.http_host, T("nový uživatel")),
+                  message=T("Přihlásil se nový uživatel:")
+                          + '\n'
+                          + '\n' + form.vars.first_name
+                          + '\n' + form.vars.last_name
+                          + '\n' + form.vars.email
+                          + '\n' + form.vars.introduce
+                  )
 
+    auth.settings.register_onaccept.append(onaccept)
+    return dict(form=auth())
+#mz ++k
 
 @cache.action()
 def download():

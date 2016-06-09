@@ -6,11 +6,9 @@ import os
 import mimetypes
 
 from sparkpost import SparkPost
-import vfp
 
 appdir = os.path.join(os.getcwd(), 'applications', 'platby')
-sparkpost_key = vfp.filetostr(os.path.join(appdir,
-          'private', 'sparkpost_zitranavylet_zvolsky.key')).strip()
+sparkpost_key = myconf.take('smtp.login').split(':')[-1].strip()
 
 def mail_send(subject, txt, prilohy=[], prijemci=
       [{'email': 'mirek.zvolsky@gmail.com', 'name': u'Mirek Zvolský na Googlu'},
