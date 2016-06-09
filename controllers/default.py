@@ -49,7 +49,8 @@ def welcome():
     return {}
 
 def pokus():
-    mail.send('zvolsky@seznam.cz',
+    from plugin_mz import admin_mail
+    mail.send(admin_mail,
           subject='pokus',
           message=request.env.http_host
           )
@@ -72,9 +73,10 @@ def user():
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
     #from mail_send import mail_send
+    from plugin_mz import admin_mail
     def onaccept(form):
         session.flash = T("Děkujeme. Registrace bude nyní čekat na schválení. Dostanete zprávu mailem.")
-        mail.send('admin@' + request.env.http_host,
+        mail.send(admin_mail,
                   subject='%s - %s' % (request.env.http_host, T("nový uživatel")),
                   message=T("Přihlásil se nový uživatel:")
                           + '\n'

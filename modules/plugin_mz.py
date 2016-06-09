@@ -12,6 +12,9 @@ from gluon.sqlhtml import add_class
 from gluon.validators import IS_NOT_EMPTY, IS_IN_DB
 
 
+admin_mail = 'admin@' + '.'.join(request.env.http_host.rsplit('.')[-2:])
+
+
 def link(filename):
     current.response.files.append(URL('static', filename))
 
