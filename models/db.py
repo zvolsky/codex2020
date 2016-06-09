@@ -102,7 +102,7 @@ auth.settings.extra_fields['auth_user'] = [
           label=T("Vzhled"), comment=T("vzhled aplikace (styl/téma)")),
     Field('introduce', 'text',
           label=T("Představte se"),
-          comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně pracujete-li s knihami profesionálně, když uvedete, kde pracujete ... děkujeme")),
+          comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně (pracujete-li s knihami profesionálně) pro kterou instituci jej plánujete využít ... děkujeme")),
     ]
 #mz ++k
 

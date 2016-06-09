@@ -90,7 +90,7 @@ def retrieve_books():
             aut = '; '.join(book_dict['A'])
             pub = '; '.join(book_dict['P'])
             puy = '; '.join(book_dict['Y'])
-            book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-info"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
+            book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
                                 _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
                              tit, aut, pub, puy])
     locale.setlocale(locale.LC_ALL, COLLATING)

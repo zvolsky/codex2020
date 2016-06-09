@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+#mz ++z
+def models():   # debug (broken migrations, ..)
+    return 'models/db finished ok'
+
 def index():
     if __active_theme():
         redirect(URL('wiki'))
     else:
-        redirect(URL('theme'))
+        redirect(URL('theme', args=('new')))
 
 def theme():
     """requires:
@@ -17,23 +21,33 @@ def theme():
     """
     themes = ('bootstrap', 'cerulean', 'cosmo', 'cyborg', 'darkly', 'flatly', 'journal', 'lumen', 'paper', 'readable',
                'sandstone', 'simplex', 'slate', 'spacelab', 'superhero', 'united', 'yeti')
-    wish = request.args(0)
-    if wish and wish in themes:
-        if auth.user:
-            db.auth_user[auth.user_id] = dict(theme=wish)
-            auth.user.theme = wish
-        else:
-            session.theme = wish  # warning: admin/ app uses similar session.themes
-        redirect(URL())
+    new = False
+    action = request.args(0)
+    if action:
+        if action == 'new':
+            new = True
+        elif action == 'set':
+            wish = request.args(1)
+            if wish and wish in themes:
+                if auth.user:
+                    db.auth_user[auth.user_id] = dict(theme=wish)
+                    auth.user.theme = wish
+                else:
+                    session.theme = wish  # warning: admin/ app uses similar session.themes
+                redirect(URL())
     active = __active_theme() or BOOTSTRAP_DEFAULT
-    themes = [LI(A(B(theme) if theme == active else theme, _href=URL(args=(theme)))) for theme in themes]
-    return dict(themes=UL(*themes, _class="list-group"))
+    themes = [LI(A(B(theme) if theme == active else theme, _href=URL(args=('set', theme)), _class="list-group-item")) for theme in themes]
+    return dict(themes=UL(*themes, _class="list-group"), new=new)
 
 def __active_theme():
     return auth.user and auth.user.theme or session.theme
 
 def wiki():
     return auth.wiki()
+
+def welcome():
+    return {}
+#mz ++k
 
 def user():
     """

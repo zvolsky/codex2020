@@ -30,7 +30,10 @@ response.google_analytics_id = None
 
 #mz +++z
 response.menu = [
-    (T('Návod'), False, URL('default', 'wiki'), []),
+    (T('Návod'), False, URL('default', 'wiki'), [
+        (T('vítejte'), False, URL('default', 'welcome'), []),
+        (T('návod'), False, URL('default', 'wiki'), []),
+        ]),
     (T('Fond'), False, URL('catalogue', 'find'), [
         (T('katalogizace'), False, URL('catalogue', 'find'), []),
         (T('revize'), False, URL('pool', 'review'), []),

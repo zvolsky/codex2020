@@ -1,6 +1,15 @@
 
 {{extend 'layout.html'}}
 
+{{if new:}}
+    {{from c2_views import codex}}
+    {{=codex(welcome=False)}}
+{{pass}}
+
+{{btn = A(T("Pokračovat k úvodní informaci"), _href="%s" % URL('welcome'), _class="btn btn-primary")}}
+{{=btn}}
+
 <h3>{{=T("Nastavte si vzhled aplikace")}}</h3>
 
 {{=themes}}
+{{=btn}}
