@@ -48,6 +48,13 @@ def wiki():
 def welcome():
     return {}
 
+def pokus():
+    mail.send('zvolsky@seznam.cz',
+          subject='pokus',
+          message=request.env.http_host
+          )
+    return 'xxx'
+
 def user():
     """
     exposes:
@@ -67,7 +74,7 @@ def user():
     #from mail_send import mail_send
     def onaccept(form):
         session.flash = T("Děkujeme. Registrace bude nyní čekat na schválení. Dostanete zprávu mailem.")
-        mail.send('zvolsky@seznam.cz',
+        mail.send('admin@' + request.env.http_host,
                   subject='%s - %s' % (request.env.http_host, T("nový uživatel")),
                   message=T("Přihlásil se nový uživatel:")
                           + '\n'
