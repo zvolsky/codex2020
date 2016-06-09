@@ -48,14 +48,6 @@ def wiki():
 def welcome():
     return {}
 
-def pokus():
-    from plugin_mz import admin_mail
-    mail.send(admin_mail,
-          subject='pokus',
-          message=request.env.http_host
-          )
-    return 'xxx'
-
 def user():
     """
     exposes:
