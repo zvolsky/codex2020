@@ -1,0 +1,12 @@
+{{extend 'layout.html'}}
+
+<h4>{{=T("Vyplň informace o vaší knihovně (nebo knižním obchodu)")}}</h4>
+
+<div class="well well-small">
+    {{=form}}
+</div>
+
+<script>
+    $('label').css('text-align', 'right');
+    $('textarea').attr('rows', 3);
+</script>

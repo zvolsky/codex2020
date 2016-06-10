@@ -1,12 +1,11 @@
 
 {{extend 'layout.html'}}
 
-{{if new:}}
-    {{from c2_views import codex}}
-    {{=codex(welcome=False)}}
-{{pass}}
+<div class="alert alert-warning">
+    Tmavé vzhledy mají zatím problém s čitelností některých údajů (seznamy, apod.). Problém se pokusíme odstranit.
+</div>
 
-{{btn = A(T("Pokračovat k úvodní informaci"), _href="%s" % URL('welcome'), _class="btn btn-primary")}}
+{{btn = A(T("Pokračovat"), _href="%s" % URL('index'), _class="btn btn-primary")}}
 {{=btn}}
 
 <h3>{{=T("Nastavte si vzhled aplikace")}}</h3>

@@ -1,5 +1,12 @@
 {{extend 'layout.html'}}
 
+{{if request.args(0) in ('register', 'profile') and (not form.record or not form.record.librarian and not form.record.library_id):}}
+    <div class="alert alert-warning">
+        {{=B(T("TIP:"))}}
+        {{=T("Ještě trvá doba, kdy si můžete založit ZDARMA vlastní databázi nejen pro domácí knihovnu, ale pro jakoukoli, i komerční organizaci.")}}
+    </div>
+{{pass}}
+
 <h3>
 {{=T('Sign Up') if request.args(0) == 'register' else T('Log In') if request.args(0) == 'login' else T(request.args(0).replace('_',' ').title())}}
 </h3>
@@ -22,14 +29,17 @@
     </div>
 </div>
 
-
 {{block page_js}}
 <script>
+    {{if request.args(0) == 'profile' and form.record.librarian:}}
+        $('#auth_user_librarian__row').hide();
+    {{pass}}
+
     jQuery("#web2py_user_form input:visible:enabled:first").focus();
-{{if request.args(0)=='register':}}
-    web2py_validate_entropy(jQuery('#auth_user_password'),100);
-{{elif request.args(0)=='change_password':}}
-    web2py_validate_entropy(jQuery('#no_table_new_password'),100);
-{{pass}}
+    {{if request.args(0)=='register':}}
+        web2py_validate_entropy(jQuery('#auth_user_password'),100);
+    {{elif request.args(0)=='change_password':}}
+        web2py_validate_entropy(jQuery('#no_table_new_password'),100);
+    {{pass}}
 </script>
 {{end page_js}}

@@ -4,7 +4,21 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
 @auth.requires_login()
+def new():
+    """will create library for the new librarian"""
+    form = SQLFORM(db.library,
+                   formstyle=formstyle_bootstrap3_compact_factory(),
+                   submit_button=T("Pokračovat ke katalogizaci"))
+    if form.process().accepted:
+        auth.user.library_id.insert(0, form.vars.id)
+        db.auth_user[auth.user_id] = dict(library_id=auth.user.library_id)
+        auth.library_id = form.vars.id
+        redirect(URL('catalogue', 'find'))
+    return dict(form=form)
+
+@auth.requires_login()
 def library():
+    """edit info about librarian's library"""
     if not auth.library_id:
         redirect(URL('default', 'index'))
     db.library.id.readable = False

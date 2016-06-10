@@ -5,10 +5,10 @@ def models():   # debug (broken migrations, ..)
     return 'models/db finished ok'
 
 def index():
-    if __active_theme():
-        redirect(URL('wiki'))
-    else:
-        redirect(URL('theme', args=('new')))
+    redirect(URL('home'))
+
+def home():
+    return dict()
 
 def theme():
     """requires:
@@ -66,19 +66,28 @@ def user():
     """
     #from mail_send import mail_send
     from plugin_mz import admin_mail
-    def onaccept(form):
-        session.flash = T("Děkujeme. Registrace bude nyní čekat na schválení. Dostanete zprávu mailem.")
+
+    def on_new_lib(form):
         mail.send(admin_mail,
-                  subject='%s - %s' % (request.env.http_host, T("nový uživatel")),
-                  message=T("Přihlásil se nový uživatel:")
+                  subject='%s - %s' % (request.env.http_host, T("nová knihovna")),
+                  message=T("Uživatel si zakládá knihovnu:")
                           + '\n'
                           + '\n' + form.vars.first_name
                           + '\n' + form.vars.last_name
                           + '\n' + form.vars.email
-                          + '\n' + form.vars.introduce
                   )
+        redirect(URL('library', 'new'))
 
-    auth.settings.register_onaccept.append(onaccept)
+    def onaccept_new(form):
+        if form.vars.librarian:
+            on_new_lib(form)
+
+    def onaccept_edit(form):
+        if form.vars.librarian and (not auth.user.library_id or auth.user.library_id == TESTING_LIB_ID):
+            on_new_lib(form)
+
+    auth.settings.register_onaccept.append(onaccept_new)
+    auth.settings.profile_onaccept.append(onaccept_edit)
     return dict(form=auth())
 #mz ++k
 

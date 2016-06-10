@@ -63,11 +63,14 @@ plugins = PluginManager()
 LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
                  ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
                  ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
-                 ('oth', T("jiné, nelze zařadit")),
+                 ('tst', T("jen pro odzkoušení")), ('oth', T("jiné, nelze zařadit")),
                 )
 db.define_table('library',
-        Field('library', 'string', length=128,
+        Field('library', 'string', length=128, requires=IS_NOT_EMPTY(),
               label=T("Jméno knihovny"), comment=T("jméno vaší knihovny")),
+        Field('slug', 'string', length=32,
+              requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.slug')],
+              label=T("URL jméno"), comment=T("jméno do URL adresy [malá písmena, číslice, pomlčka/podtržítko]")),
         Field('street', 'string', length=48,
               label=T("Ulice"), comment=T("ulice (nepovinné)")),
         Field('city', 'string', length=48,
@@ -100,9 +103,8 @@ auth.settings.extra_fields['auth_user'] = [
     Field('theme', 'string', length=16,
           readable=False, writable=False, default=BOOTSTRAP_DEFAULT,
           label=T("Vzhled"), comment=T("vzhled aplikace (styl/téma)")),
-    Field('introduce', 'text',
-          label=T("Představte se"),
-          comment=T("budeme rádi, když napíšete, jak byste rád(a) tento portál používal(a), případně (pracujete-li s knihami profesionálně) pro kterou instituci jej plánujete využít ... děkujeme")),
+    Field('librarian', 'boolean', notnull=True, default=False, readable=True, writable=True,
+          label=T("Vlastní databáze"), comment=T("označ, jestliže chceš vytvořit vlastní databázi (pro knihovnu [domácí zdarma] nebo knižní obchod)")),
     ]
 #mz ++k
 

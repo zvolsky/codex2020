@@ -10,6 +10,8 @@ from c2_db import PublLengths
 DEFAULT_CURRENCY = 'CZK'
 SUPPORTED_CURRENCIES = ('CZK', 'EUR', 'PLZ', 'USD')
 
+TESTING_LIB_ID = 1
+
 # impressions history
 HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),
             ('--', T("vyřazen (bez dalších podrobností)")),
@@ -40,7 +42,7 @@ current.db = db
 auth.settings.create_user_groups = None
 
 # dočasně, dokud ladíme první knihovnu
-auth.settings.registration_requires_approval = True  # TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
+# TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
 auth.library_id = auth.user and getattr(auth.user, 'library_id', None) or 1  # první z předvolených or zkušební
 if type(auth.library_id) == list:
     auth.library_id = auth.library_id[0]

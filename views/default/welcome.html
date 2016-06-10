@@ -20,20 +20,21 @@
     {{=MARKMIN(T("Je vytvořen [[v jazyce Python http://www.python.org]], v programovacím jazyku, který [[má budoucnost https://www.google.com/trends/explore#q=python%2C%20perl%2C%20php%2C%20c%23&date=today%2072-m&cmpt=q&tz=Etc%2FGMT-2]]."))}}
 </div>
 
-<div class="alert alert-success">
+<div class="well">
     {{=MARKMIN("Používání tohoto portálu je **trvale zdarma pro domácí knihovny**.")}}
     {{=MARKMIN("**Pro instituce** nabízíme mimořádně **nízké ceny**.")}}
     {{=MARKMIN("**Levně** nabízíme také **program placené podpory** (konzultace, zaškolení, kontrola správnosti katalogizace, apod.).")}}
 </div>
 
-<div class="alert alert-warning">
+<div class="alert alert-success">
     Práce na projektu začaly v květnu 2016, momentálně zprovozňujeme první (školní) knihovnu.
     {{=MARKMIN("Ne vše je tedy hotovo, ale, abychom vás povzbudili, je tady tato **AKCE**:")}}
     <blockquote>
         {{=MARKMIN("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%.")}}
-        <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Registrovat se</a>
     </blockquote>
+    <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Registrovat se</a>
 </div>
+<a href="{{=URL('index')}}" class="btn btn-default">{{=T("Pokračovat")}}</a>
 
 <script>
     $('#c22').click(function() {

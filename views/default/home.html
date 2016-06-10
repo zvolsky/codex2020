@@ -1,0 +1,33 @@
+{{extend 'layout.html'}}
+
+{{if auth.user:}}
+    <div class="alert alert-warning">
+        {{=T("Aplikace je ve fázi vývoje. Nelze vyhledávat v knihovnách.")}}
+    </div>
+    <div class="well">
+        {{if auth.library_id > 1:}}
+            <a href="{{=URL('catalogue', 'find')}}" class="btn btn-primary">{{=T("přejít ke katalogizaci")}}</a>
+        {{else:}}
+            <a href="{{=URL('catalogue', 'find')}}" class="btn btn-primary">{{=T("vyzkoušet katalogizaci ve ZKUŠEBNÍ knihovně")}}</a>
+            <a href="{{=URL('library', 'new') if auth.user.librarian else URL('user', args=('profile'))}}" class="btn btn-info">
+                {{=T("založit si vlastní databázi (pro knihovnu nebo knižní obchod)")}}
+            </a>
+        {{pass}}
+        <a href="{{=URL('theme')}}" class="btn btn-info">{{=T("změnit vzhled aplikace")}}</a>
+        <a href="{{=URL('welcome')}}" class="btn btn-info">{{=T("informace o portálu")}}</a>
+    </div>
+{{else:}}
+    <div class="xalert xalert-warning">
+        {{=T("Nejste přihlášen(a). Můžete pouze vyhledávat, ale nemůžete rezervovat ani spravovat své výpůjčky.")}}
+    </div>
+    <a href="{{=URL('user', args=('login'))}}" class="btn btn-primary">{{=T("přihlásit se nebo zaregistrovat")}}</a>
+    <a href="{{=URL('theme')}}" class="btn btn-info">{{=T("změnit vzhled aplikace")}}</a>
+
+    <div style="margin-top: 20px;">
+        {{=T("Tato aplikace také umožňuje evidovat knihy vlastní knihovny (nebo knižního obchodu).")}}
+    </div>
+    <a href="{{=URL('welcome')}}" class="btn btn-info">{{=T("chci vědět více")}}</a>
+{{pass}}
+
+<script>
+</script>
