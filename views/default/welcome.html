@@ -32,7 +32,13 @@
     <blockquote>
         {{=MARKMIN("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%.")}}
     </blockquote>
-    <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Registrovat se</a>
+    {{if auth.user:}}
+        {{if not auth.user.libarian:}}
+            <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Vytvořit databázi ZDARMA</a>
+        {{pass}}
+    {{else:}}
+        <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Registrovat se</a>
+    {{pass}}
 </div>
 <a href="{{=URL('index')}}" class="btn btn-default">{{=T("Pokračovat")}}</a>
 
