@@ -21,15 +21,15 @@
         <thead>
             <th>{{=T("Evidován")}}</th>
             <th />
-            {{if session.libstyle[1] == 'O':}}
+            {{if libstyle[1] == 'O':}}
                 <th>{{=T("Čís.")}}</th>
             {{pass}}
-            {{if session.libstyle[3] == 'B':}}
+            {{if libstyle[3] == 'B':}}
                 <th>{{=T("Čar.kód")}}</th>
             {{pass}}
             <th>{{=SPAN(T("Rychlá identifikace"), _title="%s" % fastid_title)}}</th>
             <th>{{=T("Nákupní cena")}}</th>
-            {{if session.libstyle[4] == 'P':}}
+            {{if libstyle[4] == 'P':}}
                 <th>{{=T("Umístění")}}</th>
             {{pass}}
             <th>{{=T("Stav")}}</th>
@@ -44,15 +44,15 @@
                         {{if impression.impr_hist.id is None:}},
                             {{=A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))}}
                         {{pass}}</td>
-                    {{if session.libstyle[1] == 'O':}}
+                    {{if libstyle[1] == 'O':}}
                         <td>{{=impression.impression.iorder}}</td>
                     {{pass}}
-                    {{if session.libstyle[3] == 'B':}}
+                    {{if libstyle[3] == 'B':}}
                         <td>{{=impression.impression.barcode or ''}}</td>
                     {{pass}}
                     <td>{{=SPAN(impression.impression.fastid, _title="%s" % fastid_title)}}</td>
                     <td style="text-align: right; padding-right: 60px;"><span class="weak smaller">{{=impression.impression.price_in or ''}}</span></td>
-                    {{if session.libstyle[4] == 'P':}}
+                    {{if libstyle[4] == 'P':}}
                         <td>{{=impression.place and impression.place.place or ''}}</td>
                     {{pass}}
                     <td><span class="weak smaller" title="{{=impression.impression.icondition or ''}}">

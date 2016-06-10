@@ -4,25 +4,8 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear
 
-from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo
+from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle
 from plugin_mz import formstyle_bootstrap3_compact_factory
-
-
-if not session.libstyle:
-    session.libstyle = 'IO.BPg...GsS'  # character position IS important
-            ## 0 I impression uses incremental ID (prirustkove cislo)
-            #  1 O impression show order of the impression
-            ## 2   if digit 2..5: impression show Rapid identification (rychla identifikace knihy), 2..5 characters long
-            #  3 B impression uses barcodes
-            #  4 P impression uses places
-            ## 5 g impression uses signature
-            ## 6   separating of signature modifier, if any, default is: empty
-            ## 7   signature modifier for the 1-st impression, if any, default is: empty
-            ## 8   signature modifier for the 2-nd impression, digit or letter, default is: b
-            ##          (next impressions will receive the incremented value)
-            ## 9 G title uses signature
-            ##10 s impression uses statistics
-            ##11 S title uses statistics
 
 
 @auth.requires_login()
@@ -106,9 +89,13 @@ def list():
             fastinfo, ean, title, author, publisher, pubyear = parse_descr(session.addbook)
         else:
             redirect(URL('default', 'index'))
+    libstyle = get_libstyle()
 
     current_book = db.impression.answer_id == answer_id
 
+    barcode = libstyle[3] == 'B'
+    place = libstyle[4] == 'P'
+    bill = session.bill and True or False
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
             Field('haction', 'string', length=2, default='+o',
@@ -118,14 +105,17 @@ def list():
                   label=T("Dar"), comment=T("získáno darem")),
             Field('bill_id', db.bill,
                   requires=IS_EMPTY_OR(IS_IN_DB(db, db.bill.id, lambda row: row.htime.strftime('%d.%m.%Y %H:%M') + (', ' + no_our) if no_our else '')),
-                  readable=False, writable=False,
+                  readable=bill, writable=False,
                   label=T("Doklad"), comment=T("doklad o pořízení (doklad lze změnit volbou Nový nákup/doklad)")),
             Field('not_this_bill', 'boolean', default=False,
-                  readable=False, writable=False,
-                  label=T("Nneí z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
-            Field('barcode', 'string', length=16, label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
+                  readable=bill, writable=bill,
+                  label=T("Není z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
+            Field('barcode', 'string', length=16,
+                  readable=barcode, writable=barcode,
+                  label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
             Field('place_id', db.place,
                   requires=IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s')),
+                  readable=place, writable=place,
                   label=T("Umístění"), comment=T("umístění výtisku")),
             Field('price_in', 'decimal(12,2)',
                   label=db.impression.price_in.label, comment=db.impression.price_in.comment),
@@ -134,11 +124,7 @@ def list():
             submit_button=T('Zařaď nové výtisky do knihovny')
             )
 
-    if session.bill:
-        form.vars.bill_id.readable = True
-        form.vars.not_this_bill.readable = True
-        form.vars.not_this_bill.writable = True
-
+    if bill:
         form.vars.bill_id = session.bill['id']
         if session.bill['gift']:
             form.vars.gift = True
@@ -219,7 +205,7 @@ def list():
                         left=[db.impr_hist.on(db.impr_hist.impression_id == db.impression.id),
                             db.place.on(db.place.id == db.impression.place_id)])
     return dict(form=form, impressions=impressions, question_id=question_id, answer_id=answer_id,
-                shortened=shortened, nnn=ean, title=title,
+                libstyle=libstyle, shortened=shortened, nnn=ean, title=title,
                 fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
@@ -260,10 +246,11 @@ def edit():
     impression_id = request.args(2)
     if not impression_id:
         redirect(URL('list'))
+    libstyle = get_libstyle()
     db.impression.id.readable = False
-    db.impression.iorder.readable = session.libstyle[1] == 'O'
-    db.impression.barcode.readable = db.impression.barcode.writable = session.libstyle[3] == 'B'
-    db.impression.place_id.readable = db.impression.place_id.writable = session.libstyle[4] == 'P'
+    db.impression.iorder.readable = libstyle[1] == 'O'
+    db.impression.barcode.readable = db.impression.barcode.writable = libstyle[3] == 'B'
+    db.impression.place_id.readable = db.impression.place_id.writable = libstyle[4] == 'P'
     form = SQLFORM(db.impression, impression_id, submit_button=T("Uložit"), formstyle=formstyle_bootstrap3_compact_factory())
     form.add_button(T('Zpět (storno)'), URL('list', args=(request.args(0), request.args(1))))
     if form.process().accepted:

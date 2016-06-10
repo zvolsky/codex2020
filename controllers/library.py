@@ -10,6 +10,7 @@ def new():
                    formstyle=formstyle_bootstrap3_compact_factory(),
                    submit_button=T("Pokračovat ke katalogizaci"))
     if form.process().accepted:
+        __clear_libstyle()
         auth.user.library_id.insert(0, form.vars.id)
         db.auth_user[auth.user_id] = dict(library_id=auth.user.library_id)
         auth.library_id = form.vars.id
@@ -24,8 +25,13 @@ def library():
     db.library.id.readable = False
     form = SQLFORM(db.library, auth.library_id, formstyle=formstyle_bootstrap3_compact_factory())
     if form.process().accepted:
+        __clear_libstyle()
         redirect(URL('default', 'index'))
     return dict(form=form)
+
+def __clear_libstyle():   # session.libstyle will be recreated when needed
+    if 'libstyle' in session:
+        del session.libstyle
 
 @auth.requires_login()
 def places():
