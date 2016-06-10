@@ -5,13 +5,13 @@
 ## Customize your APP title, subtitle and menus here
 #########################################################################
 
-#mz +++z
+#mz ++z
 library = db(db.library.id == auth.library_id).select(db.library.library).first().library
 response.logo = DIV(
         A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
         A(B(library), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
         )
-#mz +++k
+#mz ++k
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 
@@ -28,7 +28,7 @@ response.google_analytics_id = None
 ## this is the main application menu add/remove items as required
 #########################################################################
 
-#mz +++z
+#mz ++z
 response.menu = [
     (T('Návod'), False, URL('default', 'wiki'), [
         (T('vítejte'), False, URL('default', 'welcome'), []),
@@ -59,7 +59,7 @@ response.menu = [
 ]
 
 DEVELOPMENT_MENU = False  # request.is_local
-#mz +++k
+#mz ++k
 
 #########################################################################
 ## provide shortcuts for development. remove in production

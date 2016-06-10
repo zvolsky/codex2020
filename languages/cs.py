@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 {
+'!=': '!=',
 '!langcode!': 'cs-cz',
 '!langname!': 'čeština',
 '"update" is an optional expression like "field1=\'newvalue\'". You cannot update or delete the results of a JOIN': 'Kolonka "Upravit" je nepovinný výraz, například "pole1=\'nováhodnota\'". Výsledky databázového JOINu nemůžete mazat ani upravovat.',

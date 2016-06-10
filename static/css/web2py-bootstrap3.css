@@ -194,14 +194,14 @@ div.error_wrapper {
 }
 .web2py_grid thead th,
 .web2py_grid tfoot td {
-    background-color: #EAEAEA;
+    //mz ++ background-color: #EAEAEA;
     padding: 10px 5px;
 }
 .web2py_grid tr.odd {
-    background-color: #F9F9F9;
+    //mz ++ background-color: #F9F9F9;
 }
 .web2py_grid tr:hover {
-    background-color: #F5F5F5;
+    //mz ++ background-color: #F5F5F5;
 }
 .web2py_console form {
     width: 100%;
@@ -248,7 +248,7 @@ div.error_wrapper {
 }
 .web2py_paginator {
     text-align: right;
-    background-color: #f2f2f2;
+    //mz ++ background-color: #f2f2f2;
     padding: 5px;
 }
 .web2py_paginator ul {

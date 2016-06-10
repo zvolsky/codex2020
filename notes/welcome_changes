@@ -1,0 +1,58 @@
+Changes of the Web2py Welcome application need to be re-applied if we decide to use newer Welcome app version later.
+Changes are marked: mz ++
+
+Find them in code.
+Not sure if following is uptodate:
+
+
+models/db.py
+------------
+#mz ++z
+myconf = AppConfig(reload=request.is_local)
+#mz ++k
+
+#mz ++z
+........... table definitions: library, auth_user extended
+#mz ++k
+
+
+models/menu.py
+------------
+#mz ++z
+library = db(db.library.id == auth.library_id).select(db.library.library).first().library
+response.logo = DIV(
+        A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
+        A(B(library), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
+        )
+#mz ++k
+
+#mz ++z
+........... redefined menu
+DEVELOPMENT_MENU = False  # request.is_local
+#mz ++k
+
+
+controller/default.py:
+----------------------
+all except of: download(), call()
+original code for function user() was:  return dict(form=auth())
+
+
+
+views/layout.html:
+------------------
+requires:
+	netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css -> static/css/bootstrap-glyphicons.css
+	+ patch it: remove remove color/background-color for 'body'
+------------------
+<!-- include stylesheets -->
+<!-- #mz ++z -->
+<link rel="stylesheet" href="{{=URL('static','css/bootstrap/%s.min.css' % (auth.user and auth.user.theme or session.theme or BOOTSTRAP_DEFAULT))}}"/>
+<link rel="stylesheet" href="{{=URL('static','css/bootstrap-glyphicons.css')}}"/><!-- downloaded from netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css; patched: remove color/background-color for 'body' -->
+<!-- #mz ++k -->
+
+
+static/css/web2py-bootstrap.css:
+--------------------------------
+//mz ++ color....
+comment out color's, background-color's especially for web2py grid

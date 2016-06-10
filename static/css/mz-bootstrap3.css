@@ -16,16 +16,16 @@ form .btn-primary {
     border: 1px solid darkblue;
 }
 form .btn-default {
-    color: darkblue;
-    background-color: #aad;
+    //color: darkblue;
+    //background-color: #aad;
     border: 1px solid blue;
 }
 form .btn-default:hover {
-    color: white;
-    background-color: #447;
+    //color: white;
+    //background-color: #447;
 }
 form .row .small {
-    color: #222;
+    //color: #222;
     padding: 5px 0 0 26px;
 }
 
@@ -36,5 +36,5 @@ form .row .small {
     font-size: 120%;
 }
 .weak {
-    color: #555;
+    //color: #555;
 }

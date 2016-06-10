@@ -22,7 +22,7 @@
     <!-- include stylesheets -->
     <!-- #mz ++z -->
     <link rel="stylesheet" href="{{=URL('static','css/bootstrap/%s.min.css' % (auth.user and auth.user.theme or session.theme or BOOTSTRAP_DEFAULT))}}"/>
-    <!-- duplicate: default is in layout.html too -->
+    <link rel="stylesheet" href="{{=URL('static','css/bootstrap-glyphicons.css')}}"/><!-- downloaded from netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css; patched: romove color/background-color for 'body' -->
     <!-- #mz ++k -->
     <link rel="stylesheet" href="{{=URL('static','css/web2py-bootstrap3.css')}}"/>
     <link rel="shortcut icon" href="{{=URL('static','images/favicon.ico')}}" type="image/x-icon">
