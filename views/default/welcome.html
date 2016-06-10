@@ -30,14 +30,17 @@
     Práce na projektu začaly v květnu 2016, momentálně zprovozňujeme první (školní) knihovnu.
     {{=MARKMIN("Ne vše je tedy hotovo, ale, abychom vás povzbudili, je tady tato **AKCE**:")}}
     <blockquote>
-        {{=MARKMIN("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%.")}}
+        {{=MARKMIN(T("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%."))}}
     </blockquote>
     {{if auth.user:}}
-        {{if not auth.user.libarian:}}
-            <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Vytvořit databázi ZDARMA</a>
+        {{if auth.user.library_id == [TESTING_LIB_ID]:}}
+            <a href="{{=URL('newdb')}}" class="btn btn-primary">{{=T("Vytvořit databázi ZDARMA")}}</a>
         {{pass}}
     {{else:}}
-        <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">Registrovat se</a>
+        <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">{{=T("Registrovat se")}}</a>
+        <a href="{{=URL('login_newdb', vars={'_next': '/%s/default/user/profile' % request.application})}}" class="btn btn-info">
+            {{=T("Už jsem registrován. Jak mám postupovat?")}}
+        </a>
     {{pass}}
 </div>
 <a href="{{=URL('index')}}" class="btn btn-default">{{=T("Pokračovat")}}</a>

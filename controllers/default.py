@@ -48,6 +48,17 @@ def wiki():
 def welcome():
     return {}
 
+def login_newdb():
+    session.flash = T("Chcete-li si vytvořit vlastní databázi, přihlašte se, a pak zaškrtněte [Vlastní databáze]")
+    redirect(URL('user', args=('login'), vars=request.vars))
+
+def newdb():
+    if auth.user.librarian:
+        redirect(URL('library', 'new'))
+    else:
+        session.flash = T("Chcete-li si vytvořit vlastní databázi, zaškrtněte [Vlastní_databáze]")
+        redirect(URL('user', args=('profile')))
+
 def user():
     """
     exposes:
@@ -83,7 +94,7 @@ def user():
             on_new_lib(form)
 
     def onaccept_edit(form):
-        if form.vars.librarian and (not auth.user.library_id or auth.user.library_id == TESTING_LIB_ID):
+        if form.vars.librarian and (not auth.user.library_id or auth.user.library_id == [TESTING_LIB_ID]):
             on_new_lib(form)
 
     auth.settings.register_onaccept.append(onaccept_new)
