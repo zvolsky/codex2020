@@ -72,7 +72,7 @@ def create_idxs(answer_id, c2_parsed, marc_obj, old_fastinfo='', updating=False)
     if updating:
         join_rows, word_rows, short_rows = get_idx(row.id)
     else:
-        join_rows, word_rows, short_rows = []
+        join_rows = word_rows = short_rows = ()
 
     #TODO: fix rest for index updating
 
