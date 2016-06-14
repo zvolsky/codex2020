@@ -69,35 +69,45 @@ def retrieve_status():
 @auth.requires_login()
 def retrieve_books():
     question_id = request.args(0)
-    question = db(db.question.id == question_id).select(db.question.question).first().question
-    if can_be_isxn(question):
+    question, isxn_like = __get_question(question_id)
+    if isxn_like:
         ean = isxn_to_ean(question)
-        books = db(db.answer.ean == ean).select(db.answer.id, db.answer.fastinfo)
+        query = db.answer.ean == ean
+        books = db(query).select(db.answer.id, db.answer.fastinfo)
+        my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo,
+                                                             join=db.answer.on(db.answer.id == db.owned_book.answer_id))
     else:
-        books = db((db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category == 'T')).select(
+        if ',' in question.question:
+            query = (db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category.belongs(('T', 'A')))
+        else:
+            query = (db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category == 'T')
+        books = db(query).select(
             db.answer.id, db.answer.fastinfo,
             join=[db.idx_join.on(db.idx_join.idx_long_id == db.idx_long.id),
                     db.answer.on(db.answer.id == db.idx_join.answer_id)],
         )
-    book_rows = []
-    for book in books:
-        if book.fastinfo:
-            book_dict = defaultdict(lambda: [])
-            for ln in book.fastinfo.splitlines():
-                if len(ln) > 1:
-                    book_dict[ln[:1]].append(ln[1:])
-            tit = '; '.join(book_dict['T'])
-            aut = '; '.join(book_dict['A'])
-            pub = '; '.join(book_dict['P'])
-            puy = '; '.join(book_dict['Y'])
-            book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
-                                _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
-                             tit, aut, pub, puy])
+        my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo, distinct=True,
+            join=[db.answer.on(db.answer.id == db.owned_book.answer_id),
+                    db.idx_join.on(db.idx_join.answer_id == db.answer.id),
+                    db.idx_long.on(db.idx_long.id, db.idx_join.idx_long_id)],
+        )
+
     locale.setlocale(locale.LC_ALL, COLLATING)
-    book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))
-    book_rows = [row[0] for row in book_rows]
+
+    book_rows = []
+    for book in my_books.find(lambda row: row.fastinfo):
+        __book_to_list(book_rows, book)
+    __sort_book_rows(book_rows)
+    my_books_ids = [book.id for row in my_books]
 
     if book_rows:
+        book_rows.append(DIV('---------'))
+
+    for book in books.find(lambda row: row.id not in my_books_ids and row.fastinfo):
+        __book_to_list(book_rows, book)
+    __sort_book_rows(book_rows)
+
+    if book_rows or my_book_rows:
         res_info = T("Vyber z nalezených publikací nebo ..")
     else:
         res_info = SPAN(EM(question), ' ... ', T("Publikace nebyla nalezena."))
@@ -122,3 +132,24 @@ def erase_question():
 def __btnCancelSearch(hidden=False):
     return A(T('Zahodit (nekatalogizovat)'), _id="erase_question", _href="#",
              _class="btn btn-info%s" % (' hidden' if hidden else ''))
+
+def __get_question(question_id):
+    question = db(db.question.id == question_id).select(db.question.question, cache=(cache.ram, 1800), cacheable=True).first().question
+    return question, can_be_isxn(question)
+
+def __parse_fastinfo(fastinfo):
+    book_dict = defaultdict(lambda: [])
+    for ln in fastinfo.splitlines():
+        if len(ln) > 1:
+            book_dict[ln[:1]].append(ln[1:])
+    return '; '.join(book_dict['T']), '; '.join(book_dict['A']), '; '.join(book_dict['P']), '; '.join(book_dict['Y'])  # tit, aut, pub, puy
+
+def __book_to_list(book_rows, book):
+    tit, aut, pub, puy = __parse_fastinfo(book.fastinfo)
+    book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
+                        _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
+                     tit, aut, pub, puy])
+
+def __sort_book_rows(book_rows):
+    book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))
+    book_rows = [row[0] for row in book_rows]
