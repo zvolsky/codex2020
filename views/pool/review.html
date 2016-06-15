@@ -12,6 +12,13 @@
     <a class="btn btn-sm btn-info right" href="{{=URL('library', 'library')}}">změnit datum</a>
 </h2>
 
+<div class="list-group">
+    {{if cnt_tmp_lost:}}
+        <span class="list-group-item">{{=T("Jako nezvěstných označeno : %s") % (cnt_tmp_lost)}}</span>
+    {{pass}}
+    <span class="list-group-item">{{=T("Zatím nenalezeno výtisků : %s") % (cnt_missing)}}</span>
+</div>
+
 <div class="well well-sm">
     Tady se ještě pracuje ...
 </div>
