@@ -4,8 +4,7 @@ from itertools import groupby
 
 from gluon import current
 
-from global_settings import (DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, TESTING_LIB_ID,
-                             HACTIONS, HACTIONS_IN, HACTIONS_OUT, HACTIONS_MVS, HACTIONS_MVS_HINT)
+from global_settings import DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, TESTING_LIB_ID
 from c2_db import PublLengths
 
 
@@ -20,6 +19,27 @@ auth.settings.create_user_groups = None
 auth.library_id = auth.user and getattr(auth.user, 'library_id', None) or 1  # první z předvolených or zkušební
 if type(auth.library_id) == list:
     auth.library_id = auth.library_id[0]
+
+HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),
+            ('--', T("vyřazen (bez dalších podrobností)")),
+                ('-d', T("vyřazen (likvidován)")), ('-b', T("předán ke svázání (vyřazen)")),
+                ('-g', T("vyřazen (darován)")), ('-n', T("odprodán")), ('-?', T("nezvěstný vyřazen")),
+            ('+f', T("cizí dočasně zařazen (zapůjčený výtisk)")), ('-f', T("zapůjčený cizí vyřazen (vrácen zpět - odevzdán)")),
+            ('o+', T("náš zapůjčený zařazen (byl vrácen zpět)")), ('o-', T("náš dočasně vyřazen (zapůjčen - předán)")),
+            ('l+', T("vrácen")), ('l-', T("vypůjčen")),
+            ('l!', T("upomínka")), ('ll', T("prodloužen vzdáleně")), ('lL', T("prodloužen fyzicky")),
+            ('r*', T("revidován")), ('r?', T("označen jako nezvěstný")),
+            )  # 'r?' status of the impression is active if 'r?' is the last item in the impr_hist
+HACTIONS_IN = tuple(filter(lambda ha: ha[0][0] == '+', HACTIONS))
+HACTIONS_OUT = tuple(filter(lambda ha: ha[0][0] == '-', HACTIONS))
+HACTIONS_MVS = (('+f', T("získali jsme cizí knihy odjinud")),
+                ('-f', T("vrátili jsme cizí knihy")),
+                ('o-', T("zapůjčili jsme naše knihy jinam")),
+                ('o+', T("vrátily se nám naše knihy")))
+HACTIONS_MVS_HINT = (('+f', T("cizí knihy dočasně získávám (současně označte Příjem)")),
+                ('-f', T("cizí knihy vracím zpět - odevzdávám")),
+                ('o-', T("naše knihy zapůjčuji - předávám")),
+                ('o+', T("naše knihy se vrátily - zařazuji je zpět (je doporučeno označit Příjem)")))
 
 """deaktivovano
 class UNIQUE_QUESTION(object):
@@ -380,6 +400,10 @@ db.define_table('impression',
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
+        Field('bill_id', db.bill,
+              writable=False,
+              ondelete='RESTRICT',
+              label=T("Doklad"), comment=T("doklad o pořízení (paragon, faktura)")),
         Field('price_in', 'decimal(12,2)',
               label=T("Nákupní cena"),
               comment=T("nákupní nebo pořizovací cena výtisku (přepočtená na %s)") % (DEFAULT_CURRENCY)),

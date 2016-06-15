@@ -77,7 +77,7 @@ def retrieve_books():
         my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo,
                                                              join=db.answer.on(db.answer.id == db.owned_book.answer_id))
     else:
-        if ',' in question.question:
+        if ',' in question:
             query = (db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category.belongs(('T', 'A')))
         else:
             query = (db.idx_long.item.startswith(slugify(question, connectChar=' '))) & (db.idx_long.category == 'T')
@@ -89,23 +89,23 @@ def retrieve_books():
         my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo, distinct=True,
             join=[db.answer.on(db.answer.id == db.owned_book.answer_id),
                     db.idx_join.on(db.idx_join.answer_id == db.answer.id),
-                    db.idx_long.on(db.idx_long.id, db.idx_join.idx_long_id)],
+                    db.idx_long.on(db.idx_long.id == db.idx_join.idx_long_id)],
         )
 
     locale.setlocale(locale.LC_ALL, COLLATING)
 
     book_rows = []
     for book in my_books.find(lambda row: row.fastinfo):
-        __book_to_list(book_rows, book)
-    __sort_book_rows(book_rows)
+        __book_to_list(book_rows, book, question_id)
+    book_rows = __sort_book_rows(book_rows)
     my_books_ids = [book.id for row in my_books]
 
     if book_rows:
         book_rows.append(DIV('---------'))
 
     for book in books.find(lambda row: row.id not in my_books_ids and row.fastinfo):
-        __book_to_list(book_rows, book)
-    __sort_book_rows(book_rows)
+        __book_to_list(book_rows, book, question_id)
+    book_rows = __sort_book_rows(book_rows)
 
     if book_rows or my_book_rows:
         res_info = T("Vyber z nalezených publikací nebo ..")
@@ -144,7 +144,7 @@ def __parse_fastinfo(fastinfo):
             book_dict[ln[:1]].append(ln[1:])
     return '; '.join(book_dict['T']), '; '.join(book_dict['A']), '; '.join(book_dict['P']), '; '.join(book_dict['Y'])  # tit, aut, pub, puy
 
-def __book_to_list(book_rows, book):
+def __book_to_list(book_rows, book, question_id):
     tit, aut, pub, puy = __parse_fastinfo(book.fastinfo)
     book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
                         _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
@@ -152,4 +152,4 @@ def __book_to_list(book_rows, book):
 
 def __sort_book_rows(book_rows):
     book_rows.sort(key=lambda r: (locale.strxfrm(r[1]), locale.strxfrm(r[2]), locale.strxfrm(r[3]), r[4]))
-    book_rows = [row[0] for row in book_rows]
+    return [row[0] for row in book_rows]

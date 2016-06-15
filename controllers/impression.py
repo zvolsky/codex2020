@@ -168,7 +168,7 @@ def list():
                     ignore_common_filters=True).select(db.impression.iorder, orderby=db.impression.iorder)
         iorders = [row.iorder for row in rows]
         iorder_candidate = 1
-        barcode = form.vars.barcode.strip()
+        barcode = form.vars.barcode and form.vars.barcode.strip() or ''
         incr_from = None
         for pos, _char in enumerate(barcode):
             if barcode[pos:].isdigit():
@@ -182,11 +182,12 @@ def list():
             if ii > 0 and incr_from is not None:
                 next_no += 1
                 barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
+            bill_id = None if form.vars.not_this_bill else form.vars.bill_id
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
                                                  iorder=iorder_candidate, gift=form.vars.gift, barcode=barcode,
-                                                 place_id=form.vars.place_id, price_in=form.vars.price_in)
-            db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction,
-                                bill_id=None if form.vars.not_this_bill else form.vars.bill_id)
+                                                 place_id=form.vars.place_id,
+                                                 bill_id=bill_id, price_in=form.vars.price_in)
+            db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
             iorder_candidate += 1
 
         if force_redirect:

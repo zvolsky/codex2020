@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from global_settings import USE_TZ_UTC
+
+
 @auth.requires_login()
 def review():
     """
@@ -17,10 +20,10 @@ def review():
     else:  # use library tz (must be from client settings!, default for settings can be from clients javascript)
         #review_time =
         assert False, 'Not implemented yet.'
-    cnt_tmp_lost = db((db.impression) & (db.impr_hist.haction == HACTIONS_TMP_LOST)).count(
-                           left=db.impr_hist.on(db.impr_hist.impression_id == db.impression.id),
-                           orderby=~db.impr_hist.htime)
-    cnt_missing = db((db.impression) & (db.impr_hist.htime >= review_time)).count(
-                    left=db.impr_hist.on(db.impr_hist.impression_id == db.impression.id))
+    #tmp_lost = db((db.impression) & (db.impr_hist.haction == HACTIONS_TMP_LOST)).select(
+    #                       left=db.impr_hist.on(db.impr_hist.impression_id == db.impression.id),
+    #                       orderby=~db.impr_hist.htime)
+    cnt_missing = db((db.impression.id > 0) & (db.impr_hist.impression_id == db.impression.id) & (db.impr_hist.htime >= review_time)).count(
+                    distinct=db.impression.id)
     return dict(cnt_t=db(db.owned_book).count(), cnt_i=db(db.impression).count(),
-                cnt_tmp_lost=cnt_tmp_lost, cnt_missing=cnt_missing, review_date=review_date)
+                cnt_tmp_lost=0, cnt_missing=0, review_date=review_date)
