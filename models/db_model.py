@@ -333,7 +333,7 @@ db.define_table('partner',
         format=lambda row: ', '.join((row.name, row.place))
         )
 
-bill_format = lambda row: ', '.join(filter(lambda item: item, (row['no_our'], row['htime'].strftime(dtformat))))
+bill_format = lambda row: ', '.join(filter(lambda item: item, (row['no_our'], row['htime'].strftime(dtformat)))) if row else ''
             # dict format row['..'] instead of Storage format must be used, because this is used for dict formatting too
 db.define_table('bill',
         Field('library_id', db.library,
