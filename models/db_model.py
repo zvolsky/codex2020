@@ -20,6 +20,7 @@ auth.library_id = auth.user and getattr(auth.user, 'library_id', None) or 1  # p
 if type(auth.library_id) == list:
     auth.library_id = auth.library_id[0]
 
+# TODO: přidej Objednávku do HACTIONS: bude zřejmě vyžadovat extra tabulku jen částečně zpracovaných knih
 HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),
             ('--', T("vyřazen (bez dalších podrobností)")),
                 ('-d', T("vyřazen (likvidován)")), ('-b', T("předán ke svázání (vyřazen)")),
@@ -40,6 +41,7 @@ HACTIONS_MVS_HINT = (('+f', T("cizí knihy dočasně získávám (současně ozn
                 ('-f', T("cizí knihy vracím zpět - odevzdávám")),
                 ('o-', T("naše knihy zapůjčuji - předávám")),
                 ('o+', T("naše knihy se vrátily - zařazuji je zpět (je doporučeno označit Příjem)")))
+dtformat = T('%d.%m.%Y %H:%M', lazy=False)
 
 """deaktivovano
 class UNIQUE_QUESTION(object):
@@ -331,6 +333,8 @@ db.define_table('partner',
         format=lambda row: ', '.join((row.name, row.place))
         )
 
+bill_format = lambda row: ', '.join(filter(lambda item: item, (row['no_our'], row['htime'].strftime(dtformat))))
+            # dict format row['..'] instead of Storage format must be used, because this is used for dict formatting too
 db.define_table('bill',
         Field('library_id', db.library,
               default=auth.library_id,
@@ -365,6 +369,7 @@ db.define_table('bill',
         Field('imp_added', 'datetime', writable=False,
               label=T("Zpracován"), comment=T("kdy byly zaznamenány všechny položky dokladu")),
         common_filter=lambda query: db.bill.library_id == auth.library_id,
+        format=bill_format
         )
 
 db.define_table('impression',
@@ -400,10 +405,6 @@ db.define_table('impression',
         Field('registered', 'date', default=datetime.date.today(),
               notnull=True, writable=False,
               label=T("Evidován"), comment=T("datum zápisu do počítačové evidence")),
-        Field('bill_id', db.bill,
-              writable=False,
-              ondelete='RESTRICT',
-              label=T("Doklad"), comment=T("doklad o pořízení (paragon, faktura)")),
         Field('price_in', 'decimal(12,2)',
               label=T("Nákupní cena"),
               comment=T("nákupní nebo pořizovací cena výtisku (přepočtená na %s)") % (DEFAULT_CURRENCY)),
@@ -439,7 +440,8 @@ db.define_table('impr_hist',
         )
 
 def book_cnt_insert(flds, id):
-    db(db.owned_book.id == flds['owned_book_id']).update(cnt=db.owned_book.cnt + 1)
+    db((db.owned_book.id == flds['owned_book_id']) & (db.owned_book.library_id == auth.library_id),
+           ignore_common_filters=True).update(cnt=db.owned_book.cnt + 1)  # without filter as long it contain cnt>0
 def book_cnt_update(w2set, flds):
     impressions = w2set.select(db.impression.owned_book_id, db.impression.live)
     for impression in impressions:

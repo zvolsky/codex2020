@@ -243,3 +243,13 @@ def get_libstyle():
     current.session.libstyle = libstyle = ''.join(libstyle)
     assert len(libstyle) == 15
     return libstyle
+
+def finish_bill(bill_id):
+    """will finish the opened bill
+    """
+    db = current.db
+    session = current.session
+    cnt_imp = db(db.impr_hist.bill_id == bill_id).count()   # warning: after removing impression as Mistake later, this count can stay higher
+    db.bill[bill_id] = dict(cnt_imp=cnt_imp, imp_added=datetime.datetime.utcnow())
+    if 'bill' in session:
+        del session.bill

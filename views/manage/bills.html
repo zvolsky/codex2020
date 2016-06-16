@@ -1,8 +1,20 @@
 
 {{extend 'layout.html'}}
 
+{{if session.bill:}}
+    <div class="alert alert-info">
+        {{bill_caption = bill_format(session.bill)}}
+        {{=T("Doklad %s je otevřen. Nově katalogizované výtisky se připisují na tento doklad.") % bill_caption}}
+        <a href="{{=URL('bill_finished')}}" class="btn right">{{=T("uzavřít doklad %s") % bill_caption}}</a>
+    </div>
+{{pass}}
+
 <h2>{{=T("Přehled dokladů")}}</h2>
 
 <div class="well well-sm">
     {{=grid}}
+</div>
+
+<div class="alert alert-warning">
+    TODO: dodělat odkaz na položky
 </div>

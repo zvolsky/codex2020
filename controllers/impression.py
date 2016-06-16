@@ -4,7 +4,7 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear
 
-from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle
+from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle, finish_bill
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
@@ -80,18 +80,23 @@ def list():
 
     question_id = request.args(0)
     answer_id = request.args(1)
+
+    # get title+.. and rik to show book info
     if answer_id:
-        answer = db(db.answer.id == answer_id).select(db.answer.ean, db.answer.fastinfo).first()
-        ean = answer.ean[-3:]
+        answer = db(db.answer.id == answer_id).select(db.answer.ean, db.answer.rik, db.answer.fastinfo).first()
         title = answer.fastinfo.splitlines()[0][1:]
+        rik = answer.rik
     else:
         if session.addbook:    # new book with local description only (from impression/description)
             fastinfo, ean, title, author, publisher, pubyear = parse_descr(session.addbook)
+            rik = ean_to_rik(ean)
         else:
             redirect(URL('default', 'index'))
-    libstyle = get_libstyle()
 
-    current_book = db.impression.answer_id == answer_id
+    libstyle = get_libstyle()
+    rik_width = libstyle[2]
+    rik_width = int(rik_width) if rik_width.isdigit() else 3
+    rik_rendered = rik and rik[:rik_width][::-1] or ''  # rendered rik has always oposite order as db rik
 
     barcode = libstyle[3] == 'B'
     place = libstyle[4] == 'P'
@@ -103,10 +108,9 @@ def list():
                   label=T("Získáno"), comment=T("jak byl/y výtisk/y pořízen/y")),
             Field('gift', 'boolean', default=False,
                   label=T("Dar"), comment=T("získáno darem")),
-            Field('bill_id', db.bill,
-                  requires=IS_EMPTY_OR(IS_IN_DB(db, db.bill.id, lambda row: row.htime.strftime('%d.%m.%Y %H:%M') + (', ' + no_our) if no_our else '')),
+            Field('bill', 'string', length=40, default=bill_format(session.bill),
                   readable=bill, writable=False,
-                  label=T("Doklad"), comment=T("doklad o pořízení (doklad lze změnit volbou Nový nákup/doklad)")),
+                  label=T("Doklad"), comment=T("doklad o pořízení (doklad se zadává předem, volbou Nový nákup/doklad)")),
             Field('not_this_bill', 'boolean', default=False,
                   readable=bill, writable=bill,
                   label=T("Není z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
@@ -125,7 +129,6 @@ def list():
             )
 
     if bill:
-        form.vars.bill_id = session.bill['id']
         if session.bill['gift']:
             form.vars.gift = True
             form.vars.haction = '+d'
@@ -138,7 +141,9 @@ def list():
 
         if answer_id:   # found in internet
             force_redirect = False
-            owned_book = db(db.owned_book.answer_id == answer_id).select(db.owned_book.id).first()
+            owned_book = db((db.owned_book.answer_id == answer_id) & (db.owned_book.library_id == auth.library_id),
+                            ignore_common_filters=True).select(db.owned_book.id).first()
+                        # ignore_common_filters off, as long it will contain cnt>0
             if owned_book:
                 owned_book_id = owned_book.id
             else:
@@ -150,7 +155,7 @@ def list():
             answer_id = existing_answer()  # check by ean, md5publ
             if answer_id is None:
                 pubyears = parse_pubyear(pubyear)
-                answer_id = db.answer.insert(md5publ=md5publ, ean=ean, rik=ean_to_rik(ean), fastinfo=fastinfo,
+                answer_id = db.answer.insert(md5publ=md5publ, ean=ean, rik=rik, fastinfo=fastinfo,
                                              year_from=pubyears[0], year_to=pubyears[1])
             # do we have this library description?
             lib_descr = db((db.lib_descr.answer_id == answer_id) & (db.lib_descr.descr == session.addbook)).select(db.lib_descr.id).first()
@@ -182,11 +187,10 @@ def list():
             if ii > 0 and incr_from is not None:
                 next_no += 1
                 barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
-            bill_id = None if form.vars.not_this_bill else form.vars.bill_id
+            bill_id = None if form.vars.not_this_bill else session.bill and session.bill['id']
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
                                                  iorder=iorder_candidate, gift=form.vars.gift, barcode=barcode,
-                                                 place_id=form.vars.place_id,
-                                                 bill_id=bill_id, price_in=form.vars.price_in)
+                                                 place_id=form.vars.place_id, price_in=form.vars.price_in)
             db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
             iorder_candidate += 1
 
@@ -194,29 +198,21 @@ def list():
             redirect(URL(args=(question_id, answer_id)))
 
         form.add_button(T('Najít a zapsat další knihu z dokladu'), URL('catalogue', 'find'))
-        form.add_button(T('Doklad je zpracován'), URL('bill_finished'))
+        form.add_button(T('Doklad je zpracován'), URL('manage', 'bill_finished'))
     else:
         __btn_catalogue(form)
 
-    db.impression.fastid = Field.Virtual('fastid', lambda row: '%s-%s' % (ean, row.impression.iorder))
+    db.impression.rik = Field.Virtual('rik', lambda row: '%s-%s' % (rik_rendered, row.impression.iorder))
     db.impr_hist._common_filter = lambda query: ~(db.impr_hist.haction.startswith('+'))
         # impressions with other manipulations as taking into db will have: db.impr_hist.id is not None
-    impressions = db(current_book).select(db.impression.ALL, db.impr_hist.id, db.place.place,
+    impressions = db(db.impression.answer_id == answer_id).select(
+                        db.impression.ALL, db.impr_hist.id, db.place.place,
                         orderby=db.impression.iorder,
                         left=[db.impr_hist.on(db.impr_hist.impression_id == db.impression.id),
-                            db.place.on(db.place.id == db.impression.place_id)])
+                            db.place.on(db.place.id == db.impression.place_id)])    # db.bill.no_our,
     return dict(form=form, impressions=impressions, question_id=question_id, answer_id=answer_id,
-                libstyle=libstyle, shortened=shortened, nnn=ean, title=title,
-                fastid_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
-
-@auth.requires_login()
-def bill_finished():
-    if 'bill' in session:
-        bill_id = session.bill['id']
-        cnt_imp = db(db.impression.bill_id == bill_id).count()   # after removing impression as Mistake later, this count can stay higher
-        db.bill[bill_id] = dict(cnt_imp=cnt_imp, imp_added=datetime.datetime.utcnow())
-        del session.bill
-    redirect(URL('manage', 'bills'))
+                libstyle=libstyle, shortened=shortened, rik=rik_rendered, title=title,
+                rik_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
 @auth.requires_signature()

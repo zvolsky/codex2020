@@ -99,13 +99,17 @@ def retrieve_books():
         __book_to_list(book_rows, book, question_id)
     book_rows = __sort_book_rows(book_rows)
     my_books_ids = [book.id for row in my_books]
-
     if book_rows:
-        book_rows.append(DIV('---------'))
+        book_rows.insert(0, DIV(T("Naše knihy"), _class="alert alert-sm alert-info"))
+        book_rows.append(P())
+        book_rows.append(DIV(T("Ze souborného katalogu"), _class="alert alert-sm alert-info"))
 
+    ext_rows = []
     for book in books.find(lambda row: row.id not in my_books_ids and row.fastinfo):
-        __book_to_list(book_rows, book, question_id)
-    book_rows = __sort_book_rows(book_rows)
+        __book_to_list(ext_rows, book, question_id)
+    ext_rows = __sort_book_rows(ext_rows)
+
+    book_rows = book_rows + ext_rows
 
     if book_rows or my_book_rows:
         res_info = T("Vyber z nalezených publikací nebo ..")
