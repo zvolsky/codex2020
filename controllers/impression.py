@@ -2,7 +2,7 @@
 
 from mzutils import shortened
 
-from books import can_be_isxn, isxn_to_ean, parse_pubyear
+from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid
 
 from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle, finish_bill
 from plugin_mz import formstyle_bootstrap3_compact_factory
@@ -98,6 +98,7 @@ def list():
     rik_width = int(rik_width) if rik_width.isdigit() else 3
     rik_rendered = rik and rik[:rik_width][::-1] or ''  # rendered rik has always oposite order as db rik
 
+    iid = libstyle[0] == 'I'
     barcode = libstyle[3] == 'B'
     place = libstyle[4] == 'P'
     bill = session.bill and True or False
@@ -114,6 +115,9 @@ def list():
             Field('not_this_bill', 'boolean', default=False,
                   readable=bill, writable=bill,
                   label=T("Není z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
+            Field('iid', 'string', length=14,
+                  readable=iid, writable=iid,
+                  label=T("Přírůstkové číslo"), comment=T("přírůstkové číslo")),
             Field('barcode', 'string', length=16,
                   readable=barcode, writable=barcode,
                   label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
@@ -174,22 +178,18 @@ def list():
         iorders = [row.iorder for row in rows]
         iorder_candidate = 1
         barcode = form.vars.barcode and form.vars.barcode.strip() or ''
-        incr_from = None
-        for pos, _char in enumerate(barcode):
-            if barcode[pos:].isdigit():
-                incr_from = pos
-                len_digits = len(barcode) - pos
-                next_no = int(barcode[pos:])
-                break
+        incr_from, len_digits, barcode_no = analyze_barcode(barcode)
         for ii in xrange(form.vars.new):
             while iorder_candidate in iorders:
                 iorder_candidate += 1
-            if ii > 0 and incr_from is not None:
-                next_no += 1
-                barcode = barcode[:incr_from] + (len_digits * '0' + str(next_no))[len_digits:]
+            if ii:  # 2nd added impression and all next
+                iid = next_iid(iid)
+                barcode_no += 1
+                barcode = format_barcode(barcode, incr_from, len_digits, barcode_no)
             bill_id = None if form.vars.not_this_bill else session.bill and session.bill['id']
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
-                                                 iorder=iorder_candidate, gift=form.vars.gift, barcode=barcode,
+                                                 iorder=iorder_candidate, gift=form.vars.gift,
+                                                 iid=iid, barcode=barcode,
                                                  place_id=form.vars.place_id, price_in=form.vars.price_in)
             db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
             iorder_candidate += 1

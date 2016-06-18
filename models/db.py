@@ -94,8 +94,8 @@ db.define_table('library',
               label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
         Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle[1] = O
               label=T("Čís.výtisku ?"), comment=T("označte, pokud se má zobrazovat číslo výtisku jako rozlišení výtisků každé publikace")),
-        Field('st_imp_rik', 'integer',  # libstyle[2] = 2/3/4/5
-              notnull=True, default=3, requires=IS_INT_IN_RANGE(2, 5),
+        Field('st_imp_rik', 'integer',  # libstyle[2] = 2/3/4/5/6
+              notnull=True, default=3, requires=IS_INT_IN_RANGE(2, 7),
               label=T("Rychlá identifikace"), comment=T("kolikamístné číslo zobrazit pro rychlé hledání knihy z klávesnice? zvol podle velikosti knihovny: 2 - do počtu 50 výtisků, 3 - do 500, 4 - do 5000, 5 - nad 5000")),
         Field('st_imp_bc', 'boolean', notnull=True, default=False,  # libstyle[3] = B
               label=T("Čarové kódy ?"), comment=T("označte, pokud knihovna používá vlastní čarové kódy")),

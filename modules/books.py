@@ -95,3 +95,38 @@ def parse_pubyear(pubyear):
         return (nyear1, nyear2)
     else:
         return (None, None)
+
+# librarian (impressions agenda)
+
+def analyze_barcode(barcode):
+    """analyze the barcode to make possiible incrementing for different barcode formats
+    works together with format_barcode()
+    first found number is intended to be incremented, other parts will remain same
+
+    Returns tuple:
+        incr_from - position where the number starts
+        len_digits - length of the number (count of digits)
+        barcode_no - barcode number (as integer)
+    """
+    match = re.search(r'\d+', barcode)
+    if match:
+        start = match.start()
+        end = match.end()
+        return start, end - start, int(barcode[start:end])
+    else:
+        return len(barcode), 0, 0
+
+def format_barcode(previous, incr_from, len_digits, barcode_no):
+    return previous[:incr_from] + (len_digits * '0' + str(barcode_no))[-len_digits:] + previous[incr_from + len_digits:]
+
+def next_iid(iid):
+    numbers = re.findall(r'\d+', iid)
+    if len(numbers) >= 2:
+        return iid  # not supported yet
+    elif len(numbers):
+        number = numbers[0]
+        lnu = len(number)
+        next = ('%0' + str(lnu) + 'd') % (int(number) + 1)
+        return iid.replace(number, next)
+    else:
+        return iid
