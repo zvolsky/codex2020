@@ -226,6 +226,7 @@ def get_libstyle():
 
     libstyle = []
     libstyle.append('I' if library.st_imp_id else ' ')
+    libstyle.append(str(library.st_imp_idx)[-1:])
     libstyle.append('O' if library.st_imp_ord else ' ')
     libstyle.append(str(library.st_imp_rik) if 2 <= library.st_imp_rik <= 5 else '3')
     libstyle.append('B' if library.st_imp_bc else ' ')
@@ -239,7 +240,7 @@ def get_libstyle():
     libstyle.append('s' if library.st_imp_st else ' ')
     libstyle.append('S' if library.st_tit_st else ' ')
 
-    # session.libstyle = 'IO.BPg......GsS'  # character position IS important
+    # session.libstyle = 'I.O.BPg......sS'  # character position IS important
     current.session.libstyle = libstyle = ''.join(libstyle)
     assert len(libstyle) == 15
     return libstyle

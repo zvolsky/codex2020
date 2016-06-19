@@ -92,25 +92,25 @@ db.define_table('library',
               label=T("Zahájení revize"), comment=T("den zahájení revize (vypíší se výtisky, nenalezené od tohoto data)")),
         Field('st_imp_id', 'boolean', notnull=True, default=False,  # libstyle[0] = I
               label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
-        Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle[1] = O
+        Field('st_imp_idx', 'integer', default=1,  # libstyle[1] = 0|1|2|.. which number-part of ID should be incremented
+              label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
+        Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle[2] = O
               label=T("Čís.výtisku ?"), comment=T("označte, pokud se má zobrazovat číslo výtisku jako rozlišení výtisků každé publikace")),
-        Field('st_imp_rik', 'integer',  # libstyle[2] = 2/3/4/5/6
+        Field('st_imp_rik', 'integer',  # libstyle[3] = 2/3/4/5/6
               notnull=True, default=3, requires=IS_INT_IN_RANGE(2, 7),
               label=T("Rychlá identifikace"), comment=T("kolikamístné číslo zobrazit pro rychlé hledání knihy z klávesnice? zvol podle velikosti knihovny: 2 - do počtu 50 výtisků, 3 - do 500, 4 - do 5000, 5 - nad 5000")),
-        Field('st_imp_bc', 'boolean', notnull=True, default=False,  # libstyle[3] = B
+        Field('st_imp_bc', 'boolean', notnull=True, default=False,  # libstyle[4] = B
               label=T("Čarové kódy ?"), comment=T("označte, pokud knihovna používá vlastní čarové kódy")),
-        Field('st_imp_pl', 'boolean', notnull=True, default=False,  # libstyle[4] = P
+        Field('st_imp_pl', 'boolean', notnull=True, default=False,  # libstyle[5] = P
               label=T("Umístění výtisku ?"), comment=T("označte, pokud chcete zapisovat, kde je výtisk umístěn (oddělení, místnost, regál, apod.)")),
-        Field('st_imp_sg', 'boolean', notnull=True, default=False,  # libstyle[5] = g
+        Field('st_imp_sg', 'boolean', notnull=True, default=False,  # libstyle[6] = G
               label=T("Signatura výtisku ?"), comment=T("označte, pokud používáte signatury a každý výtisk má mít unikátní")),
-        Field('st_imp_sgsep', 'string', length=3, notnull=True, default='',  # libstyle[6:10] 6 is len (0|1|2|3), 7:10 are characters
+        Field('st_imp_sgsep', 'string', length=3, notnull=True, default='',  # libstyle[7:11] 7 is len (0|1|2|3), 8:11 are characters
               label=T("Oddělovač v signatuře"), comment=T("unikátní signatura výtisku (je-li použita): znak(y) pro oddělení dodatku")),
-        Field('st_imp_sgmod1', 'string', length=1, notnull=True, default='',  # libstyle[10]
+        Field('st_imp_sgmod1', 'string', length=1, notnull=True, default='',  # libstyle[11]
               label=T("Signatura, 1.výtisk"), comment=T("unikátní signatura výtisku (je-li použita): přídavný znak 1.výtisku (např. prázdný, a, A, 1)")),
-        Field('st_imp_sgmod2', 'string', length=1, notnull=True, default='b',  # libstyle[11]
+        Field('st_imp_sgmod2', 'string', length=1, notnull=True, default='b',  # libstyle[12]
               label=T("Signatura, 2.výtisk"), comment=T("unikátní signatura výtisku (je-li použita): přídavný znak 2.výtisku (např. a, b, B, 2)")),
-        Field('st_tit_sg', 'boolean', notnull=True, default=False,  # libstyle[12] = G
-              label=T("Signatura titulu ?"), comment=T("označte, pokud používáte signatury a chcete zobrazovat signaturu u titulu")),
         Field('st_imp_st', 'boolean', notnull=True, default=False,  # libstyle[13] = s
               label=T("Stat.dělení výtisků ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat výtisky (tip: i pro oddělení dosp/děts, pokud výtisky titulu mohou být přiděleny do různých oddělení)")),
         Field('st_tit_st', 'boolean', notnull=True, default=False,  # libstyle[14] = S

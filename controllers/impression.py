@@ -94,13 +94,13 @@ def list():
             redirect(URL('default', 'index'))
 
     libstyle = get_libstyle()
-    rik_width = libstyle[2]
+    rik_width = libstyle[3]
     rik_width = int(rik_width) if rik_width.isdigit() else 3
     rik_rendered = rik and rik[:rik_width][::-1] or ''  # rendered rik has always oposite order as db rik
 
     iid = libstyle[0] == 'I'
-    barcode = libstyle[3] == 'B'
-    place = libstyle[4] == 'P'
+    barcode = libstyle[4] == 'B'
+    place = libstyle[5] == 'P'
     bill = session.bill and True or False
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
@@ -245,9 +245,9 @@ def edit():
         redirect(URL('list'))
     libstyle = get_libstyle()
     db.impression.id.readable = False
-    db.impression.iorder.readable = libstyle[1] == 'O'
-    db.impression.barcode.readable = db.impression.barcode.writable = libstyle[3] == 'B'
-    db.impression.place_id.readable = db.impression.place_id.writable = libstyle[4] == 'P'
+    db.impression.iorder.readable = libstyle[2] == 'O'
+    db.impression.barcode.readable = db.impression.barcode.writable = libstyle[4] == 'B'
+    db.impression.place_id.readable = db.impression.place_id.writable = libstyle[5] == 'P'
     form = SQLFORM(db.impression, impression_id, submit_button=T("Uložit"), formstyle=formstyle_bootstrap3_compact_factory())
     form.add_button(T('Zpět (storno)'), URL('list', args=(request.args(0), request.args(1))))
     if form.process().accepted:

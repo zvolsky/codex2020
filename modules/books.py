@@ -117,16 +117,35 @@ def analyze_barcode(barcode):
         return len(barcode), 0, 0
 
 def format_barcode(previous, incr_from, len_digits, barcode_no):
+    """will format the barcode number with numeric part 'barcode_no' using information from analyze_barcode()
+    to obtain next barcode, 1) analyze_barcode() for previous|starting code, 2) increment barcode_no, call format_barcode()
+    """
     return previous[:incr_from] + (len_digits * '0' + str(barcode_no))[-len_digits:] + previous[incr_from + len_digits:]
 
-def next_iid(iid):
-    numbers = re.findall(r'\d+', iid)
-    if len(numbers) >= 2:
-        return iid  # not supported yet
-    elif len(numbers):
-        number = numbers[0]
+def next_iid(iid, part=1):
+    """
+    Args:
+        part: -1..disable incrementing, 0..increment 1st found number, 1..increment 2nd found number (for numbering styles like 2020/146)
+    """
+    def get_next(number):
         lnu = len(number)
-        next = ('%0' + str(lnu) + 'd') % (int(number) + 1)
-        return iid.replace(number, next)
-    else:
+        return ('%0' + str(lnu) + 'd') % (int(number) + 1)
+
+    if part < 0:
         return iid
+    numbers = re.findall(r'\d+', iid)
+    if len(numbers) <= part:
+        return iid   # not enough number-parts
+    number = numbers[part]
+    next = get_next(number)
+    if part == 0 or number not in numbers[:part]:  # can be done easy, because we have no same ocurrence earlier
+        return iid.replace(number, next)
+    # do it the hard way: split in preceding numbers, do replacing in the rest, join back together
+    before = []
+    split_src = iid
+    for pos in xrange(part):
+        splitted = split_src.split(numbers[pos], 1)
+        before.append(splitted[0] + numbers[pos])
+        split_src = splitted[1]
+    before.append(split_src.replace(number, next))
+    return ''.join(before)
