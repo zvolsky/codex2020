@@ -22,15 +22,21 @@
             <th>{{=T("Evidován")}}</th>
             <th>{{=T("Doklad")}}</th>
             <th />
-            {{if libstyle[2] == 'O':}}
+            {{if libstyle['id'][2] == 'O':}}
                 <th>{{=T("Čís.")}}</th>
             {{pass}}
-            {{if libstyle[4] == 'B':}}
-                <th>{{=T("Čar.kód")}}</th>
+            {{if libstyle['id'][0] == 'I':}}
+                <th>{{=T("Přír.číslo")}}</th>
+            {{pass}}
+            {{if libstyle['sg'][0] == 'G':}}
+                <th>{{=T("Signatura")}}</th>
             {{pass}}
             <th>{{=SPAN(T("Rychlá identifikace"), _title="%s" % rik_title)}}</th>
+            {{if libstyle['bc'][0] == 'B':}}
+                <th>{{=T("Čar.kód")}}</th>
+            {{pass}}
             <th>{{=T("Nákupní cena")}}</th>
-            {{if libstyle[5] == 'P':}}
+            {{if libstyle['gr'][0] == 'P':}}
                 <th>{{=T("Umístění")}}</th>
             {{pass}}
             <th>{{=T("Stav")}}</th>
@@ -46,15 +52,21 @@
                         {{if impression.impr_hist.id is None:}},
                             {{=A(T("omyl"), _href='%s' % URL('mistake', args=(question_id, impression.impression.answer_id, impression.impression.id), user_signature=True), _title=T("omyl zápisu - vše o výtisku bude zcela smazáno"))}}
                         {{pass}}</td>
-                    {{if libstyle[2] == 'O':}}
+                    {{if libstyle['id'][2] == 'O':}}
                         <td>{{=impression.impression.iorder}}</td>
                     {{pass}}
-                    {{if libstyle[4] == 'B':}}
-                        <td>{{=impression.impression.barcode or ''}}</td>
+                    {{if libstyle['id'][0] == 'I':}}
+                        <td>{{=impression.impression.iid or ''}}</td>
+                    {{pass}}
+                    {{if libstyle['sg'][0] == 'G':}}
+                        <td>{{=impression.impression.sgn or ''}}</td>
                     {{pass}}
                     <td>{{=SPAN(impression.impression.rik, _title="%s" % rik_title)}}</td>
+                    {{if libstyle['bc'][0] == 'B':}}
+                        <td>{{=impression.impression.barcode or ''}}</td>
+                    {{pass}}
                     <td style="text-align: right; padding-right: 60px;"><span class="weak smaller">{{=impression.impression.price_in or ''}}</span></td>
-                    {{if libstyle[5] == 'P':}}
+                    {{if libstyle['gr'][0] == 'P':}}
                         <td>{{=impression.place and impression.place.place or ''}}</td>
                     {{pass}}
                     <td><span class="weak smaller" title="{{=impression.impression.icondition or ''}}">

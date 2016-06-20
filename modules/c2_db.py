@@ -25,6 +25,11 @@ class PublLengths(object):
     pubyear = 100
     country = 3
 
+    # for impressions
+    iid = 14
+    sgn = 16
+    barcode = 18
+
     # for indexes (index tables idx..)
     iword = 16
     ishort = 3
@@ -224,25 +229,22 @@ def get_libstyle():
     db = current.db
     library = db(db.library.id == current.auth.library_id).select().first()
 
-    libstyle = []
-    libstyle.append('I' if library.st_imp_id else ' ')
-    libstyle.append(str(library.st_imp_idx)[-1:])
-    libstyle.append('O' if library.st_imp_ord else ' ')
-    libstyle.append(str(library.st_imp_rik) if 2 <= library.st_imp_rik <= 5 else '3')
-    libstyle.append('B' if library.st_imp_bc else ' ')
-    libstyle.append('P' if library.st_imp_pl else ' ')
-    libstyle.append('g' if library.st_imp_sg else ' ')
-    libstyle.append(str(len(library.st_imp_sgsep)))      # 1 char length of sg separator
-    libstyle.append((library.st_imp_sgsep + '   ')[:3])  # 3 char content of sg separator
-    libstyle.append(library.st_imp_sgmod1 or ' ')
-    libstyle.append(library.st_imp_sgmod2 or ' ')
-    libstyle.append('G' if library.st_tit_sg else ' ')
-    libstyle.append('s' if library.st_imp_st else ' ')
-    libstyle.append('S' if library.st_tit_st else ' ')
+    libstyle = {}
+    libstyle['id'] = (('I' if library.st_imp_id else ' ') +
+                    str(library.st_imp_idx)[-1:] +
+                    ('O' if library.st_imp_ord else ' ') +
+                    (str(library.st_imp_rik) if 2 <= library.st_imp_rik <= 5 else '3'))
+    libstyle['bc'] = ('B' if library.st_imp_bc else ' ') + ('+' if library.st_imp_bc else '-')
+    libstyle['sg'] = (('G' if library.st_imp_sg else ' ') +
+                    (library.st_imp_sgmod1 or ' ') +
+                    (library.st_imp_sgmod2 or ' '))
+    libstyle['sgsep'] = library.st_imp_sgsep
+    libstyle['gr'] = (('P' if library.st_imp_pl else ' ') +
+                    ('s' if library.st_imp_st else ' ') +
+                    ('S' if library.st_tit_st else ' '))
 
-    # session.libstyle = 'I.O.BPg......sS'  # character position IS important
-    current.session.libstyle = libstyle = ''.join(libstyle)
-    assert len(libstyle) == 15
+    # session.libstyle = {'id':'I.O.', 'bc':'B+', 'sg':'G..', 'sgsep':'???', 'gr':'PsS'}  # character position IS important
+    current.session.libstyle = libstyle
     return libstyle
 
 def finish_bill(bill_id):

@@ -122,16 +122,18 @@ def format_barcode(previous, incr_from, len_digits, barcode_no):
     """
     return previous[:incr_from] + (len_digits * '0' + str(barcode_no))[-len_digits:] + previous[incr_from + len_digits:]
 
-def next_iid(iid, part=1):
+def next_iid(iid, part=1, maxlen=None):
     """
     Args:
+        iid:  current iid; this will be incremented
         part: -1..disable incrementing, 0..increment 1st found number, 1..increment 2nd found number (for numbering styles like 2020/146)
+        maxlen: if len() is larger, then will return text '= overflow ===='
     """
     def get_next(number):
         lnu = len(number)
         return ('%0' + str(lnu) + 'd') % (int(number) + 1)
 
-    if part < 0:
+    if part < 0 or iid is None:
         return iid
     numbers = re.findall(r'\d+', iid)
     if len(numbers) <= part:
@@ -139,13 +141,50 @@ def next_iid(iid, part=1):
     number = numbers[part]
     next = get_next(number)
     if part == 0 or number not in numbers[:part]:  # can be done easy, because we have no same ocurrence earlier
-        return iid.replace(number, next)
-    # do it the hard way: split in preceding numbers, do replacing in the rest, join back together
-    before = []
-    split_src = iid
-    for pos in xrange(part):
-        splitted = split_src.split(numbers[pos], 1)
-        before.append(splitted[0] + numbers[pos])
-        split_src = splitted[1]
-    before.append(split_src.replace(number, next))
-    return ''.join(before)
+        new_iid = iid.replace(number, next)
+    else:
+        # do it the hard way: split in preceding numbers, do replacing in the rest, join back together
+        before = []
+        split_src = iid
+        for pos in xrange(part):
+            splitted = split_src.split(numbers[pos], 1)
+            before.append(splitted[0] + numbers[pos])
+            split_src = splitted[1]
+        before.append(split_src.replace(number, next))
+        new_iid = ''.join(before)
+    if maxlen and len(new_iid) > maxlen:
+        return ('= overflow ' + 50*'=')[:maxlen]
+    return new_iid
+
+def next_sgn_imp(sgn, sgsep, sgn_2, maxlen=None):
+    """Provides impression signature as base signature extended with suffix.
+    Then increments the suffix to be ready for next impression.
+
+    Args:
+        sgn:   base signature
+        sgsep: separator
+        sgn_2: suffix as single char: digit|uppercase-letter|lowercase-letter
+        maxlen: if len() is larger, then will return text '= overflow ===='
+
+    Returns:
+        sgn_imp: complete signature
+        sgn_2:   next suffix: digit:1,2,..9,10,11,.. letter:A,B,..,Z,ZA,..,ZZ,ZZA,..
+
+    """
+    def inkr_suffix(sfx):
+        if sfx.isdigit():
+            return str(int(sfx) + 1)
+        elif sfx[-1] == 'z':
+            return sfx + 'a'
+        elif sfx[-1] == 'Z':
+            return sfx + 'A'
+        else:
+            return sfx[:-1] + chr(ord(sfx[-1]) + 1)
+
+    if sgn and sgn_2:
+        new_sgn = sgn + sgsep + sgn_2
+        if maxlen and len(new_sgn) > maxlen:
+            return ('= overflow ' + 50*'=')[:maxlen], sgn_2
+        return new_sgn, inkr_suffix(sgn_2)
+    else:
+        return sgn, sgn_2

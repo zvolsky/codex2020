@@ -2,9 +2,9 @@
 
 from mzutils import shortened
 
-from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid
+from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid, next_sgn_imp
 
-from c2_db import ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle, finish_bill
+from c2_db import PublLengths, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle, finish_bill
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
@@ -94,14 +94,21 @@ def list():
             redirect(URL('default', 'index'))
 
     libstyle = get_libstyle()
-    rik_width = libstyle[3]
+    rik_width = libstyle['id'][3]
     rik_width = int(rik_width) if rik_width.isdigit() else 3
     rik_rendered = rik and rik[:rik_width][::-1] or ''  # rendered rik has always oposite order as db rik
 
-    iid = libstyle[0] == 'I'
-    barcode = libstyle[4] == 'B'
-    place = libstyle[5] == 'P'
-    bill = session.bill and True or False
+    see_iid = libstyle['id'][0] == 'I'
+    iid_part = int(libstyle['id'][1]) - 1  # for user: 0,1,2,.. ; but for autoinc we need -1,0,1,..
+    see_sgn = libstyle['sg'][0] == 'G'
+    if see_sgn:
+        sgn_1 = libstyle['sg'][1]
+        sgn_2 = libstyle['sg'][2]
+        sgsep = libstyle['sgsep']
+    see_barcode = libstyle['bc'][0] == 'B'
+    barcode_inkr = libstyle['bc'][1] == '+'
+    see_place = libstyle['gr'][0] == 'P'
+    see_bill = session.bill and True or False
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
             Field('haction', 'string', length=2, default='+o',
@@ -110,20 +117,23 @@ def list():
             Field('gift', 'boolean', default=False,
                   label=T("Dar"), comment=T("získáno darem")),
             Field('bill', 'string', length=40, default=bill_format(session.bill),
-                  readable=bill, writable=False,
+                  readable=see_bill, writable=False,
                   label=T("Doklad"), comment=T("doklad o pořízení (doklad se zadává předem, volbou Nový nákup/doklad)")),
             Field('not_this_bill', 'boolean', default=False,
-                  readable=bill, writable=bill,
+                  readable=see_bill, writable=see_bill,
                   label=T("Není z dokladu"), comment=T("označením nebude u výtisku připsán výše uvedený doklad")),
-            Field('iid', 'string', length=14,
-                  readable=iid, writable=iid,
+            Field('iid', 'string', length=PublLengths.iid,
+                  readable=see_iid, writable=see_iid,
                   label=T("Přírůstkové číslo"), comment=T("přírůstkové číslo")),
-            Field('barcode', 'string', length=16,
-                  readable=barcode, writable=barcode,
+            Field('sgn', 'string', length=PublLengths.sgn,
+                  readable=see_sgn, writable=see_sgn,
+                  label=T("Signatura"), comment=T("signatura výtisku")),
+            Field('barcode', 'string', length=PublLengths.barcode,
+                  readable=see_barcode, writable=see_barcode,
                   label=T("Čarový kód"), comment=T("čarový kód (při více výtiscích bude číslo zvyšováno)")),
             Field('place_id', db.place,
                   requires=IS_EMPTY_OR(IS_IN_DB(db, db.place.id, '%(place)s')),
-                  readable=place, writable=place,
+                  readable=see_place, writable=see_place,
                   label=T("Umístění"), comment=T("umístění výtisku")),
             Field('price_in', 'decimal(12,2)',
                   label=db.impression.price_in.label, comment=db.impression.price_in.comment),
@@ -132,7 +142,7 @@ def list():
             submit_button=T('Zařaď nové výtisky do knihovny')
             )
 
-    if bill:
+    if see_bill:
         if session.bill['gift']:
             form.vars.gift = True
             form.vars.haction = '+d'
@@ -177,19 +187,27 @@ def list():
                     ignore_common_filters=True).select(db.impression.iorder, orderby=db.impression.iorder)
         iorders = [row.iorder for row in rows]
         iorder_candidate = 1
-        barcode = form.vars.barcode and form.vars.barcode.strip() or ''
+        iid = form.vars.iid
+        sgn_imp = sgn = form.vars.sgn
+        if sgn and sgn_1:
+            sgn_imp += sgsep + sgn_1
+        barcode = form.vars.barcode and form.vars.barcode.strip()
         incr_from, len_digits, barcode_no = analyze_barcode(barcode)
         for ii in xrange(form.vars.new):
             while iorder_candidate in iorders:
                 iorder_candidate += 1
             if ii:  # 2nd added impression and all next
-                iid = next_iid(iid)
-                barcode_no += 1
-                barcode = format_barcode(barcode, incr_from, len_digits, barcode_no)
+                iid = next_iid(iid, iid_part, maxlen=PublLengths.iid)
+                sgn_imp, sgn_2 = next_sgn_imp(sgn, sgsep, sgn_2, maxlen=PublLengths.sgn)
+                if barcode and barcode_inkr:
+                    barcode_no += 1
+                    barcode = format_barcode(barcode, incr_from, len_digits, barcode_no)
+                else:
+                    barcode = None
             bill_id = None if form.vars.not_this_bill else session.bill and session.bill['id']
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
                                                  iorder=iorder_candidate, gift=form.vars.gift,
-                                                 iid=iid, barcode=barcode,
+                                                 iid=iid, sgn=sgn_imp, barcode=barcode,
                                                  place_id=form.vars.place_id, price_in=form.vars.price_in)
             db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
             iorder_candidate += 1
@@ -245,9 +263,11 @@ def edit():
         redirect(URL('list'))
     libstyle = get_libstyle()
     db.impression.id.readable = False
-    db.impression.iorder.readable = libstyle[2] == 'O'
-    db.impression.barcode.readable = db.impression.barcode.writable = libstyle[4] == 'B'
-    db.impression.place_id.readable = db.impression.place_id.writable = libstyle[5] == 'P'
+    db.impression.iid.readable = db.impression.iid.writable = libstyle['id'][0] == 'I'
+    db.impression.sgn.readable = db.impression.sgn.writable = libstyle['sg'][0] == 'G'
+    db.impression.iorder.readable = libstyle['id'][2] == 'O'
+    db.impression.barcode.readable = db.impression.barcode.writable = libstyle['bc'][0] == 'B'
+    db.impression.place_id.readable = db.impression.place_id.writable = libstyle['gr'][0] == 'P'
     form = SQLFORM(db.impression, impression_id, submit_button=T("Uložit"), formstyle=formstyle_bootstrap3_compact_factory())
     form.add_button(T('Zpět (storno)'), URL('list', args=(request.args(0), request.args(1))))
     if form.process().accepted:
