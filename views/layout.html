@@ -127,7 +127,9 @@
         $.w2p.focus._onfocus = $.w2p.focus.getAttribute('onfocus');
         $.w2p.focus.enabled = !($.w2p.focus._onfocus && $.w2p.focus._onfocus.indexOf('#w2p_query_panel') > -1);
       }
-      {{block page_js}}{{end page_js}}
+    </script>
+    {{block page_js}}{{end page_js}}
+    <script>
       if ($.w2p.focus && $.w2p.focus.enabled) {
         $.w2p.focus.focus();
       }

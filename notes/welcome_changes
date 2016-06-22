@@ -51,21 +51,23 @@ requires:
 <link rel="stylesheet" href="{{=URL('static','css/bootstrap-glyphicons.css')}}"/><!-- downloaded from netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css; patched: remove color/background-color for 'body' -->
 <!-- #mz ++k -->
 
-<!-- #mz ++z -->
-<script>
-  $.w2p = {};
-  $.w2p.focus = $("form *:visible:enabled:first");
-  if ($.w2p.focus) {
-    $.w2p.focus = $.w2p.focus[0];
-    $.w2p.focus._onfocus = $.w2p.focus.getAttribute('onfocus');
-    $.w2p.focus.enabled = !($.w2p.focus._onfocus && $.w2p.focus._onfocus.indexOf('#w2p_query_panel') > -1);
-  }
-  {{block page_js}}{{end page_js}}
-  if ($.w2p.focus && $.w2p.focus.enabled) {
-    $.w2p.focus.focus();
-  }
-</script>
-<!-- #mz ++k -->
+    <!-- #mz ++z -->
+    <script>
+      $.w2p = {};
+      $.w2p.focus = $("form *:visible:enabled:first");
+      if ($.w2p.focus) {
+        $.w2p.focus = $.w2p.focus[0];
+        $.w2p.focus._onfocus = $.w2p.focus.getAttribute('onfocus');
+        $.w2p.focus.enabled = !($.w2p.focus._onfocus && $.w2p.focus._onfocus.indexOf('#w2p_query_panel') > -1);
+      }
+    </script>
+    {{block page_js}}{{end page_js}}
+    <script>
+      if ($.w2p.focus && $.w2p.focus.enabled) {
+        $.w2p.focus.focus();
+      }
+    </script>
+    <!-- #mz ++k -->
 
 
 static/css/web2py-bootstrap.css:
