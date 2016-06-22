@@ -21,7 +21,7 @@ $(document).ready(function() {
         if (jqEl) {    // explicit call (inizially for 1st question --or-- from the click)
             wishQuestionId = jqEl.attr('data_id');
         } else {       // repeated call after status checking
-            $('.active').each(function(index, element) {
+            $('#retrieve_status .active').each(function(index, element) {
                 if ($(element).attr('data_id') === wishQuestionId) {
                     jqEl = $(element);
                     return false;  // break
