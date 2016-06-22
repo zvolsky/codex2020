@@ -4,7 +4,17 @@
     {{=SPAN(B(rik), _title="%s" % T("RYCHLÁ IDENTIFIKACE pro rychlé nalezení knihy; má-li kniha více výtisků, nabídnou se k dourčení"), _style="font-size: 130%; padding-right: 10px;")}} {{=B(title)}}
 </div>
 
-<div class="well well-small">
+<div id="done"{{if creatable != 0:}} style="display: none;"{{pass}}>
+    <a href="{{=URL('catalogue', 'find')}}" class="btn btn-success">
+        {{if see_bill:}}{{=T("Najít a zapsat další knihu z dokladu")}}{{else:}}{{=T("Zpět ke katalogizaci")}}{{pass}}
+    </a>
+    {{if see_bill:}}
+        <a href="{{=URL('manage', 'bill_finished')}}" class="btn btn-success">{{=T("Doklad je zpracován")}}</a>
+    {{pass}}
+    <button type="button" id="btn-repeat-add" class="btn btn-info">{{=T("Přidat ještě další výtisk(y) této publikace")}}</button>
+</div>
+
+<div id="todo" class="well well-small"{{if creatable != 1:}} style="display: none;"{{pass}}>
     <div class="col-sm-2"></div>
     <div class="col-sm-10">
         <div class="btn-group btn-group-sm" role="group" aria-label="..." style="padding-bottom: 3px;">
@@ -96,7 +106,7 @@
 </div>
 
 <div class="alert alert-warning">
-    TODO: zobrazování čísla dokladu ; správnost přiřazování daru a způsobu pořízení podle dokladu ; ověřit, zda Dar není duplicitní ; duplicity při bohatší historii výtisku?
+    TODO: správnost přiřazování daru a způsobu pořízení podle dokladu ; ověřit, zda Dar není duplicitní ; duplicity při bohatší historii výtisku?
 </div>
 
 <script>
@@ -104,6 +114,7 @@ $(document).ready(function() {
     function getOldVal() {
         return parseInt($("#no_table_new").val(), 10);
     }
+
     $("#btn-plus").click(function() {
         var oldVal = getOldVal();
         $("#no_table_new").val(oldVal + 1);
@@ -111,6 +122,11 @@ $(document).ready(function() {
     $("#btn-minus").click(function() {
         var oldVal = getOldVal();
         $("#no_table_new").val(Math.max(1, oldVal - 1));
+    });
+
+    $("#btn-repeat-add").click(function() {
+        $("#done").fadeOut();
+        $("#todo").fadeIn();
     });
 
     $('label').css('text-align', 'right');

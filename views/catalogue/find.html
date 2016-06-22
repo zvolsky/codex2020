@@ -16,8 +16,22 @@
 $(document).ready(function() {
     var interval = 2000;
     var resolvedQuestion = null;
+    var wishQuestionId = null;
     function getBooksForQuestionEl(jqEl) {
-        var wishQuestionId = jqEl.attr('data_id');
+        if (jqEl) {    // explicit call (inizially for 1st question --or-- from the click)
+            wishQuestionId = jqEl.attr('data_id');
+        } else {       // repeated call after status checking
+            $('#retrieve_books .active').each(function(index, element) {
+                if (element.attr('data_id') === wishQuestionId) {
+                    jqEl = element;
+                    return false;  // break
+                }
+            });
+            if (!jqEl) {      // element id=wishQuestionId is already deleted
+                              // so, what now? we could delete wishQuestionId (and test it earlier) --or-- resolve 1st item --or--(we choose this) do nothing (will call $().each() next time with same effect)
+                return null;  // null will prevent saving of previous status
+            }
+        }
         var wishQuestionStatus = jqEl.hasClass('active');
         var wishQuestionFull = (wishQuestionStatus ? '+' : '-') + wishQuestionId;
         if (wishQuestionFull !== resolvedQuestion) {
@@ -58,7 +72,12 @@ $(document).ready(function() {
                     resolvedQuestion = getBooksForQuestionEl($(this));
                 });
                 if (resolvedQuestion === null) {
-                    resolvedQuestion = getBooksForQuestionEl($(wishList[0]));
+                    resolvedQuestion = getBooksForQuestionEl($(wishList[0]));  // initially run for the 1st el without any click
+                } else {
+                    var retval = getBooksForQuestionEl();   // re-run for the last resolved el (maybe it has changed status now?)
+                    if (retval) {     // call without parameter has a meaningfull output only if element with previous id still exists
+                        resolvedQuestion = retval;
+                    }
                 }
             }
         });

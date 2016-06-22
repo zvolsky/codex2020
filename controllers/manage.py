@@ -2,6 +2,8 @@
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
+from c2_db import finish_bill
+
 
 @auth.requires_login()
 def partners():

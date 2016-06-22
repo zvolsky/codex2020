@@ -4,7 +4,7 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid, next_sgn_imp
 
-from c2_db import PublLengths, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle, finish_bill
+from c2_db import PublLengths, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
@@ -33,7 +33,7 @@ def description():
                     label=T("Rok vydání"), comment=T("rok vydání")),
             Field('edition', 'text',
                     label=T("Vydání"), comment=T("číslo vydání (např.: 2.rozš.vyd. nebo: 3.vyd., v Odeonu 2.)")),
-            submit_button = "Uložit a zadat výtisky",
+            submit_button=T("Uložit a zadat výtisky"),
             formstyle=formstyle_bootstrap3_compact_factory()
     )
     __btn_catalogue(form)
@@ -80,6 +80,9 @@ def list():
 
     question_id = request.args(0)
     answer_id = request.args(1)
+    extra = request.args(2)
+    creatable = 0 if extra == 'done' else 1  # 1 form for adding, 0 without form but with form-show buttons after successfull adding
+                                             # TODO: adapt this for -1 (extra=show): show list only (without any possibility to add)
 
     # get title+.. and rik to show book info
     if answer_id:
@@ -109,6 +112,15 @@ def list():
     barcode_inkr = libstyle['bc'][1] == '+'
     see_place = libstyle['gr'][0] == 'P'
     see_bill = session.bill and True or False
+    '''
+    buttons = [DIV(DIV(
+                TAG.button(T('Zařaď nové výtisky do knihovny'), _type="submit", _class="btn btn-primary"),
+                TAG.button(T('Zpět'), _type="button", _id="btn-done", _style="Xdisplay: none"),
+                _class="btn-group-sm"), _class="col-sm-10 col-sm-offset-2")]
+    #<button type="submit" class="btn btn-default">Zařaď nové výtisky do knihovny</button>
+    #<input class="btn btn-primary" type="submit" value="Zařaď nové výtisky do knihovny">
+    #<div class="col-sm-10 col-sm-offset-2"><div class="btn-group-sm"><input class="btn btn-primary" type="submit" value="Odeslat"></div></div>
+    '''
     form = SQLFORM.factory(
             Field('new', 'integer', default=1, label=T("Přidat"), comment=T("zadej počet nových výtisků")),
             Field('haction', 'string', length=2, default='+o',
@@ -138,8 +150,8 @@ def list():
             Field('price_in', 'decimal(12,2)',
                   label=db.impression.price_in.label, comment=db.impression.price_in.comment),
             hidden=dict(question_id=question_id),
+            submit_button=T('Zařaď nové výtisky do knihovny'),
             formstyle=formstyle_bootstrap3_compact_factory(),
-            submit_button=T('Zařaď nové výtisky do knihovny')
             )
 
     if see_bill:
@@ -151,6 +163,7 @@ def list():
         form.vars.loan = session.bill['loan'] and True or False
 
     if form.process().accepted:
+        creatable = 0  # hide the form and instead display the form-show button
         db.question[question_id] = dict(live=False)  # question used: no longer display it
 
         if answer_id:   # found in internet
@@ -215,10 +228,9 @@ def list():
         if force_redirect:
             redirect(URL(args=(question_id, answer_id)))
 
-        form.add_button(T('Najít a zapsat další knihu z dokladu'), URL('catalogue', 'find'))
-        form.add_button(T('Doklad je zpracován'), URL('manage', 'bill_finished'))
-    else:
-        __btn_catalogue(form)
+    if creatable == 0:
+        form.add_button(T('Zpět'), URL(args=request.args[:2] + ['done']))
+    __btn_catalogue(form)
 
     db.impression.rik = Field.Virtual('rik', lambda row: '%s-%s' % (rik_rendered, row.impression.iorder))
     db.impr_hist._common_filter = lambda query: ~(db.impr_hist.haction.startswith('+'))
@@ -230,6 +242,7 @@ def list():
                             db.place.on(db.place.id == db.impression.place_id)])    # db.bill.no_our,
     return dict(form=form, impressions=impressions, question_id=question_id, answer_id=answer_id,
                 libstyle=libstyle, shortened=shortened, rik=rik_rendered, title=title,
+                creatable=creatable, see_bill=see_bill,
                 rik_title=T("RYCHLÁ IDENTIFIKACE KNIHY: Výtisk rychle naleznete (nebo půjčíte) pomocí tohoto čísla nebo jen čísla před pomlčkou (což je konec čísla čarového kódu)."))
 
 @auth.requires_login()
