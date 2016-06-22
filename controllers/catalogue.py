@@ -112,7 +112,7 @@ def retrieve_books():
             book_rows.append(DIV(T("Ze souborného katalogu"), _class="alert alert-sm alert-info"))
         book_rows = book_rows + __sort_book_rows(ext_rows)
 
-    if book_rows or my_book_rows:
+    if book_rows or my_books:
         res_info = T("Vyber z nalezených publikací nebo ..")
     else:
         res_info = SPAN(EM(question), ' ... ', T("Publikace nebyla nalezena."))
