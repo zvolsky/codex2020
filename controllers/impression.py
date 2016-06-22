@@ -51,6 +51,10 @@ def description():
     return dict(form=form)
 
 @auth.requires_login()
+def list2():
+    return list()
+
+@auth.requires_login()
 def list():
     def existing_answer():
         flds = (db.answer.id,)
