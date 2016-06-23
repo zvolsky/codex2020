@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from books import can_be_isxn, isxn_to_ean
+
+from c2_db import PublLengths, parse_fbi
 from global_settings import USE_TZ_UTC
 
 
 @auth.requires_login()
 def review():
     """
-    We accept for now 'l!' (dun)
-    We accept for now HACTIONS_TMP_LOST='r?' too, because we report them separately
-    HACTIONS_TMP_LOST = 'r?'  # ignore in pool revision   # we accept l! for now
+    At his time we accept everything in impr_hist as founded book:
+        We accept for now 'l!' (dun [cz:upomínka])
+        We accept for now HACTIONS_TMP_LOST='r?' too, because we report them separately
     """
     from global_settings import HACTIONS_TMP_LOST
 
@@ -27,3 +30,26 @@ def review():
                     distinct=db.impression.id)
     return dict(cnt_t=db(db.owned_book).count(), cnt_i=db(db.impression).count(),
                 cnt_tmp_lost=0, cnt_missing=0, review_date=review_date)
+
+# ajax
+@auth.requires_login()
+def review_find():
+    """we accept: ean/isxn, own barcode, rik(fbi)
+    """
+    question = request.args(0)
+    if can_be_isxn(question):
+        ean = isxn_to_ean(question)
+        #answer.ean=
+    rik, iorder = parse_fbi(question)
+    if rik:
+        #answer.rik.startswith(rik)
+
+        '''
+        query = db.answer.ean == ean
+        my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo,
+                                                             join=db.answer.on(db.answer.id == db.owned_book.answer_id))
+        '''
+    if len(question) <= PublLengths.barcode:
+        #impression.barcode=
+
+    # vlož 'r*' pro každý nalezený

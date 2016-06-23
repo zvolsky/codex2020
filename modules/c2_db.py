@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import random
+import re
 import string
 
 from gluon import current
@@ -25,6 +26,7 @@ class PublLengths(object):
     publisher = 255
     pubyear = 100
     country = 3
+    rik = 6
 
     # for impressions
     iid = 14
@@ -257,3 +259,25 @@ def finish_bill(bill_id):
     db.bill[bill_id] = dict(cnt_imp=cnt_imp, imp_added=datetime.datetime.utcnow())
     if 'bill' in session:
         del session.bill
+
+def parse_fbi(question):
+    """can asked string be a rik(fbi)?
+    return:
+        None,None if cannot
+        rik,None|iorder (rik(fbi) of book, iorder(order of impression for given book) if present)
+    note: always the same rik_width must be used in the library,
+            so non-digit separator between rik and iorder is possible but not neccessary
+        if for the growing library shorter rik(fbi) will be allowed in the future (using additional parameter allow_shorter=True),
+            then non-digit separator would stay obligatory
+    """
+    rik_width = get_libstyle()['id'][3]
+    rik = question[:rik_width]
+    if len(rik) < rik_width or not rik.isdigit() or not question[-1].isdigit():
+        return None, None
+    iorder = None
+    tail = re.findall('\d+$', question[rik_width:])
+    if tail:
+        tail = int(tail[0])
+        if tail > 0:
+            iorder = tail
+    return rik, iorder
