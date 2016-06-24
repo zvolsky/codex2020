@@ -1,0 +1,20 @@
+
+{{extend 'layout.html'}}
+
+<mark>ZDE SE PRACUJE</mark>
+
+{{if cnt_missing:}}
+    <h3><span class="label label-warning">{{=T("Při revizi nebylo zatím nalezeno výtisků")}} <span class="badge">{{=cnt_missing}}</span></span></h3>
+{{pass}}
+
+<h2>{{=T("Nenalezené výtisky")}} <small>{{=T("od data zahájení revize")}}</small>
+    {{=review_date.strftime(T('%d.%m.%Y', lazy=False))}}
+    <a href="{{=URL('review')}}" class="btn btn-sm btn-default right">{{=T("Přejít do revize")}}</a>
+    <a href="{{=URL('library', 'library')}}" class="btn btn-sm btn-info right">{{=T("změnit datum lze v profilu")}}</a>
+</h2>
+
+{{if cnt_missing:}}
+    {{=grid}}
+{{else:}}
+    <h3><span class="label label-success">{{=T("Všechny výtisky byly nalezeny.")}}</span></h3>
+{{pass}}

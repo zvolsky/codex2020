@@ -136,7 +136,7 @@
     <script>
       $.w2p = {};
       $.w2p.focus = $("form *:visible:enabled:first");
-      if ($.w2p.focus) {
+      if ($.w2p.focus.length) {
         $.w2p.focus = $.w2p.focus[0];
         $.w2p.focus._onfocus = $.w2p.focus.getAttribute('onfocus');
         $.w2p.focus.enabled = !($.w2p.focus._onfocus && $.w2p.focus._onfocus.indexOf('#w2p_query_panel') > -1);

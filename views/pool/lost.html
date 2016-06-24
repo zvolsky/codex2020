@@ -1,0 +1,17 @@
+
+{{extend 'layout.html'}}
+
+<mark>ZDE SE PRACUJE</mark>
+
+{{if cnt_tmp_lost:}}
+    <h3><span class="label label-danger">{{=T("Jako nezvěstných označeno výtisků")}} <span class="badge">{{=cnt_tmp_lost}}</span></span></h3>
+    {{=grid}}
+{{else:}}
+    <h3><span class="label label-success">{{=T("Žádné výtisky nejsou označeny jako dlouhodobě nezvěstné.")}}</span></h3>
+{{pass}}
+
+<div style="height: 20px"></div>
+<span class="alert alert-info">
+    {{=XML(T("Výtisk můžete (nechcete-li jej hned vyřadit) označit jako dlouhodobě nezvěstný v editaci výtisku nebo v přehledu %s."
+    ) % A(T("Fond, nenalezené v revizi"), _href="%s" % URL('missing')))}}
+</span>

@@ -222,9 +222,11 @@ def list():
                 else:
                     barcode = None
             bill_id = None if form.vars.not_this_bill else session.bill and session.bill['id']
+            htime = datetime.datetime.utcnow()
             impression_id = db.impression.insert(answer_id=answer_id, owned_book_id=owned_book_id,
                                                  iorder=iorder_candidate, gift=form.vars.gift,
                                                  iid=iid, sgn=sgn_imp, barcode=barcode,
+                                                 htime=htime, haction=form.vars.haction,
                                                  place_id=form.vars.place_id, price_in=form.vars.price_in)
             db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
             iorder_candidate += 1

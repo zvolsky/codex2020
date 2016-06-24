@@ -1,23 +1,34 @@
 
 {{extend 'layout.html'}}
 
-<div class="well well-sm">
-    <span style="padding-right: 10px;">{{=T("V knihovně evidujete")}}</span>
-    <mark>{{=T("titulů:")}} <span class="larger"><strong>{{=cnt_t}}</strong></span></mark> ,
-    <mark>{{=T("výtisků (exemplářů):")}} <span class="larger"><strong>{{=cnt_i}}</strong></span></mark>
-</div>
+<h3>
+    <span class="label label-primary">{{=T("Evidujete titulů")}} <span class="badge">{{=cnt_t}}</span></span>
+    <span class="label label-primary">{{=T("výtisků")}} <span class="badge">{{=cnt_i}}</span></span>
+
+    <span style="display: inline-block; width: 20px;"></span>
+    {{if cnt_tmp_lost:}}
+        <span class="label label-danger">{{=T("Jako nezvěstných označeno")}} <span class="badge">{{=cnt_tmp_lost}}</span>
+        <a class="btn btn-xs btn-default" href="{{=URL('lost')}}">
+            <span class="icon magnifier icon-zoom-in glyphicon glyphicon-zoom-in"></span>
+        </a></span>
+    {{pass}}
+    {{cnt_missing = max(0, cnt_i - cnt_tmp_lost - cnt_found)}}
+    <span class="label label-warning">{{=T("Zatím nenalezeno výtisků")}} <span class="badge">{{=cnt_missing}}</span>
+    {{if cnt_missing:}}
+        <a class="btn btn-xs btn-default" href="{{=URL('missing')}}">
+            <span class="icon magnifier icon-zoom-in glyphicon glyphicon-zoom-in"></span>
+        </a>
+    {{pass}}</span>
+
+    <span style="display: inline-block; width: 20px;"></span>
+    <span class="label label-success">{{=T("Již nalezeno")}} <span class="badge">{{=cnt_found}}</span></span>
+</h3>
 
 <h2>{{=T("Revize")}} <small>{{=T("vyhledání výtisků, které nebyly fyzicky nalezeny od data zahájení revize")}}</small>
-    {{T.lazy = False}}{{=review_date.strftime(T('%d.%m.%Y'))}}{{T.lazy = True}}
-    <a class="btn btn-sm btn-info right" href="{{=URL('library', 'library')}}">změnit datum</a>
+    {{=review_date.strftime(T('%d.%m.%Y', lazy=False))}}
+    <a class="btn btn-sm btn-info right" href="{{=URL('library', 'library')}}">{{=T("změnit datum v profilu")}}</a>
 </h2>
 
-<div class="list-group">
-    {{if cnt_tmp_lost:}}
-        <span class="list-group-item">{{=T("Jako nezvěstných označeno : %s") % (cnt_tmp_lost)}}</span>
-    {{pass}}
-    <span class="list-group-item">{{=T("Zatím nenalezeno výtisků : %s") % (cnt_missing)}}</span>
-</div>
 
 <div class="well well-sm">
     Tady se ještě pracuje ...

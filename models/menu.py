@@ -37,6 +37,8 @@ response.menu = [
     (T('Fond'), False, URL('catalogue', 'find'), [
         (T('katalogizace'), False, URL('catalogue', 'find'), []),
         (T('revize'), False, URL('pool', 'review'), []),
+        (T('nenalezené v revizi'), False, URL('pool', 'missing'), []),
+        (T('dlouhodobě nezvěstné'), False, URL('pool', 'lost'), []),
         ]),
     (T('Čtenáři'), False, '#', [
         (T('skupiny čtenářů'), False, URL('readers', 'groups'), []),

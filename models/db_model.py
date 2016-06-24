@@ -414,9 +414,15 @@ db.define_table('impression',
               comment=T("nákupní nebo pořizovací cena výtisku (přepočtená na %s)") % (DEFAULT_CURRENCY)),
         Field('icondition', 'text',
               label=T("Stav"), comment=T("stav výtisku, poškození")),
+        Field('htime', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True, writable=False,
+              label=T("Poslední manipulace"), comment=T("čas poslední manipulace (v UTC)")),
+        Field('haction', 'string', length=2, default='+o',
+              notnull=True, requires=IS_IN_SET(HACTIONS), writable=False,
+              label=T("Poslední akce"), comment=T("naposledy provedená činnost s výtiskem")),
         common_filter=lambda query: (db.impression.library_id == auth.library_id) & (db.impression.live == True),
         format=T('čís.') + ' %(iorder)s'
-        )
+        )   # htime, haction: redundant info for easier and faster access to the last impr_hist entry
 
 db.define_table('impr_hist',
         Field('impression_id', db.impression,
