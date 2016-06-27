@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import datetime
-import hashlib
-import random
-import re
-import string
+"""TODO: this should be rafactor: moved into c_utils, c_db, ..
+"""
 
+import datetime
+
+from c_utils import make_fastinfo
 from gluon import current
 
 from mzutils import slugify
@@ -193,18 +193,6 @@ def add_short(answer_id, item, category):
         db.idx_short[0] = {'answer_id': answer_id, 'category': category, 'item': item[:PublLengths.ishort]}
         # we ignore slugify, as long as we have only languages here
 
-def ean_to_rik(ean):
-    """convert last numbers of EAN into (reverted) rik or creates a random one
-    rik is designed to find books easier without barcode readers
-    """
-    return ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
-
-def publ_hash(title, author, publisher, pubyear):
-    src = '%s|%s|%s|%s' % (title, author, publisher, pubyear)
-    if type(src) == unicode:
-        src = src.encode('utf-8')
-    return hashlib.md5(src).hexdigest()
-
 def answer_by_ean(db, ean, flds):
     """return: row or None
     """
@@ -217,9 +205,6 @@ def answer_by_hash(db, md5publ, flds):
     """return: row or None
     """
     return db(db.answer.md5publ == md5publ).select(*flds).first()
-
-def make_fastinfo(title, author, publisher, pubyear):
-    return 'T' + title + '\nA' + author + '\nP' + publisher + '\nY' + pubyear
 
 def get_libstyle():
     """provides information about allowed/disabled fields
@@ -259,25 +244,3 @@ def finish_bill(bill_id):
     db.bill[bill_id] = dict(cnt_imp=cnt_imp, imp_added=datetime.datetime.utcnow())
     if 'bill' in session:
         del session.bill
-
-def parse_fbi(question):
-    """can asked string be a rik(fbi)?
-    return:
-        None,None if cannot
-        rik,None|iorder (rik(fbi) of book, iorder(order of impression for given book) if present)
-    note: always the same rik_width must be used in the library,
-            so non-digit separator between rik and iorder is possible but not neccessary
-        if for the growing library shorter rik(fbi) will be allowed in the future (using additional parameter allow_shorter=True),
-            then non-digit separator would stay obligatory
-    """
-    rik_width = get_libstyle()['id'][3]
-    rik = question[:rik_width]
-    if len(rik) < rik_width or not rik.isdigit() or not question[-1].isdigit():
-        return None, None
-    iorder = None
-    tail = re.findall('\d+$', question[rik_width:])
-    if tail:
-        tail = int(tail[0])
-        if tail > 0:
-            iorder = tail
-    return rik, iorder

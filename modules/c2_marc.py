@@ -8,7 +8,8 @@ from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 from gluon import current
 
 from books import isxn_to_ean
-from c2_db import PublLengths, create_idxs, del_idxs, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash
+from c_utils import publ_hash, ean_to_fbi
+from c2_db import PublLengths, create_idxs, del_idxs, answer_by_ean, answer_by_hash
 from marc_dialects import MarcFrom_AlephCz
 
 
@@ -60,7 +61,7 @@ def updatedb(record, touched):
     if exists_update():
         return False
     else:                                    # row doesn't exist...
-        answer['rik'] = ean_to_rik(ean)
+        answer['rik'] = ean_to_fbi(ean)
         row_id = db.answer.insert(**answer)  # ...insert it
         touched.append((row_id, marcrec, record, None))
         return True  # True -> + 1 into inserted count

@@ -4,7 +4,8 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid, next_sgn_imp
 
-from c2_db import PublLengths, ean_to_rik, publ_hash, answer_by_ean, answer_by_hash, make_fastinfo, get_libstyle
+from c_utils import publ_hash, ean_to_fbi, make_fastinfo
+from c2_db import PublLengths, answer_by_ean, answer_by_hash, get_libstyle
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
@@ -96,7 +97,7 @@ def list():
     else:
         if session.addbook:    # new book with local description only (from impression/description)
             fastinfo, ean, title, author, publisher, pubyear = parse_descr(session.addbook)
-            rik = ean_to_rik(ean)
+            rik = ean_to_fbi(ean)
         else:
             redirect(URL('default', 'index'))
 
