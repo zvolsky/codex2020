@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+# http://www.web2py.com/AlterEgo/default/show/260
+# https://groups.google.com/forum/#!searchin/web2py/unittest/web2py/lADMcdO84cY/56REY-gtGZwJ
+# https://groups.google.com/forum/#!searchin/web2py/unittest/web2py/N4UT5GbTdlM/0IwUrH-w0acJ
+#     testRunner code can be found on web2pyslices.com
+
 import os
 import glob
 import sys
@@ -10,11 +15,12 @@ APP = 'codex2020'
 
 
 def run_tests(filename='test*.py'):
-    files = os.path.join(os.getcwd(), 'applications', APP, 'tests', filename)
+    app_root = os.path.join(os.getcwd(), 'applications', APP)
+    files = os.path.join(app_root, 'tests', filename)
     db = DAL(myconf.take('dbtest.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
     suite = unittest.TestSuite()
     for file in glob.glob(files):
-        execfile(file, globals())
+        execfile(file, locals())
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 

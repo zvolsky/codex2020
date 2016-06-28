@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os
+import sys
 import unittest
+
+modules_path = os.path.join(app_root, 'modules')
+sys.path.append(modules_path)
+
+import books
+
 
 class TestBooks(unittest.TestCase):
     knownEan2isbn10 = (('9788072038022', '8072038028'),
@@ -9,8 +17,10 @@ class TestBooks(unittest.TestCase):
 
     def testEan2isbn10(self):
         for vin, vout in self.knownEan2isbn10:
-            result = roman.toRoman(integer)
+            result = books.ean2isbn10(vin)
             self.assertEqual(vout, result)
+
+suite.addTest(unittest.makeSuite(TestBooks))
 
 '''
 # testFoo.py
