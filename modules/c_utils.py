@@ -45,3 +45,25 @@ def ean_to_fbi(ean):
     rik(fbi) is designed to find books easier without barcode readers
     """
     return ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
+
+def limit_rows(rows, limitby):
+    """will shorten an iterable to limitby items
+        limitby can be integer or tuple/list length=2 (lower and upper boundary)
+    return tuple : (shortened iterable, was_longer?)
+    this is suitable for SQL queries made with LIMIT BY limitby+1 to obtain info if we have more records as was just fetched
+    """
+    if isinstance(limitby, (tuple, list)):
+        limitby = limitby[1] - limitby[0]
+    if len(rows) > limitby:
+        return rows[:limitby], True
+    else:
+        return rows, False
+
+def parse_fastinfo(fastinfo):
+    """will parse fastinfo blob into tuple: (title, author, publisher, pubyear)
+    """
+    book_dict = defaultdict(lambda: [])
+    for ln in fastinfo.splitlines():
+        if len(ln) > 1:
+            book_dict[ln[:1]].append(ln[1:])
+    return '; '.join(book_dict['T']), '; '.join(book_dict['A']), '; '.join(book_dict['P']), '; '.join(book_dict['Y'])  # tit, aut, pub, puy

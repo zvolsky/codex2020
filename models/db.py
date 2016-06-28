@@ -93,7 +93,7 @@ db.define_table('library',
         Field('st_imp_id', 'boolean', notnull=True, default=False,  # libstyle['id'][0] = I
               label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
         Field('st_imp_idx', 'integer', notnull=True, default=1,  # libstyle['id'][1] = 0|1|2|.. which number-part of ID should be incremented
-              label=T("Typ inkrementování"), comment=T("0 nezvětšovat přír.číslo; 1 zvětšovat nebo zvětšovat první nalezené podčíslo; 2 zvětšovat druhé nalezené podčíslo (např. při stylu: rok/číslo)")),
+              label=T("Typ inkrementování"), comment=T("0 nezvětšovat přír.číslo; 1 zvětšovat resp. zvětšovat první nalezené podčíslo; 2 zvětšovat druhé nalezené podčíslo (např. při stylu: rok/číslo)")),
         Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle['id'][2] = O
               label=T("Čís.výtisku ?"), comment=T("označte, pokud se má zobrazovat číslo výtisku jako rozlišení výtisků každé publikace")),
         Field('st_imp_rik', 'integer',  # libstyle['id'][3] = 2/3/4/5/6

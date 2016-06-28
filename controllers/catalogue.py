@@ -10,6 +10,8 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 
 from books import can_be_isxn, isxn_to_ean
 
+from c_utils import parse_fastinfo
+
 
 COLLATING = 'cs_CZ.utf8'
 ISMN1 = '979-0-'
@@ -142,15 +144,8 @@ def __get_question(question_id):
     question = db(db.question.id == question_id).select(db.question.question, cache=(cache.ram, 1800), cacheable=True).first().question
     return question, can_be_isxn(question)
 
-def __parse_fastinfo(fastinfo):
-    book_dict = defaultdict(lambda: [])
-    for ln in fastinfo.splitlines():
-        if len(ln) > 1:
-            book_dict[ln[:1]].append(ln[1:])
-    return '; '.join(book_dict['T']), '; '.join(book_dict['A']), '; '.join(book_dict['P']), '; '.join(book_dict['Y'])  # tit, aut, pub, puy
-
 def __book_to_list(book_rows, book, question_id):
-    tit, aut, pub, puy = __parse_fastinfo(book.fastinfo)
+    tit, aut, pub, puy = parse_fastinfo(book.fastinfo)
     book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
                         _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
                      tit, aut, pub, puy])
