@@ -2,7 +2,7 @@
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-from c2_db import finish_bill
+from c2_db_tmp import finish_bill
 
 
 @auth.requires_login()

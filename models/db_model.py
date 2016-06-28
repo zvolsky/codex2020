@@ -2,15 +2,16 @@
 
 from itertools import groupby
 
-from gluon import current
-
 from global_settings import DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, TESTING_LIB_ID
-from c2_db import PublLengths
+from c2_db_tmp import PublLengths
+
+from gluon import current
 
 
 # export for modules
 current.auth = auth
 current.db = db
+
 
 auth.settings.create_user_groups = None
 

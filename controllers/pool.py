@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from books import can_be_isxn, isxn_to_ean
+from dal_utils import get_libstyle
+from dalc_pool import get_review_time
 
-from c_utils import parse_fbi
-from c_db import get_review_time
-from c2_db import PublLengths, get_libstyle
+from c2_db_tmp import PublLengths
+from c2_common import fmt_impressions_by_usrid
 from global_settings import USE_TZ_UTC, HACTIONS_TMP_LOST
 
 
@@ -30,22 +30,7 @@ def review_find():
     """we accept: ean/isxn, own barcode, rik(fbi)
     """
     question = request.args(0)
-    if can_be_isxn(question):
-        ean = isxn_to_ean(question)
-        #answer.ean=
-    rik, iorder = parse_fbi(question)
-    if rik:
-        pass
-        #answer.rik.startswith(rik)
-
-        '''
-        query = db.answer.ean == ean
-        my_books = db((db.owned_book.id > 0) & query).select(db.answer.id, db.answer.fastinfo,
-                                                             join=db.answer.on(db.answer.id == db.owned_book.answer_id))
-        '''
-    if len(question) <= PublLengths.barcode:
-        pass
-        #impression.barcode=
+    fmt_impressions_by_usrid(question)
 
     # vlož 'r*' pro každý nalezený
 
