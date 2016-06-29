@@ -3,7 +3,6 @@
 from dal_utils import get_libstyle
 from dalc_pool import get_review_time
 
-from c2_db_tmp import PublLengths
 from c2_common import fmt_impressions_by_usrid
 from global_settings import USE_TZ_UTC, HACTIONS_TMP_LOST
 
@@ -31,6 +30,16 @@ def review_find():
     """
     question = request.args(0)
     fmt_impressions_by_usrid(question)
+
+
+
+    ### TODO: ajax call on blur + activate .click() for review_doit() in the callback
+
+
+
+# ajax
+@auth.requires_login()
+def review_doit():
 
     # vlož 'r*' pro každý nalezený
 

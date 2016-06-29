@@ -39,6 +39,8 @@ def impressions_by_usrid(question, db=None):
     rik, iorder = parse_fbi(question, libstyle)
     if rik:
         need_more = False
+        if iorder:
+            query &= db.impression.iorder == iorder
         query &= db.answer.rik.startswith(rik)
 
     if need_more:
