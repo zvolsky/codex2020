@@ -12,17 +12,21 @@ from books import can_be_isxn, isxn_to_ean
 from c_utils import parse_fbi
 from dal_utils import get_libstyle
 from c2_db_tmp import PublLengths
+from global_settings import USE_TZ_UTC
+
 
 from gluon import current
 
 
-def get_review_time(db=None):
+def get_review_time(db=None, auth=None):
     """provides tuple:
         - starting review date from library settings
         - appropriate starting review time for compare expressions where datetime.datetime is used
     """
     if db is None:
         db = current.db
+    if auth is None:
+        auth = current.auth
 
     review_date = db(db.library.id == auth.library_id).select(db.library.review_date).first().review_date
     if USE_TZ_UTC:

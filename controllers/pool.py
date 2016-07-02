@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from plugin_mz import formstyle_bootstrap3_compact_factory
+
 from dal_utils import get_libstyle
 from dalc_pool import get_review_time
 
 from c2_common import fmt_impressions_by_usrid
-from global_settings import USE_TZ_UTC, HACTIONS_TMP_LOST
+from global_settings import HACTIONS_TMP_LOST
 
 
 @auth.requires_login()
@@ -18,10 +20,16 @@ def review():
     if not auth.library_id:
         redirect(URL('default', 'index'))
 
+    form = SQLFORM.factory(Field('imp_id',
+                                 label=T("Zkontrolovaný výtisk"),
+                                 comment=T("zadej rik, čarový kód nebo přír.číslo")),
+                           formstyle=formstyle_bootstrap3_compact_factory())
+
     review_date, review_time = get_review_time()
     return dict(cnt_t=db(db.owned_book).count(), cnt_i=db(db.impression).count(),
                 cnt_tmp_lost=db(db.impression.haction == HACTIONS_TMP_LOST).count(),
-                cnt_found=db(db.impression.htime >= review_time).count(), review_date=review_date)
+                cnt_found=db(db.impression.htime >= review_time).count(), review_date=review_date,
+                form=form)
 
 # ajax
 @auth.requires_login()
@@ -35,12 +43,13 @@ def review_find():
 
     ### TODO: ajax call on blur + activate .click() for review_doit() in the callback
 
+    # return simplejson.dumps(candidates.xml())
 
 
 # ajax
 @auth.requires_login()
 def review_doit():
-
+    pass
     # vlož 'r*' pro každý nalezený
 
 @auth.requires_login()

@@ -36,7 +36,7 @@ $(document).ready(function() {
         var wishQuestionFull = (wishQuestionStatus ? '+' : '-') + wishQuestionId;
         if (wishQuestionFull !== resolvedQuestion) {
             if (wishQuestionStatus) {
-                $.getJSON('{{=URL('retrieve_books')}}' + '/' + wishQuestionId, function(result, status) {
+                $.getJSON('{{=URL('retrieve_books')}}' + '/' + wishQuestionId, function(result) {
                     $('#erase_question').hide().off('click');
                     $('#retrieve_books').show().html(result);
                     $('#erase_question').click(function(event) {
@@ -62,7 +62,7 @@ $(document).ready(function() {
         $('#retrieve_books').fadeOut();
     }
     function getRetrieveStatus() {
-        $.getJSON("{{=URL('retrieve_status')}}", function(result, status) {
+        $.getJSON("{{=URL('retrieve_status')}}", function(result) {
             $('#retrieve_status .list-group-item').off('click');
             $('#retrieve_status').html(result);
             var wishList = $('#retrieve_status .list-group-item');

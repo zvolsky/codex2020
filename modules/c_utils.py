@@ -3,6 +3,7 @@
 """Codex 2020 utils, completely independent on the Web2py framework
 """
 
+from collections import defaultdict
 import hashlib
 import random
 import re
