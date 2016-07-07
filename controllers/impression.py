@@ -7,7 +7,8 @@ from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, form
 from dal_utils import get_libstyle
 
 from c_utils import publ_hash, ean_to_fbi, make_fastinfo
-from c2_db_tmp import PublLengths, answer_by_ean, answer_by_hash
+from dal_utils import answer_by_ean, answer_by_hash
+from c2_db_tmp import PublLengths
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 

@@ -43,19 +43,6 @@ class PublLengths(object):
     question = 60
 
 
-def answer_by_ean(db, ean, flds):
-    """return: row or None
-    """
-    if ean[:3] == '977':  # can have everything in [10:12] position
-        return db(db.answer.ean.startswith(ean[:10])).select(*flds).first()
-    else:
-        return db(db.answer.ean == ean).select(*flds).first()
-
-def answer_by_hash(db, md5publ, flds):
-    """return: row or None
-    """
-    return db(db.answer.md5publ == md5publ).select(*flds).first()
-
 def finish_bill(bill_id):
     """will finish the opened bill
     """

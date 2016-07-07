@@ -10,7 +10,8 @@ from gluon import current
 from books import isxn_to_ean
 from c_utils import publ_hash, ean_to_fbi
 from dal_idx import create_idxs, del_idxs
-from c2_db_tmp import PublLengths, answer_by_ean, answer_by_hash
+from dal_utils import answer_by_ean, answer_by_hash
+from c2_db_tmp import PublLengths
 from marc_dialects import MarcFrom_AlephCz
 
 
