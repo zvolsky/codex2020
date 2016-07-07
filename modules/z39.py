@@ -13,15 +13,28 @@ from gluon import current
 from books import ean2isbn10, ean2issn, can_be_isxn, add_missing_control
 
 
+# TODO: make this library configurable
+Z39_SERVER = 'aleph.nkp.cz'
+Z39_PORT = 9991
+Z39_DATABASE = 'SKC-UTF'  # AUT-UTF # http://aleph.nkp.cz/F/?func=file&file_name=base-list
+
+
 def get_from_large_library(fnd):
+    """
+    return tuple: (warning, result)
+        warning (0 is default if no problem occured)
+            1 - T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?")
+            2 - T("Spojení se souhrnným katalogem bylo navázáno, ale dotaz selhal.")
+        result: conn.search(zoom.Query('PQF', smartquery(fnd)))
+    """
     results = None
     try:
-        conn = zoom.Connection ('aleph.nkp.cz', 9991)
-        warning = None
+        conn = zoom.Connection (Z39_SERVER, Z39_PORT)
+        warning = 0
     except ConnectionError:
-        warning = current.T("Nelze navázat spojení se souhrnným katalogem. Jste připojeni k internetu?")
+        warning = 1
     if warning is None:
-        conn.databaseName = 'SKC-UTF'  # AUT-UTF # http://aleph.nkp.cz/F/?func=file&file_name=base-list
+        conn.databaseName = Z39_DATABASE
         conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
         conn.charset = 'UTF-8'
         query = zoom.Query('PQF', smartquery(fnd))
@@ -38,7 +51,7 @@ def get_from_large_library(fnd):
         try:
             results = conn.search(query)
         except Exception:
-            warning = current.T("Spojení se souhrnným katalogem bylo navázáno, ale dotaz selhal.")
+            warning = 2
     return warning, results
 
 class PQFConfig(object):

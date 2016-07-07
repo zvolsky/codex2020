@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from c2_z39 import get_from_large_library
+from z39 import get_from_large_library
 from c2_marc import parse_Marc_and_updatedb
 
 from gluon.scheduler import Scheduler
@@ -13,7 +13,7 @@ def task_catalogize(question_id, question, asked):
     asked = datetime.datetime.strptime(asked, '%Y-%m-%d %H:%M:%S.%f')  # JSON unpack str()
     warning, results = get_from_large_library(question)
     duration_z39 = datetime.datetime.utcnow()
-    if warning:
+    if warning:     # TODO: save warning value
         retrieved = inserted = 0
         duration_marc = None
     else:
