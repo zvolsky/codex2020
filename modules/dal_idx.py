@@ -5,7 +5,7 @@ from mzutils import slugify
 from gluon import current
 
 from c_utils import make_fastinfo
-from c2_db import PublLengths
+from c_db import PublLengths
 
 
 def del_idxs(answer_id):

@@ -11,7 +11,7 @@ from books import can_be_isxn, isxn_to_ean
 
 from c_utils import parse_fbi
 from dal_utils import get_libstyle
-from c2_db import PublLengths
+from c_db import PublLengths
 from global_settings import USE_TZ_UTC
 
 

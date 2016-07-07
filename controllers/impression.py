@@ -8,7 +8,7 @@ from dal_utils import get_libstyle
 
 from c_utils import publ_hash, ean_to_fbi, make_fastinfo
 from dal_utils import answer_by_ean, answer_by_hash
-from c2_db import PublLengths
+from c_db import PublLengths
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 

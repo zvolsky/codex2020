@@ -3,7 +3,7 @@
 from itertools import groupby
 
 from global_settings import DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, TESTING_LIB_ID
-from c2_db import PublLengths
+from c_db import PublLengths
 
 from gluon import current
 
