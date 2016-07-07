@@ -5,7 +5,7 @@ from pymarc import MARCReader    # pymarc from PyPI
 from gluon import current
 current.db = db  # export for modules
 
-from c2_db_tmp import create_idxs, truncate_idxs
+from dal_idx import create_idxs, truncate_idxs
 from marc_dialects import MarcFrom_AlephCz
 
 
