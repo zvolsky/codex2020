@@ -31,7 +31,7 @@ def get_from_large_library(fnd):
         warning = 0
     except ConnectionError:
         warning = 1
-    if warning is None:
+    if not warning:
         conn.databaseName = Z39_DATABASE
         conn.preferredRecordSyntax = 'USMARC' # UNIMARC, XML   # http://aleph.nkp.cz/web/Z39_NK_cze.htm
         conn.charset = 'UTF-8'
