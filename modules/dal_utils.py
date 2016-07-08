@@ -21,7 +21,7 @@ def answer_by_hash(db, md5publ, flds):
     """
     return db(db.answer.md5publ == md5publ).select(*flds).first()
 
-def get_libstyle(db=None, session=None):
+def get_libstyle(db=None, session=None, auth=None):
     """provides information about allowed/disabled fields
     from session.libstyle if present
     and direct from db if session.libstyle is missing yet
@@ -34,14 +34,16 @@ def get_libstyle(db=None, session=None):
 
     if db is None:
         db = current.db
+    if auth is None:
+        auth = current.auth
 
-    library = db(db.library.id == current.auth.library_id).select().first()
+    library = db(db.library.id == auth.library_id).select().first()
 
     libstyle = {}
     libstyle['id'] = (('I' if library.st_imp_id else ' ') +
                     str(library.st_imp_idx)[-1:] +
-                    ('O' if library.st_imp_ord else ' ') +
-                    (str(library.st_imp_rik) if 2 <= library.st_imp_rik <= 5 else '3'))
+                    ('O' if library.st_imp_ord else ' '))
+    libstyle['lrik'] = library.st_imp_rik if 2 <= library.st_imp_rik <= 5 else 3
     libstyle['bc'] = ('B' if library.st_imp_bc else ' ') + ('+' if library.st_imp_bc else '-')
     libstyle['sg'] = (('G' if library.st_imp_sg else ' ') +
                     (library.st_imp_sgmod1 or ' ') +

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from gluon.contrib import simplejson
+
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
 from dal_utils import get_libstyle
@@ -12,7 +14,7 @@ from global_settings import HACTIONS_TMP_LOST
 @auth.requires_login()
 def review():
     """
-    At his time we accept everything in impr_hist as founded book:
+    At this time we accept everything in impr_hist as founded book:
         We accept for now 'l!' (dun [cz:upomínka])
         We accept for now HACTIONS_TMP_LOST='r?' too, because we report them separately
     """
@@ -37,25 +39,19 @@ def review_find():
     """we accept: ean/isxn, own barcode, rik(fbi)
     """
     question = request.args(0)
-    fmt_impressions_by_usrid(question)
-
-
-
-    ### TODO: ajax call on blur + activate .click() for review_doit() in the callback
-
-    # return simplejson.dumps(candidates.xml())
-
+    candidates = fmt_impressions_by_usrid(question)
+    return simplejson.dumps(candidates.xml())
 
 # ajax
 @auth.requires_login()
 def review_doit():
+    ### TODO: ajax call on blur + activate .click() for review_doit() in the callback
     pass
     # vlož 'r*' pro každý nalezený
 
 @auth.requires_login()
 def missing():
     review_date, review_time = get_review_time()
-    libstyle = get_libstyle()
     grid = SQLFORM.grid((db.impression.htime < review_time) & (db.impression.haction != HACTIONS_TMP_LOST))
     return dict(grid=grid, review_date=review_date,
                 cnt_missing=db((db.impression.htime < review_time) & (db.impression.haction != HACTIONS_TMP_LOST)).count())
@@ -63,7 +59,6 @@ def missing():
 
 @auth.requires_login()
 def lost():
-    libstyle = get_libstyle()
     grid = SQLFORM.grid(db.impression.haction == HACTIONS_TMP_LOST)
     return dict(grid=grid,
                 cnt_tmp_lost=db(db.impression.haction == HACTIONS_TMP_LOST).count())

@@ -7,11 +7,12 @@ The exception is use of current., which makes possible calls from Web2py framewo
 
 from books import can_be_isxn, isxn_to_ean
 
+from gluon import current
+
 from c_common import group_imp_by_book
+from c_db import PublLengths
 from c_utils import parse_fbi, limit_rows
 from dal_utils import get_libstyle
-
-from gluon import current
 
 
 def impressions_by_usrid(question, db=None):
@@ -25,29 +26,31 @@ def impressions_by_usrid(question, db=None):
         return ()
 
     libstyle = get_libstyle()
-    need_more = True
-    if len(question) <= PublLengths.barcode:  # TODO: formal control for valid barcode syntax would be good, but must be library dependent
-        need_more = False
+    query = False
+    if libstyle['bc'][0] == 'B' and len(question) <= PublLengths.barcode:  # TODO: formal control for valid barcode syntax would be good, but must be library dependent
         query = db.impression.barcode == question
-    else:
-        query = db.impression
+
+    if libstyle['id'][0] == 'I' and len(question) <= PublLengths.iid:
+        query |= db.impression.iid == question
 
     if can_be_isxn(question):
-        need_more = False
         ean = isxn_to_ean(question)
-        query &= db.answer.ean == ean
+        query |= db.answer.ean == ean
     rik, iorder = parse_fbi(question, libstyle)
     if rik:
-        need_more = False
         if iorder:
-            query &= db.impression.iorder == iorder
-        query &= db.answer.rik.startswith(rik)
+            query |= db.impression.iorder == iorder
+        elif not query:
+            query = db.impression
+        query |= db.answer.rik.startswith(rik)
 
-    if need_more:
+    if not query:
         return ()
 
     imp_order = db.impression.iid if libstyle['id'][0] == 'I' else db.impression.iorder
     limitby = 50
+    import pdb;pdb.set_trace()
+
     imps = db(query).select(db.impression.id, db.impression.iorder, db.impression.iid, db.owned_book.id, db.answer.id, db.answer.rik, db.answer.fastinfo,
                            join=(db.owned_book.on(db.owned_book.id == db.impression.owned_book_id),
                                 db.answer.on(db.answer.id == db.impression.answer_id)),

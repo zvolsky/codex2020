@@ -26,3 +26,4 @@ def group_imp_by_book(imps):
                           'answer_id': imp.answer.id,
                           'rik': imp.answer.rik,
                           'fastinfo': imp.answer.fastinfo})
+    return books

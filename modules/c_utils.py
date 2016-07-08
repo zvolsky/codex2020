@@ -29,7 +29,7 @@ def parse_fbi(question, libstyle):
         if for the growing library shorter rik(fbi) will be allowed in the future (using additional parameter allow_shorter=True),
             then non-digit separator would stay obligatory
     """
-    rik_width = libstyle['id'][3]
+    rik_width = libstyle['lrik']
     rik = question[:rik_width]
     if len(rik) < rik_width or not rik.isdigit() or not question[-1].isdigit():
         return None, None

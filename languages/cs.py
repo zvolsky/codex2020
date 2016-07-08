@@ -964,6 +964,7 @@
 'zadej rik, čarový kód nebo přír.číslo': 'zadej rik, čarový kód nebo přír.číslo',
 'Zadej statistické skupiny, které chceš vyhodnocovat.': 'Zadej statistické skupiny, které chceš vyhodnocovat.',
 'Zadej statistické skupiny, které chceš vyhodnocovat. Statistika podle umístění výtisků je vytvořena nezávisle, není potřeba pro ni definovat skupinu.': 'Zadej statistické skupiny, které chceš vyhodnocovat. Statistika podle umístění výtisků je vytvořena nezávisle, není potřeba pro ni definovat skupinu.',
+'Zadání neodpovídá žádný výtisk.': 'Zadání neodpovídá žádný výtisk.',
 'zaevidován': 'zaevidován',
 'zaevidován - nový nákup': 'zaevidován - nový nákup',
 'zaevidován zpětně': 'zaevidován zpětně',

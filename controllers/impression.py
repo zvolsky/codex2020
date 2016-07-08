@@ -105,8 +105,7 @@ def list():
             redirect(URL('default', 'index'))
 
     libstyle = get_libstyle()
-    rik_width = libstyle['id'][3]
-    rik_width = int(rik_width) if rik_width.isdigit() else 3
+    rik_width = libstyle['lrik']
     rik_rendered = rik and rik[:rik_width][::-1] or ''  # rendered rik has always oposite order as db rik
 
     see_iid = libstyle['id'][0] == 'I'

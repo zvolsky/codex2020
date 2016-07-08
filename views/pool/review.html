@@ -32,20 +32,29 @@
 <div class="well well-sm">
     {{=form}}
 </div>
+<div id="fndImps" class="well well-sm">
+</div>
     Tady se ještě pracuje ...
 
 <script>
+$(document).ready(function() {
     $('label').css('text-align', 'right');
-
     $('#submit_record__row').hide();
     $('#no_table_imp_id').blur(function(e) {
         var impId = $('#no_table_imp_id').val();
         if (impId) {
-            $.getJSON('{{=URL('review_find')}}' + '/' + impId, function(result) {
-            };
+            $.getJSON('{{=URL('review_find', args=(impId))}}', function(result) {   // encodeURIComponent(str) ???
+                $('#fndImps').hide().off('click');  // TODO: na jednotlivé výtisky, ne na container
+                $('#fndImps').show().html(result);
+                $('#fndImps').click(function(event) {
+                    eraseQuestion(event, $(this).parent().attr('data_id')); // double erase button - see eraseQuestion()
+                });
+            });
 
             $('#no_table_imp_id').val('');
             e.target.focus();
+
         }
     });
+});
 </script>
