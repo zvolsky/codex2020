@@ -19,7 +19,7 @@ def publ_hash(title, author, publisher, pubyear):
 def make_fastinfo(title, author, publisher, pubyear):
     return 'T' + title + '\nA' + author + '\nP' + publisher + '\nY' + pubyear
 
-def parse_fbi(question, libstyle):
+def parse_fbi(question, libstyle, reverted=True):
     """can asked string be a rik(fbi)?
     return:
         None,None if cannot
@@ -39,7 +39,10 @@ def parse_fbi(question, libstyle):
         tail = int(tail[0])
         if tail > 0:
             iorder = tail
-    return rik, iorder
+    if reverted:
+        return rik[::-1], iorder
+    else:
+        return rik, iorder
 
 def ean_to_fbi(ean):
     """convert last numbers of EAN into (reverted) rik(fbi) or creates a random one

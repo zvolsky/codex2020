@@ -43,7 +43,7 @@ $(document).ready(function() {
     $('#no_table_imp_id').blur(function(e) {
         var impId = $('#no_table_imp_id').val();
         if (impId) {
-            $.getJSON('{{=URL('review_find', args=(impId))}}', function(result) {   // encodeURIComponent(str) ???
+            $.getJSON('{{=URL('review_find')}}' + '?q=' + encodeURIComponent(impId), function(result) {
                 $('#fndImps').hide().off('click');  // TODO: na jednotlivé výtisky, ne na container
                 $('#fndImps').show().html(result);
                 $('#fndImps').click(function(event) {

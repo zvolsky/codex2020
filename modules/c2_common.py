@@ -30,7 +30,6 @@ def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
             lbl = '%s-%s' % (rik, iorder)
         return DIV(A(lbl, _href="%s/%s" % ((URL(c, f) if c else URL(f)), imp[0]),
                      _data_id="%s" % imp[0]), _class='pull-left')
-    import pdb;pdb.set_trace()
 
     uses_iid = get_libstyle()['id'][0] == 'I'
     books, overflow = impressions_by_usrid(question)

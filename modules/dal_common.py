@@ -37,20 +37,22 @@ def impressions_by_usrid(question, db=None):
         ean = isxn_to_ean(question)
         query |= db.answer.ean == ean
     rik, iorder = parse_fbi(question, libstyle)
+    iorder = None
+    query = False
     if rik:
+        rik_query = db.answer.rik.startswith(rik)
         if iorder:
-            query |= db.impression.iorder == iorder
-        elif not query:
-            query = db.impression
-        query |= db.answer.rik.startswith(rik)
+            query |= (db.impression.iorder == iorder) & rik_query
+        elif query:
+            query |= rik_query
+        else:
+            query = (db.impression.id > 0) & rik_query
 
     if not query:
         return ()
 
     imp_order = db.impression.iid if libstyle['id'][0] == 'I' else db.impression.iorder
     limitby = 50
-    import pdb;pdb.set_trace()
-
     imps = db(query).select(db.impression.id, db.impression.iorder, db.impression.iid, db.owned_book.id, db.answer.id, db.answer.rik, db.answer.fastinfo,
                            join=(db.owned_book.on(db.owned_book.id == db.impression.owned_book_id),
                                 db.answer.on(db.answer.id == db.impression.answer_id)),

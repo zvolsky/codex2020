@@ -38,7 +38,7 @@ def review():
 def review_find():
     """we accept: ean/isxn, own barcode, rik(fbi)
     """
-    question = request.args(0)
+    question = request.vars.q
     candidates = fmt_impressions_by_usrid(question)
     return simplejson.dumps(candidates.xml())
 
