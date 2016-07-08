@@ -22,8 +22,11 @@ def impressions_by_usrid(question, db=None):
     if db is None:
         db = current.db
 
+    def nothing():
+        return ([], False)
+
     if not len(question):
-        return ()
+        return nothing()
 
     libstyle = get_libstyle()
     query = False
@@ -37,19 +40,15 @@ def impressions_by_usrid(question, db=None):
         ean = isxn_to_ean(question)
         query |= db.answer.ean == ean
     rik, iorder = parse_fbi(question, libstyle)
-    iorder = None
-    query = False
     if rik:
         rik_query = db.answer.rik.startswith(rik)
         if iorder:
             query |= (db.impression.iorder == iorder) & rik_query
-        elif query:
-            query |= rik_query
         else:
-            query = (db.impression.id > 0) & rik_query
+            query |= rik_query
 
     if not query:
-        return ()
+        return nothing()
 
     imp_order = db.impression.iid if libstyle['id'][0] == 'I' else db.impression.iorder
     limitby = 50
