@@ -8,8 +8,6 @@ from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: pytho
         # originální asl2/ chyba instalace,
         # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
 
-from gluon import current
-
 from books import ean2isbn10, ean2issn, can_be_isxn, add_missing_control
 
 
