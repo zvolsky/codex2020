@@ -48,7 +48,8 @@ def ean_to_fbi(ean):
     """convert last numbers of EAN into (reverted) rik(fbi) or creates a random one
     rik(fbi) is designed to find books easier without barcode readers
     """
-    return ean[:-6:-1] if (ean and len(ean) >= 5) else ''.join(random.choice(string.digits) for _ in range(5))
+    return ean[:-7:-1] if (ean and len(ean) >= 6) else ''.join(random.choice(string.digits) for _ in range(6))
+    # 7,6,6 pro len(rik)==6
 
 def limit_rows(rows, limitby):
     """will shorten an iterable to limitby items
