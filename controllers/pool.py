@@ -4,7 +4,6 @@ from gluon.contrib import simplejson
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-from dal_utils import get_libstyle
 from dalc_pool import get_review_time
 
 from c2_common import fmt_impressions_by_usrid
@@ -39,7 +38,7 @@ def review_find():
     """we accept: ean/isxn, own barcode, rik(fbi)
     """
     question = request.vars.q
-    candidates = fmt_impressions_by_usrid(question)
+    candidates = DIV(fmt_impressions_by_usrid(question), _class="well well-sm")
     return simplejson.dumps(candidates.xml())
 
 # ajax

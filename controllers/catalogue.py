@@ -10,6 +10,7 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 from books import can_be_isxn, isxn_to_ean
 
 from c_utils import parse_fastinfo
+from c2_common import get_book_line
 
 
 COLLATING = 'cs_CZ.utf8'
@@ -147,8 +148,8 @@ def __get_question(question_id):
 
 def __book_to_list(book_rows, book, question_id):
     tit, aut, pub, puy = parse_fastinfo(book.fastinfo)
-    book_rows.append([A(B(tit), ' ', SPAN(aut, _class="bg-primary"), ' ', SPAN(pub, ' ', puy, _class="smaller"),
-                        _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
+    book_line = get_book_line(tit, aut, pub, puy)
+    book_rows.append([A(*book_line, _class="list-group-item", _href=URL('impression', 'list', args=(question_id, book.id))),
                      tit, aut, pub, puy])
 
 def __sort_book_rows(book_rows):
