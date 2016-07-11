@@ -15,8 +15,11 @@ from gluon.validators import IS_NOT_EMPTY, IS_IN_DB
 admin_mail = 'admin@' + '.'.join(current.request.env.http_host.rsplit('.')[-2:])
 
 
-def link(filename):
-    current.response.files.append(URL('static', filename))
+def link(src):
+    if '://' in src:
+        current.response.files.append(src)
+    else:
+        current.response.files.append(URL('static', src))
 
 
 def force_download(filename, content, mime_type=None):
