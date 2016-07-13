@@ -4,7 +4,7 @@ from mzutils import shortened
 
 from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, format_barcode, next_iid, next_sgn_imp
 
-from dal_utils import get_libstyle
+from dal_utils import get_libstyle, add_impr_hist
 
 from c_utils import publ_hash, ean_to_fbi, make_fastinfo
 from dal_utils import answer_by_ean, answer_by_hash
@@ -231,7 +231,8 @@ def list():
                                                  iid=iid, sgn=sgn_imp, barcode=barcode,
                                                  htime=htime, haction=form.vars.haction,
                                                  place_id=form.vars.place_id, price_in=form.vars.price_in)
-            db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, bill_id=bill_id)
+            db.impr_hist.insert(impression_id=impression_id, haction=form.vars.haction, htime=htime, bill_id=bill_id)
+                    # no need for add_impr_hist() here, impression table is uptodate
             iorder_candidate += 1
 
         if force_redirect:
@@ -257,23 +258,28 @@ def list():
 @auth.requires_login()
 @auth.requires_signature()
 def displace():
+    """will remove impression which already has a history
+    """
     question_id = request.args(0)
     answer_id = request.args(1)
     impression_id = request.args(2)
     if not impression_id:
         redirect(URL('default', 'index'))
-    db.impr_hist.insert(impression_id=impression_id, haction='--')
+    add_impr_hist(impression_id, '--')
     db(db.impression.id == impression_id).update(live=False)
     redirect(URL('list', args=(question_id, answer_id)))
 
 @auth.requires_login()
 @auth.requires_signature()
 def mistake():
+    """will remove impression improperly entered
+    """
     question_id = request.args(0)
     answer_id = request.args(1)
     impression_id = request.args(2)
     if not impression_id:
         redirect(URL('default', 'index'))
+    db(db.impr_hist.impression_id == impression_id).delete()
     db(db.impression.id == impression_id).delete()
     redirect(URL('list', args=(question_id, answer_id)))
 

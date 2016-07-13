@@ -454,12 +454,13 @@ def book_cnt_insert(flds, id):
     db((db.owned_book.id == flds['owned_book_id']) & (db.owned_book.library_id == auth.library_id),
            ignore_common_filters=True).update(cnt=db.owned_book.cnt + 1)  # without filter as long it contain cnt>0
 def book_cnt_update(w2set, flds):
-    impressions = w2set.select(db.impression.owned_book_id, db.impression.live)
-    for impression in impressions:
-        if impression.live is True and flds['live'] is False:
-            db(db.owned_book.id == impression.owned_book_id).update(cnt=max(0, db.owned_book.cnt - 1))
-        elif impression.live is False and flds['live'] is True:
-            db(db.owned_book.id == impression.owned_book_id).update(cnt=db.owned_book.cnt + 1)
+    if 'live' in flds:
+        impressions = w2set.select(db.impression.owned_book_id, db.impression.live)
+        for impression in impressions:
+            if impression.live is True and flds['live'] is False:
+                db(db.owned_book.id == impression.owned_book_id).update(cnt=max(0, db.owned_book.cnt - 1))
+            elif impression.live is False and flds['live'] is True:
+                db(db.owned_book.id == impression.owned_book_id).update(cnt=db.owned_book.cnt + 1)
 def book_cnt_delete(w2set):
     impressions = w2set.select(db.impression.owned_book_id, orderby=db.impression.owned_book_id)
     for key, group in groupby(impressions, lambda impression: impression.owned_book_id):

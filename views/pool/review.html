@@ -23,31 +23,36 @@
     <span style="display: inline-block; width: 20px;"></span>
     <span class="label label-success">{{=T("Již nalezeno")}} <span class="badge">{{=cnt_found}}</span></span>
 </h3>
+TODO: vylepšit aktualizaci počtů - zatím se počty aktualizují až po obnovení stránky
 
 <h2>{{=T("Revize")}} <small>{{=T("vyhledání výtisků, které nebyly fyzicky nalezeny od data zahájení revize")}}</small>
     {{=review_date.strftime(T('%d.%m.%Y', lazy=False))}}
     <a class="btn btn-sm btn-info right" href="{{=URL('library', 'library')}}">{{=T("změnit datum v profilu")}}</a>
 </h2>
 
+<div id="revImps"></div>
 <div class="well well-sm">
     {{=form}}
 </div>
 <div id="fndImps"></div>
-
-    Tady se ještě pracuje ...
 
 <script>
 $(document).ready(function() {
     $('label').css('text-align', 'right');
     $('#submit_record__row').hide();
     $('#no_table_imp_id').blur(function(e) {
+        $.w2p.stop(e);
         var impId = $('#no_table_imp_id').val();
         if (impId) {
             $.getJSON('{{=URL('review_find')}}' + '?q=' + encodeURIComponent(impId), function(result) {
-                $('#fndImps').hide().off('click');  // TODO: na jednotlivé výtisky, ne na container
+                $('#fndImps a').off('click');
                 $('#fndImps').show().html(result);
-                $('#fndImps').click(function(event) {
-                    eraseQuestion(event, $(this).parent().attr('data_id')); // double erase button - see eraseQuestion()
+                $('#fndImps a').click(function(e) {
+                    $.w2p.stop(e);
+                    $.getJSON('{{=URL('review_doit')}}' + '/' + $(this).attr('data_id'), function(result) {
+                        $('#fndImps').hide().html('');
+                        $('#revImps').show().html(result);
+                    });
                 });
             });
 

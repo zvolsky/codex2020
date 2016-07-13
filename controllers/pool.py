@@ -4,9 +4,11 @@ from gluon.contrib import simplejson
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
+from dal_common import get_imp_book
+from dal_utils import add_impr_hist
 from dalc_pool import get_review_time
 
-from c2_common import fmt_impressions_by_usrid
+from c2_common import fmt_impressions_by_usrid, fmt_impression_plain
 from global_settings import HACTIONS_TMP_LOST
 
 
@@ -44,9 +46,14 @@ def review_find():
 # ajax
 @auth.requires_login()
 def review_doit():
-    ### TODO: ajax call on blur + activate .click() for review_doit() in the callback
-    pass
-    # vlož 'r*' pro každý nalezený
+    imp_id = request.args[0]
+    imp = get_imp_book(imp_id)
+    if imp:
+        add_impr_hist(imp.impression.id, 'r*')
+        finished = DIV(fmt_impression_plain(imp))
+    else:
+        finished = DIV(T("Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává)."))
+    return simplejson.dumps(finished.xml())
 
 @auth.requires_login()
 def missing():

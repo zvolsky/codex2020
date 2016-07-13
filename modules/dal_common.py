@@ -15,6 +15,19 @@ from c_utils import parse_fbi, limit_rows
 from dal_utils import get_libstyle
 
 
+def get_imp_book(imp_id, db=None):
+    """based on impression.id (imp_id)
+    this will retrieve None or single row: imp.impression(id,iorder,iid,sgn)+imp.answer(rik,fastinfo)
+    """
+    if db is None:
+        db = current.db
+
+    return db(db.impression.id == imp_id).select(
+            db.impression.id, db.impression.iorder, db.impression.iid, db.impression.sgn,
+            db.answer.rik, db.answer.fastinfo,
+            left=db.answer.on(db.answer.id == db.impression.answer_id)
+            ).first()
+
 def impressions_by_usrid(question, db=None):
     """this is search for review, for loans, ...
     barcode, isXn, ean, rik/fbi or (?TODO: begin of title) are accepted as question
@@ -52,10 +65,11 @@ def impressions_by_usrid(question, db=None):
 
     imp_order = db.impression.iid if libstyle['id'][0] == 'I' else db.impression.iorder
     limitby = 50
-    imps = db(query).select(db.impression.id, db.impression.iorder, db.impression.iid, db.owned_book.id, db.answer.id, db.answer.rik, db.answer.fastinfo,
-                           join=(db.owned_book.on(db.owned_book.id == db.impression.owned_book_id),
+    imps = db(query).select(db.impression.id, db.impression.iorder, db.impression.iid, db.impression.sgn,
+                            db.owned_book.id, db.answer.id, db.answer.rik, db.answer.fastinfo,
+                            join=(db.owned_book.on(db.owned_book.id == db.impression.owned_book_id),
                                 db.answer.on(db.answer.id == db.impression.answer_id)),
-                           orderby=(db.owned_book.id, imp_order),
-                           limitby=(0, limitby + 1))
+                            orderby=(db.owned_book.id, imp_order),
+                            limitby=(0, limitby + 1))
     imps, overflow = limit_rows(imps, limitby)
     return group_imp_by_book(imps), overflow

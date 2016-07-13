@@ -5,6 +5,8 @@ The exception is use of current., which makes possible calls from Web2py framewo
     implicit parameter set via current. is always handled at the beginning of the func
 """
 
+import datetime
+
 from gluon import current
 
 
@@ -20,6 +22,16 @@ def answer_by_hash(db, md5publ, flds):
     """return: row or None
     """
     return db(db.answer.md5publ == md5publ).select(*flds).first()
+
+def add_impr_hist(imp_id, haction, reader_id=None, bill_id=None, db=None):
+    """add impression history in a consistent way (into impr_hist and into impression together)
+    """
+    if db is None:
+        db = current.db
+
+    htime = datetime.datetime.utcnow()
+    db.impr_hist.insert(impression_id=imp_id, reader_id=reader_id, bill_id=bill_id, haction=haction, htime=htime)
+    db.impression[imp_id] = dict(haction=haction, htime=htime)
 
 def get_libstyle(db=None, session=None, auth=None):
     """provides information about allowed/disabled fields

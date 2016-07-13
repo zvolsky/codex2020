@@ -135,6 +135,10 @@
     <!-- #mz ++z -->
     <script>
       $.w2p = {};
+      $.w2p.stop = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+      };
       $.w2p.focus = $("form *:visible:enabled:first");
       if ($.w2p.focus.length) {
         $.w2p.focus = $.w2p.focus[0];

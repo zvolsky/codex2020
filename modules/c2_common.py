@@ -8,6 +8,12 @@ from gluon import current
 from gluon.html import A, B, DIV, SPAN, URL
 
 
+def get_rik_short_pos(libstyle):
+    """position where we have to limit fbi/rik retrieved from db.answer based on library setting
+    fbi/rik should be: rik = db.answer.rik[get_rik_short_pos(libstyle)::-1]
+    """
+    return - libstyle['lrik'] + 1
+
 def get_book_line(tit, aut, pub=None, puy=None):
     """formatted info line about book
     if publisher is used then pubyear is obligatory
@@ -16,6 +22,21 @@ def get_book_line(tit, aut, pub=None, puy=None):
     if pub is not None:
         book_line += [' ', SPAN(pub, ' ', puy, _class="smaller")]
     return book_line
+
+def fmt_impression_plain(imp):
+    """format single impression row (obtained from get_imp_book())
+    """
+    tit, aut, pub, puy = parse_fastinfo(imp.answer.fastinfo)
+    libstyle = get_libstyle()
+    rik_short_pos = get_rik_short_pos(libstyle)
+    rik = '%s-%s' % (imp.answer.rik[rik_short_pos::-1], imp.impression.iorder)
+    fmt = [rik]
+    if libstyle['id'][0] == 'I':
+        fmt += (' ', imp.impression.iid)
+    if libstyle['sg'][0] == 'G':
+        fmt += (' ', imp.impression.sgn)
+    fmt += (' ', tit)
+    return DIV(*fmt, _class="btn btn-success btn-sm")
 
 def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
     """
@@ -36,12 +57,15 @@ def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
         if uses_iid:
             lbl.append(' ')
             lbl.append(B(imp[2]))
-        return A(lbl, _href="%s/%s" % ((URL(c, f) if c else URL(f)), imp[0]),
-                     _data_id="%s" % imp[0], _class='btn btn-warning')
+        if uses_sgn:
+            lbl.append(' ')
+            lbl.append(imp[3])
+        return A(lbl, _href="#", _data_id="%s" % imp[0], _class='btn btn-warning')
 
     libstyle = get_libstyle()
-    rik_short_pos = - libstyle['lrik'] + 1
+    rik_short_pos = get_rik_short_pos(libstyle)
     uses_iid = libstyle['id'][0] == 'I'
+    uses_sgn = libstyle['sg'][0] == 'G'
     books, overflow = impressions_by_usrid(question)
     '''boooks is list of dictionaries, one dict for one publication, keys are:
           'owned_book_id', 'answer_id', 'rik', 'fastinfo' and 'imp', where 'imp' is list of impressions (of single book)
