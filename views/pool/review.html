@@ -32,32 +32,49 @@ TODO: vylepšit aktualizaci počtů - zatím se počty aktualizují až po obnov
 
 <div id="revImps"></div>
 <div class="well well-sm">
-    {{=form}}
+    <div class="row">
+        <label class="control-label-sm col-sm-2" for="question">{{=T("Zkontrolovaný výtisk")}}</label>
+        <div class="col-sm-4">
+            <input class="form-control string input-sm" id="impQuestion" type="text" value="">
+        </div>
+        <div class="col-sm-6"><span class="help-block">{{=T("zadej rik, čarový kód nebo přír.číslo")}}</span></div>
+    </div>
 </div>
+TODO: zatím zde nefunguje ENTER, použij TAB
 <div id="fndImps"></div>
 
 <script>
 $(document).ready(function() {
+    function afterReview(result) {
+        $('#fndImps').hide().html('');
+        $('#revImps').show().html(result);
+    }
+
     $('label').css('text-align', 'right');
     $('#submit_record__row').hide();
-    $('#no_table_imp_id').blur(function(e) {
+    var impQEl = $('#impQuestion');
+    impQEl.focus();
+    impQEl.blur(function(e) {
         $.w2p.stop(e);
-        var impId = $('#no_table_imp_id').val();
+        var impId = impQEl.val();
         if (impId) {
             $.getJSON('{{=URL('review_find')}}' + '?q=' + encodeURIComponent(impId), function(result) {
                 $('#fndImps a').off('click');
-                $('#fndImps').show().html(result);
-                $('#fndImps a').click(function(e) {
-                    $.w2p.stop(e);
-                    $.getJSON('{{=URL('review_doit')}}' + '/' + $(this).attr('data_id'), function(result) {
-                        $('#fndImps').hide().html('');
-                        $('#revImps').show().html(result);
+                if (result[0] === 'C') {   // not a SINGLE impression: list them to selection
+                    $('#fndImps').show().html(result[1]);
+                    $('#fndImps a').click(function(e) {
+                        $.w2p.stop(e);
+                        $.getJSON('{{=URL('review_doit')}}' + '/' + $(this).attr('data_id'), function(result) {
+                            afterReview(result);
+                        });
                     });
-                });
+                } else {  // exactly SINGLE impression: auto-review it
+                    afterReview(result[1]);
+                }
             });
 
-            $('#no_table_imp_id').val('');
-            e.target.focus();
+            impQEl.val('');
+            impQEl.focus();
 
         }
     });

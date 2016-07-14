@@ -38,14 +38,15 @@ def fmt_impression_plain(imp):
     fmt += (' ', tit)
     return DIV(*fmt, _class="btn btn-success btn-sm")
 
-def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
-    """
+def fmt_impressions_by_usrid(question, f=None, c=None, T=None):
+    """Used for actions where we need identify SINGLE physically presented impression: review or loans.
     Args:
         question: rik, ean, isxn (title?) of the book which we want find for review or loan
-        f: action if clicked; if '#' you can set jQuery .click() later to call ajax (based on <a data_id="nnn">)
+        f: action if clicked; if None you can set jQuery .click() later to call ajax (based on <a data_id="nnn">)
         c: controller for the action (if it is different as the current one)
-    Returns:
-        formatted output
+    Returns: tuple (imp_id, candidates)
+        imp_id:  provided only if we have SINGLE impression found (to allow make the action without offering the list), otherwise this is None
+        candidates: formatted output for possible candidates (empty in case of SINGLE impression)
     """
 
     if T is None:
@@ -60,17 +61,22 @@ def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
         if uses_sgn:
             lbl.append(' ')
             lbl.append(imp[3])
-        return A(lbl, _href="#", _data_id="%s" % imp[0], _class='btn btn-warning')
+        imp_id = "%s" % imp[0]
+        return A(lbl, _href=(URL(c, f, args=imp_id) if c else URL(f, args=imp_id)) if f else "#", _data_id=imp_id, _class='btn btn-warning')
 
     libstyle = get_libstyle()
     rik_short_pos = get_rik_short_pos(libstyle)
     uses_iid = libstyle['id'][0] == 'I'
     uses_sgn = libstyle['sg'][0] == 'G'
-    books, overflow = impressions_by_usrid(question)
+    books, overflow, imp_id = impressions_by_usrid(question, stop_if_single=True)
+    if imp_id:
+        return imp_id, ''
     '''boooks is list of dictionaries, one dict for one publication, keys are:
           'owned_book_id', 'answer_id', 'rik', 'fastinfo' and 'imp', where 'imp' is list of impressions (of single book)
           each item in 'imp' is tuple: (id, iorder, iid)
+    imp_id will be set if we have exactly SINGLE impression - this terminates the formatting immediately
     '''
+
     fmt = []
     if books:
         for book in books:
@@ -96,4 +102,4 @@ def fmt_impressions_by_usrid(question, f='#', c=None, T=None):
         result.append(DIV(*fmt))
     else:
         result = DIV(T("Zadání neodpovídá žádný výtisk."))
-    return result
+    return None, result

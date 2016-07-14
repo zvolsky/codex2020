@@ -718,6 +718,7 @@
 'Search': 'Hledat',
 'Search Pages': 'Hledat stránky',
 'sejmi **prodejní čarový kód EAN**, chybí-li, stiskni **F7** a opiš **ISBN** nebo zadej **počáteční 2-3 slova názvu**': 'sejmi **prodejní čarový kód EAN**, chybí-li, stiskni **F7** a opiš **ISBN** nebo zadej **počáteční 2-3 slova názvu**',
+'Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává).': 'Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává).',
 'Semantic': 'Modul semantic',
 'Server je dočasně mimo provoz, zkuste se prosím vrátit %s.': 'Server je dočasně mimo provoz, zkuste se prosím vrátit %s.',
 'Server je dočasně mimo provoz, zkuste to prosím %s.': 'Server je dočasně mimo provoz, zkuste to prosím %s.',

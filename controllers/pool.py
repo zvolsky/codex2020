@@ -4,8 +4,7 @@ from gluon.contrib import simplejson
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-from dal_common import get_imp_book
-from dal_utils import add_impr_hist
+from dal_common import review_imp_book
 from dalc_pool import get_review_time
 
 from c2_common import fmt_impressions_by_usrid, fmt_impression_plain
@@ -23,16 +22,10 @@ def review():
     if not auth.library_id:
         redirect(URL('default', 'index'))
 
-    form = SQLFORM.factory(Field('imp_id',
-                                 label=T("Zkontrolovaný výtisk"),
-                                 comment=T("zadej rik, čarový kód nebo přír.číslo")),
-                           formstyle=formstyle_bootstrap3_compact_factory())
-
     review_date, review_time = get_review_time()
     return dict(cnt_t=db(db.owned_book).count(), cnt_i=db(db.impression).count(),
                 cnt_tmp_lost=db(db.impression.haction == HACTIONS_TMP_LOST).count(),
-                cnt_found=db(db.impression.htime >= review_time).count(), review_date=review_date,
-                form=form)
+                cnt_found=db(db.impression.htime >= review_time).count(), review_date=review_date)
 
 # ajax
 @auth.requires_login()
@@ -40,19 +33,24 @@ def review_find():
     """we accept: ean/isxn, own barcode, rik(fbi)
     """
     question = request.vars.q
-    candidates = DIV(fmt_impressions_by_usrid(question), _class="well well-sm")
-    return simplejson.dumps(candidates.xml())
+    imp_id, candidates = fmt_impressions_by_usrid(question)  # imp_id only if we have SINGLE impression
+    imp = review_imp_book(imp_id)                            # will be successful if we have SINGLE impression
+    if imp:
+        finished = fmt_impression_plain(imp)
+        return simplejson.dumps(('F', finished.xml()))
+    else:
+        candidates = DIV(candidates, _class="well well-sm")
+        return simplejson.dumps(('C', candidates.xml()))
 
 # ajax
 @auth.requires_login()
 def review_doit():
     imp_id = request.args[0]
-    imp = get_imp_book(imp_id)
+    imp = review_imp_book(imp_id)
     if imp:
-        add_impr_hist(imp.impression.id, 'r*')
-        finished = DIV(fmt_impression_plain(imp))
+        finished = fmt_impression_plain(imp)
     else:
-        finished = DIV(T("Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává)."))
+        finished = T("Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává).")
     return simplejson.dumps(finished.xml())
 
 @auth.requires_login()
