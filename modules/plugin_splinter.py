@@ -7,29 +7,31 @@
 
 from splinter import Browser
 
-CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
 
-
-def run_for_server(url, frmvars):
+def run_for_server(url, frmvars, myconf):
     print 'SERVER : ' + url
     print
 
     if frmvars.chrome:
+        CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
         run_for_browser(url, frmvars, 'chrome', CHROME_PATH)
     if frmvars.firefox:
         run_for_browser(url, frmvars, 'firefox')
+
+    print 'FINISHED'
 
 def run_for_browser(url, frmvars, browser, extra_params=None):
     if extra_params is None:
         extra_params = {}
 
-    print 'BROWSER : ' + browser
+    print '    BROWSER : ' + browser
     print
 
     br = Browser(browser, **extra_params)
     br.visit(url)
-    assert(br.is_text_present('Codex'))
+    assert(br.is_text_present('codex'))
 
+    br.quit()
 
 
 
@@ -54,4 +56,4 @@ def runTests():
 
 
 if __name__ == '__main__':
-    run_for_server('http://localhost:8000', None)
+    run_for_browser('http://localhost:8000', None, 'firefox')
