@@ -2,10 +2,7 @@
 
 from gluon.contrib import simplejson
 
-from plugin_mz import formstyle_bootstrap3_compact_factory
-
-from dal_common import review_imp_book
-from dalc_pool import get_review_time
+from dalc_pool import get_review_time, review_imp_book
 
 from c2_common import fmt_impressions_by_usrid, fmt_impression_plain
 from global_settings import HACTIONS_TMP_LOST
@@ -34,10 +31,10 @@ def review_find():
     """
     question = request.vars.q
     imp_id, candidates = fmt_impressions_by_usrid(question)  # imp_id only if we have SINGLE impression
-    imp = review_imp_book(imp_id)                            # will be successful if we have SINGLE impression
+    imp, new = review_imp_book(imp_id)                       # will be successful if we have SINGLE impression
     if imp:
         finished = fmt_impression_plain(imp)
-        return simplejson.dumps(('F', finished.xml()))
+        return simplejson.dumps(('F', (new, finished.xml())))
     else:
         candidates = DIV(candidates, _class="well well-sm")
         return simplejson.dumps(('C', candidates.xml()))
@@ -46,12 +43,12 @@ def review_find():
 @auth.requires_login()
 def review_doit():
     imp_id = request.args[0]
-    imp = review_imp_book(imp_id)
+    imp, new = review_imp_book(imp_id)
     if imp:
         finished = fmt_impression_plain(imp)
     else:
         finished = T("Selhalo nalezení výtisku (kontaktuj podporu, pokud problém přetrvává).")
-    return simplejson.dumps(finished.xml())
+    return simplejson.dumps((new, finished.xml()))
 
 @auth.requires_login()
 def missing():

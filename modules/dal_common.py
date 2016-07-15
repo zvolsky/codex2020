@@ -11,23 +11,9 @@ from gluon import current
 
 from c_common import group_imp_by_book
 from c_db import PublLengths
-from c_utils import parse_fbi, limit_rows
-from dal_utils import get_libstyle, add_impr_hist
+from c_utils import parse_fbi
+from dal_utils import get_libstyle
 
-
-def review_imp_book(imp_id):
-    """add revision row into impression history
-    this is designed for selection from the impressions list (loud_if_fails=True)
-    and for auto-revision (without offering the list) if user has identified SINGLE impression immediately
-    Args: imp_id can be None if we haven't just SINGLE impression
-    Returns: imp (info about reviewed impression which have to be formatted) or None, if nothing was reviewed
-    """
-    if imp_id:
-        imp = get_imp_book(imp_id)
-        if imp:
-            add_impr_hist(imp.impression.id, 'r*')
-            return imp
-    return None
 
 def get_imp_book(imp_id, db=None):
     """based on impression.id (imp_id)

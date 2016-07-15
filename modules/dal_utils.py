@@ -64,6 +64,7 @@ def get_libstyle(db=None, session=None, auth=None):
     libstyle['gr'] = (('P' if library.st_imp_pl else ' ') +
                     ('s' if library.st_imp_st else ' ') +
                     ('S' if library.st_tit_st else ' '))
+    libstyle['rev'] = library.review_date
 
     # session.libstyle = {'id':'I.O.', 'bc':'B+', 'sg':'G..', 'sgsep':'???', 'gr':'PsS'}  # character position IS important
     session.libstyle = libstyle

@@ -23,7 +23,6 @@
     <span style="display: inline-block; width: 20px;"></span>
     <span class="label label-success">{{=T("Již nalezeno")}} <span id="cnt_found" class="badge">{{=cnt_found}}</span></span>
 </h3>
-TODO: vylepšit aktualizaci počtů - zatím se počty aktualizují až po obnovení stránky
 
 <h2>{{=T("Revize")}} <small>{{=T("vyhledání výtisků, které nebyly fyzicky nalezeny od data zahájení revize")}}</small>
     {{=review_date.strftime(T('%d.%m.%Y', lazy=False))}}
@@ -45,9 +44,17 @@ TODO: zatím zde nefunguje ENTER, použij TAB
 
 <script>
 $(document).ready(function() {
-    function afterReview(result) {
+    function afterReview(result) {  // result is tuple: (new, formatted_info)
         $('#fndImps').hide().html('');
-        $('#revImps').show().html(result);
+        $('#revImps').show().html(result[1]);
+        if (result[0]) {      // wasn't found in this review yet
+            var missing = parseInt($('#cnt_missing').text(), 10);
+            if (missing > 0) {
+                var found = parseInt($('#cnt_found').text(), 10);
+                $('#cnt_missing').html(missing - 1);
+                $('#cnt_found').html(found + 1);
+            }
+        }
     }
 
     $('label').css('text-align', 'right');

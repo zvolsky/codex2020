@@ -29,7 +29,8 @@ def fmt_impression_plain(imp):
     tit, aut, pub, puy = parse_fastinfo(imp.answer.fastinfo)
     libstyle = get_libstyle()
     rik_short_pos = get_rik_short_pos(libstyle)
-    rik = '%s-%s' % (imp.answer.rik[rik_short_pos::-1], imp.impression.iorder)
+    rik = imp.answer.rik
+    rik = '%s-%s' % (rik[rik_short_pos::-1] if rik else '', imp.impression.iorder)
     fmt = [rik]
     if libstyle['id'][0] == 'I':
         fmt += (' ', imp.impression.iid)
@@ -80,7 +81,8 @@ def fmt_impressions_by_usrid(question, f=None, c=None, T=None):
     fmt = []
     if books:
         for book in books:
-            rik = book['rik'][rik_short_pos::-1]
+            rik = book['rik']
+            rik = rik[rik_short_pos::-1] if rik else ''
             impressions = book['imp']
             cnt_imp = len(impressions)
             tit, aut, pub, puy = parse_fastinfo(book['fastinfo'])
