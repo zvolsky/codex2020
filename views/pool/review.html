@@ -13,7 +13,7 @@
         </a></span>
     {{pass}}
     {{cnt_missing = max(0, cnt_i - cnt_tmp_lost - cnt_found)}}
-    <span class="label label-warning">{{=T("Zatím nenalezeno výtisků")}} <span class="badge">{{=cnt_missing}}</span>
+    <span class="label label-warning">{{=T("Zatím nenalezeno výtisků")}} <span id="cnt_missing" class="badge">{{=cnt_missing}}</span>
     {{if cnt_missing:}}
         <a class="btn btn-xs btn-default" href="{{=URL('missing')}}">
             <span class="icon magnifier icon-zoom-in glyphicon glyphicon-zoom-in"></span>
@@ -21,7 +21,7 @@
     {{pass}}</span>
 
     <span style="display: inline-block; width: 20px;"></span>
-    <span class="label label-success">{{=T("Již nalezeno")}} <span class="badge">{{=cnt_found}}</span></span>
+    <span class="label label-success">{{=T("Již nalezeno")}} <span id="cnt_found" class="badge">{{=cnt_found}}</span></span>
 </h3>
 TODO: vylepšit aktualizaci počtů - zatím se počty aktualizují až po obnovení stránky
 
