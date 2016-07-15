@@ -26,7 +26,9 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
     print 'BROWSER : ' + browser
     print
 
-    pass  # browser, **extra_params
+    br = Browser(browser, **extra_params)
+    br.visit(url)
+    assert(br.is_text_present('Codex'))
 
 
 
@@ -50,15 +52,6 @@ def runTests():
     print 'testLogin'
     testLogin()
 
+
 if __name__ == '__main__':
-    print 'FIREFOX'
-    br = Browser('firefox')  # ~ default: Browser()
-    runTests()
-    print
-
-    print 'CHROME'
-    br = Browser('chrome', **CHROME_PATH)
-    runTests()
-    print
-
-    #br.quit()
+    run_for_server('http://localhost:8000', None)
