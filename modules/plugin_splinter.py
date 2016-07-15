@@ -5,7 +5,21 @@
 # download and unzip (into path from CHROME_PATH) current chromedriver
 # run the server which shell be tested
 
+# in private/appconfig.ini: [splinter] section, chromedriver= (pathname of chromedriver binary (download/unzip from google))
+# in private/appconfig.ini: [splinter] section, production= (url of the production web incl. app)
+# modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
+
 from splinter import Browser
+# from tests_splinter import TESTCLASSES   # later: import from tests_splinter requires the TestBase class
+
+
+class TestBase(object):
+    def __init__(self, br, url):
+        self.br = br
+        self.url = url
+
+from tests_splinter import TESTCLASSES
+from tests_splinter import *  # test classes
 
 
 def run_for_server(url, frmvars, myconf):
@@ -24,14 +38,20 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
     if extra_params is None:
         extra_params = {}
 
-    print '    BROWSER : ' + browser
+    print 4*' ' + 'BROWSER : ' + browser
     print
 
     br = Browser(browser, **extra_params)
-    br.visit(url)
-    assert(br.is_text_present('codex'))
+
+    for testClass in TESTCLASSES:
+        if frmvars.all_tests or getattr(frmvars, 'test_' + testClass, False):
+            print 8*' ' + 'TEST : ' + testClass
+
+            testObj = globals()[testClass](br, url)
+            testObj.run()
 
     br.quit()
+    print
 
 
 
