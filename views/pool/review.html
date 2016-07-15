@@ -39,7 +39,6 @@
         <div class="col-sm-6"><span class="help-block">{{=T("zadej rik, čarový kód nebo přír.číslo")}}</span></div>
     </div>
 </div>
-TODO: zatím zde nefunguje ENTER, použij TAB
 <div id="fndImps"></div>
 
 <script>
@@ -61,6 +60,12 @@ $(document).ready(function() {
     $('#submit_record__row').hide();
     var impQEl = $('#impQuestion');
     impQEl.focus();
+    impQEl.keydown(function(e) {
+        if (e.which===13) {   // needed to fire blur() using Enter
+            $.w2p.stop(e);
+            impQEl.blur();
+        }
+    });
     impQEl.blur(function(e) {
         $.w2p.stop(e);
         var impId = impQEl.val();
