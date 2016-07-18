@@ -5,15 +5,16 @@
 # download and unzip (into path from CHROME_PATH) current chromedriver
 # run the server which shell be tested
 
-import urlparse
+from posixpath import join as urljoin
 
 from plugin_splinter import run_for_server
 from tests_splinter import TESTCLASSES
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
+import pdb;pdb.set_trace()
 
-URLLOCAL = 'http://localhost:8000'
+URLLOCAL = 'http://localhost:8000/'
 
 
 def tests():
@@ -35,7 +36,7 @@ def tests():
         )
     if form.process().accepted:
         if form.vars.develop:
-            run_for_server(urlparse.urljoin(URLLOCAL, request.application), form.vars, myconf)
+            run_for_server(urljoin(URLLOCAL, request.application), form.vars, myconf)
         if form.vars.production:
             run_for_server(production, form.vars, myconf)
     return dict(form=form)

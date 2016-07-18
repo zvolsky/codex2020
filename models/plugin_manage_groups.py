@@ -21,6 +21,8 @@ def _():
             table_membership = auth.table_membership()
             )
 
+    import pdb;pdb.set_trace()
+    
     if plugins.manage_groups.first_admin and plugins.manage_groups.admin_group and "auth" in globals() and auth.user_id:
         if not auth.id_group(plugins.manage_groups.admin_group):
             auth.add_membership(auth.add_group(plugins.manage_groups.admin_group), auth.user_id)

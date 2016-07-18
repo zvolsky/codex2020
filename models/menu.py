@@ -6,19 +6,22 @@
 #########################################################################
 
 #mz ++z
-library = db(db.library.id == auth.library_id).select(db.library.library).first().library
+logo_library = db(db.library.id == auth.library_id).select(db.library.library).first()
+logo_library = logo_library.library if logo_library else ''
 response.logo = DIV(
         A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
-        A(B(library), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
+        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
         )
 #mz ++k
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 
 ## read more at http://dev.w3.org/html5/markup/meta.name.html
-response.meta.author = 'Your Name <you@example.com>'
-response.meta.description = 'a cool new app'
-response.meta.keywords = 'web2py, python, framework'
+#mz ++z
+response.meta.author = 'mojeknihovna.eu <admin@mojeknihovna.eu>'
+response.meta.description = 'software for work with books'
+response.meta.keywords = 'books, libraries, web2py, python'
+#mz ++k
 response.meta.generator = 'Web2py Web Framework'
 
 ## your http://google.com/analytics id

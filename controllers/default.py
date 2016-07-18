@@ -53,7 +53,7 @@ def login_newdb():
     redirect(URL('user', args=('login'), vars=request.vars))
 
 def newdb():
-    if auth.user.librarian:
+    if auth.user and auth.user.librarian:
         redirect(URL('library', 'new'))
     else:
         session.flash = T("Chcete-li si vytvořit vlastní databázi, zaškrtněte [Vlastní_databáze]")
