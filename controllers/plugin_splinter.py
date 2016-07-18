@@ -12,8 +12,6 @@ from tests_splinter import TESTCLASSES
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-import pdb;pdb.set_trace()
-
 URLLOCAL = 'http://localhost:8000/'
 
 
