@@ -2,14 +2,16 @@
 
 #mz ++z
 def models():   # debug (broken migrations, ..)
+    xxx=''
     try:
-        print request.env.server_port
+        xxx += '%s %s' % (request.env.server_port, type(request.env.server_port))
     except:
-        print 'xxx request.env.server_port'
+        xxx += 'xxx request.env.server_port'
     try:
-        print request.global_settings.cmd_options.port
+        xxx += '%s %s' % (request.global_settings.cmd_options.port, type(request.global_settings.cmd_options.port))
     except:
-        print 'xxx request.global_settings.cmd_options.port'
+        xxx += 'xxx request.global_settings.cmd_options.port'
+    return xxx
     return 'models/db finished ok'
 
 def index():
