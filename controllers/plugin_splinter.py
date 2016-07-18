@@ -2,8 +2,10 @@
 
 # pip install selenium
 # pip install splinter
-# download and unzip (into path from CHROME_PATH) current chromedriver
+# download and unzip current chromedriver into path from CHROME_PATH / [private/appconfig.ini:]splinter.chromedriver
 # run the server which shell be tested
+# run tests from url <app>/plugin_splinter/tests
+
 
 from posixpath import join as urljoin
 
