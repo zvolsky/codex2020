@@ -2,6 +2,7 @@
 
 #mz ++z
 def models():   # debug (broken migrations, ..)
+    from pdb import set_trace; set_trace()
     return 'models/db finished ok'
 
 def index():
