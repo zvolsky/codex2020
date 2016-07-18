@@ -2,7 +2,14 @@
 
 #mz ++z
 def models():   # debug (broken migrations, ..)
-    from pdb import set_trace; set_trace()
+    try:
+        print request.env.server_port
+    except:
+        print 'xxx request.env.server_port'
+    try:
+        print request.global_settings.cmd_options.port
+    except:
+        print 'xxx request.global_settings.cmd_options.port'
     return 'models/db finished ok'
 
 def index():
