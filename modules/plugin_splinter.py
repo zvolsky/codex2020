@@ -18,6 +18,14 @@ class TestBase(object):
         self.br = br
         self.url = url
 
+    def log(self, test_name):
+        print 12*' ' + test_name
+
+    def check_page(self, urlpath, check_text='Copyright'):
+        self.br.visit(urljoin(self.url, urlpath))
+        assert(self.br.is_text_present(check_text))
+
+
 from tests_splinter import TESTCLASSES
 from tests_splinter import *  # test classes
 

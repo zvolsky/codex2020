@@ -3,19 +3,27 @@
 # for plugin_splinter
 # TESTCLASSES defines the testing classes
 
+from posixpath import join as urljoin
+
 from plugin_splinter import TestBase
 
-TESTCLASSES = ['Aaa', 'Bbb']
+TESTCLASSES = ['TestUnlogged']
 
-class Aaa(TestBase):
+class TestUnlogged(TestBase):
     def run(self):
-        self.testUnlogged()
+        self.test_unlogged_default()
 
-    def testUnlogged(self):
-        print 12*' ' + 'testUnlogged'
+    def test_unlogged_default(self):
+        self.log('test Unlogged Default')
 
-        self.br.visit(self.url)
-        assert(self.br.is_text_present('codex'))
+        self.check_page('default/models', 'finished ok')
+        self.check_page('default/index')
+        self.check_page('default/home')
+        self.check_page('default/theme')
+        self.check_page('default/wiki')
+        self.check_page('default/welcome')
+        self.check_page('default/login_newdb')
+        self.check_page('default/newdb')
 
 class Bbb(TestBase):
     def run(self):
