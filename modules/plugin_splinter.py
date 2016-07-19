@@ -9,6 +9,8 @@
 # in private/appconfig.ini: [splinter] section, production= (url of the production web incl. app)
 # modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
 
+from posixpath import join as urljoin
+
 from splinter import Browser
 # from tests_splinter import TESTCLASSES   # later: import from tests_splinter requires the TestBase class
 
@@ -18,8 +20,13 @@ class TestBase(object):
         self.br = br
         self.url = url
 
-    def log(self, test_name):
-        print 12*' ' + test_name
+    def log_test(self, test_name):
+        self.log(5, 'TEST', test_name)
+
+    @staticmethod
+    def log(level, label, name):
+        print level * 4 * ' ' + label + ' : ' + name
+        print
 
     def check_page(self, urlpath, check_text='Copyright'):
         self.br.visit(urljoin(self.url, urlpath))
@@ -27,17 +34,16 @@ class TestBase(object):
 
 
 from tests_splinter import TESTCLASSES
-from tests_splinter import *  # test classes
+from tests_splinter import *  # test classes themselves (because of python problems with instantiatig classes from names - see #**)
 
 
 def run_for_server(url, frmvars, myconf):
-    print 'SERVER : ' + url
-    print
+    TestBase.log(0, 'SERVER', url)
 
-    if frmvars.chrome:
+    if frmvars['chrome']:  # frmvars don't use Storage (frmvars.attr) syntax to allow Scheduler mode
         CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
         run_for_browser(url, frmvars, 'chrome', CHROME_PATH)
-    if frmvars.firefox:
+    if frmvars['firefox']:
         run_for_browser(url, frmvars, 'firefox')
 
     print 'FINISHED'
@@ -46,17 +52,16 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
     if extra_params is None:
         extra_params = {}
 
-    print 4*' ' + 'BROWSER : ' + browser
-    print
+    TestBase.log(1, 'BROWSER', browser)
 
     br = Browser(browser, **extra_params)
 
-    for testClass in TESTCLASSES:
-        if frmvars.all_tests or getattr(frmvars, 'test_' + testClass, False):
-            print 8*' ' + 'TEST : ' + testClass
+    for TestClass in TESTCLASSES:
+        if frmvars['all_tests'] or frmvars.get('test_' + testClass, False):
+            TestBase.log(2, 'TESTCLASS', TestClass)
 
-            testObj = globals()[testClass](br, url)
-            testObj.run()
+            test_obj = globals()[TestClass](br, url)  #** see imports
+            test_obj.run()
 
     br.quit()
     print

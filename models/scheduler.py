@@ -5,6 +5,8 @@ from c2_marc import parse_Marc_and_updatedb
 
 from gluon.scheduler import Scheduler
 
+from plugin_splinter import run_for_server
+
 
 def task_catalogize(question_id, question, asked):
     """the time consuming retrieve/parse/db-save action
@@ -26,6 +28,10 @@ def task_catalogize(question_id, question, asked):
             'duration_total': round((datetime.datetime.utcnow() - asked).total_seconds(), 0),
             'retrieved': retrieved, 'inserted': inserted}
     db.commit()
+
+def run_tests(form_vars, urls):
+    for url in urls:
+        run_for_server(url, form_vars, myconf)
 
 
 scheduler = Scheduler(db)

@@ -3,8 +3,6 @@
 # for plugin_splinter
 # TESTCLASSES defines the testing classes
 
-from posixpath import join as urljoin
-
 from plugin_splinter import TestBase
 
 TESTCLASSES = ['TestUnlogged']
@@ -14,7 +12,7 @@ class TestUnlogged(TestBase):
         self.test_unlogged_default()
 
     def test_unlogged_default(self):
-        self.log('test Unlogged Default')
+        self.log_test('Unlogged Default')
 
         self.check_page('default/models', 'finished ok')
         self.check_page('default/index')

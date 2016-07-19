@@ -19,9 +19,14 @@ myconf = AppConfig(reload=request.is_local)
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     #mz ++z
-    myconf.dburi = 'db.urit' if request.env.server_port == '8001' else 'db.uri'
-    db = DAL(myconf.take(myconf.dburi), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+    db_uri = ('db.urit'
+              if (False and request.controller == 'plugin_splinter')
+              else 'db.uri')
+    db = DAL(myconf.take(db_uri), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
+    session.connect(request, response, db=db)
+    print db._uri
+    print 30*'-'
     #mz ++k
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
