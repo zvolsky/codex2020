@@ -1,6 +1,6 @@
 {{extend 'layout.html'}}
 
-<p>Tests run in database <b>{{=(db._folder + '/') if db._folder else '' + ('/' + db._uri).rsplit('/', 1)[-1]}}</b>.</p>
+<p>Tests run in database defined in (tested machine) private/<b>appconfig.ini</b>, key <b>db.urit</b>.</p>
 
 {{=form}}
 

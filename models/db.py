@@ -144,7 +144,7 @@ auth.settings.extra_fields['auth_user'] = [
 #mz ++k
 
 ## create all tables needed by auth if not custom tables
-auth.define_tables(username=False, signature=False)
+auth.define_tables(username=True, signature=False)
 
 ## configure email
 mail = auth.settings.mailer

@@ -26,4 +26,4 @@ class TestUnlogged(TestBase):
 class Bbb(TestBase):
     def run(self):
         self.br.visit(self.url)
-        assert(self.br.is_text_present('codex'))
+        assert self.br.is_text_present('codex')
