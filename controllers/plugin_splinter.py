@@ -13,7 +13,7 @@
 from posixpath import join as urljoin
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
-from plugin_splinter import TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, OLD_TESTS_MSG
+from plugin_splinter import TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG
 from tests_splinter import TESTCLASSES
 
 
@@ -26,16 +26,16 @@ except BaseException:
     TESTADMIN = 'admin'
 
 @auth.requires_membership(TESTADMIN)
-def testing_mode_on():
-    if TestStatus.tests_on():
+def testdb_on():
+    if TestStatus().tests_on():
         return TESTS_ARE_ON_MSG
     else:
         return OLD_TESTS_MSG
 
 @auth.requires_membership(TESTADMIN)
-def testing_mode_off():
-    TestStatus.tests_off()
-    redirect(URL('default', 'index'))
+def testdb_off():
+    TestStatus().tests_off()
+    return TESTS_ARE_OFF_MSG
 
 @auth.requires_membership(TESTADMIN)
 def tests():

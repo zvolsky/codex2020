@@ -87,6 +87,11 @@
       </div>
     </nav>
     <!-- Masthead ===================================== -->    
+    <!-- #mz ++z -->
+    {{if session.testdb:}}
+        <mark>TESTING DATABASE: {{=db._uri}}</mark>
+    {{pass}}
+    <!-- #mz ++k -->
     {{block header}}
     {{end}}
     <!-- Main ========================================= -->

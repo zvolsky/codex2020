@@ -33,8 +33,8 @@ from gluon import current
 
 
 TESTS_ARE_ON_MSG = 'TEST MODE IS ENABLED'
+TESTS_ARE_OFF_MSG = 'TEST MODE IS OFF -> STANDARD MODE'
 OLD_TESTS_MSG = 'Previous tests are active. If this is 100 % sure not truth, you can remove models/_tests.py (WARNING: If you do so and tests are still running, they will damage the main application database!)'
-ENABLER = os.path.join(current.request.folder, 'models', '_tests.py')
 
 
 class TestBase(object):
@@ -63,38 +63,41 @@ from tests_splinter import *  # test classes themselves (because of python probl
 class TestStatus(object):
     # set testing mode on this machine
 
-    @staticmethod
     def tests_running(self):
-        return os.path.isfile(ENABLER)
+        session = current.session
+        return session.testdb  # in (at least) models/db.py we use session.testdb directly
 
-    @staticmethod
-    def tests_off():
-        if TestStatus.tests_running():
-            os.remove(ENABLER)
+    def tests_off(self, session=None):
+        session = current.session
+        if self.tests_running():
+            if 'auth' in session:
+                del session.auth
+            del session.testdb
 
-    @staticmethod
-    def tests_on():
-        if TestStatus.tests_running():
+    def tests_on(self, session=None):
+        session = current.session
+        if self.tests_running():
             print OLD_TESTS_MSG
             return False
-        with open(ENABLER, mode='w') as f:
-            f.write('splinter_tests = True' + os.path.sep + 'splinter_ip = ' + current.request.ip + os.path.sep)
+        if 'auth' in session:
+            del session.auth
+        session.testdb = True
         return True
 
     # set testing mode on remote url
 
     @staticmethod
-    def remote_testing_mode_on(br, url):
+    def remote_testdb_on(br, url):
         test_obj = TestStatus.login(br, url)
-        test_obj.check_page('plugin_splinter/testing_mode_on', check_text=None)
+        test_obj.check_page('plugin_splinter/testdb_on', check_text=None)
         enabled = br.is_text_present(TESTS_ARE_ON_MSG)
         TestStatus.logout(br, url, test_obj=test_obj)
         return enabled
 
     @staticmethod
-    def remote_testing_mode_off(br, url):
+    def remote_testdb_off(br, url):
         test_obj = TestStatus.login(br, url)
-        test_obj.check_page('plugin_splinter/testing_mode_off')
+        test_obj.check_page('plugin_splinter/testdb_off', check_text=TESTS_ARE_OFF_MSG)
         TestStatus.logout(br, url, test_obj=test_obj)
 
     @staticmethod
@@ -151,14 +154,14 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
 
     br = Browser(browser, **extra_params)
 
-    if TestStatus.remote_testing_mode_on(br, url):
+    if TestStatus.remote_testdb_on(br, url):
         for TestClass in TESTCLASSES:
             if frmvars['all_tests'] or frmvars.get('test_' + testClass, False):
                 TestBase.log(2, 'TESTCLASS', TestClass)
 
                 test_obj = globals()[TestClass](br, url)  #** see imports
                 test_obj.run()
-        TestStatus.remote_testing_mode_off(br, url)
+        TestStatus.remote_testdb_off(br, url)
 
     br.quit()
     print

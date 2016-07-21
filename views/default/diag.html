@@ -1,0 +1,7 @@
+{{extend 'layout.html'}}
+
+{{if request.is_local:}}
+{{=response.toolbar()}}
+{{else:}}
+Diag is accessible for localhost only.
+{{pass}}

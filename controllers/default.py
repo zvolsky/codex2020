@@ -4,6 +4,10 @@
 def models():   # debug (broken migrations, ..)
     return 'models/db finished ok'
 
+@auth.requires_membership('admin')
+def diag():   # debug (broken migrations, ..)
+    return dict()
+
 def index():
     redirect(URL('home'))
 

@@ -66,6 +66,7 @@
 'adresa: ulice a č.domu': 'adresa: ulice a č.domu',
 'Ajax Recipes': 'Recepty s ajaxem',
 'Akce': 'Akce',
+'All users are members of this group.': 'All users are members of this group.',
 'An error occured, please %s the page': 'Došlo k chybě, prosím %s stránku',
 'and rename it:': 'a přejmenovat na:',
 'Ano: čarový kód více výtisků bude předvyplněn zvětšujícím se číslem; Ne: čaar.kód 2+ výtisku doplníte ručně': 'Ano: čarový kód více výtisků bude předvyplněn zvětšujícím se číslem; Ne: čaar.kód 2+ výtisku doplníte ručně',

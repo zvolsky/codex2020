@@ -19,18 +19,20 @@ myconf = AppConfig(reload=request.is_local)
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     #mz ++z
-    db_uri = ('db.urit'
-              if (False and request.controller == 'plugin_splinter')
-              else 'db.uri')
-    db = DAL(myconf.take(db_uri), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+    db0 = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
-    session.connect(request, response, db=db)
+    session.connect(request, response, db=db0)
+    if session.testdb:  # TESTING database
+        db = DAL(myconf.take('db.urit'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+                            #, fake_migrate_all=True)
+    else:               # MAIN database
+        db = db0
     print db._uri
     print 30*'-'
     #mz ++k
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
-    db = DAL('google:datastore+ndb')
+    db0 = DAL('google:datastore+ndb')
     ## store sessions and tickets there
     session.connect(request, response, db=db)
     ## or store session in Memcache, Redis, etc.
