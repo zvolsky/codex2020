@@ -57,6 +57,7 @@ def tests():
         dynamic_flds.append(Field('test_' + testClass, 'boolean', label=testClass, comment='', default=False))
 
     form = SQLFORM.factory(
+        Field('scheduler', 'boolean', label='run in scheduler', comment='MODE', default=True),
         Field('chrome', 'boolean', label='chrome', comment='BROWSERS', default=True),
         Field('firefox', 'boolean', label='firefox', comment='** FF 47+ requires Selenium 3+', default=False),
         *dynamic_flds,
@@ -78,8 +79,10 @@ def tests():
             server_no += 1
 
         if urls:
-            #scheduler.queue_task(run_tests,
-            #        pvars={'form_vars': form.vars, 'urls': urls},
-            #        timeout=3600)
-            run_tests(form.vars, urls)  # debug
+            if form.vars.scheduler:
+                scheduler.queue_task(run_tests,
+                        pvars={'form_vars': form.vars, 'urls': urls},
+                        timeout=3600)
+            else:
+                run_tests(form.vars, urls)  # debug
     return dict(form=form)

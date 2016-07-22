@@ -27,8 +27,7 @@ if not request.env.web2py_runtime_gae:
                             #, fake_migrate_all=True)
     else:               # MAIN database
         db = db0
-    print db._uri
-    print 30*'-'
+    # print db._uri  # debug: standard/testing database
     #mz ++k
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')

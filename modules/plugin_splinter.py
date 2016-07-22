@@ -91,14 +91,12 @@ class TestStatus(object):
         test_obj = TestStatus.login(br, url)
         test_obj.check_page('plugin_splinter/testdb_on', check_text=None)
         enabled = br.is_text_present(TESTS_ARE_ON_MSG)
-        TestStatus.logout(br, url, test_obj=test_obj)
         return enabled
 
     @staticmethod
     def remote_testdb_off(br, url):
         test_obj = TestStatus.login(br, url)
         test_obj.check_page('plugin_splinter/testdb_off', check_text=TESTS_ARE_OFF_MSG)
-        TestStatus.logout(br, url, test_obj=test_obj)
 
     @staticmethod
     def login(br, url):
@@ -108,8 +106,10 @@ class TestStatus(object):
         name_el = br.find_by_name('username')
         if not name_el:
             name_el = br.find_by_name('email')
-        name_el.type('jmeno')
-        br.find_by_name('password').type('heslo')
+        # TODO: tested user probably should be defined on the target server; serverR definitions should be without user/pwd
+        name_el.type('xxxxxxxxxx')
+        br.find_by_name('password').type('xxxxxxxxxxxxx')
+        br.find_by_id('submit_record__row').find_by_tag('input').click()
         return test_obj
 
     @staticmethod
@@ -161,7 +161,7 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
 
                 test_obj = globals()[TestClass](br, url)  #** see imports
                 test_obj.run()
-        TestStatus.remote_testdb_off(br, url)
+        # seems not necessary and not good here: TestStatus.remote_testdb_off(br, url)
 
     br.quit()
     print

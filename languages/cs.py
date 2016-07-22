@@ -372,6 +372,7 @@
 'invalid password.': 'neplatné heslo',
 'Invalid Query': 'Neplatný dotaz',
 'invalid request': 'Neplatný požadavek',
+'Invalid username': 'Invalid username',
 'Is Active': 'Je aktivní',
 'It is %s %%{day} today.': 'Dnes je to %s %%{den}.',
 'IČO': 'IČO',
