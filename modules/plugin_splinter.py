@@ -8,6 +8,7 @@
 - pip install selenium
 - pip install splinter
 - download and unzip from google the current chromedriver
+- tested server must be running
 
 - in private/appconfig.ini: [db] section, urit= (testing database; connection string similar to uri=)
 - in private/appconfig.ini: [splinter] section, chromedriver= (pathname of chromedriver binary)
@@ -18,8 +19,14 @@
            testgroupuser : name of the user of group defined in the testgroup= (default group: admin)
            password      : password of the user
 
-- modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
-- tested server must be running
+- tests
+    -- defined already in plugin (TestUnloggedAll,..)
+        --- TestUnloggedAll will check all controller actions if the page contains USUAL_TEXT
+            USUAL_TEXT default: Copyright ; or you can set it in private/appconfig.ini: [splinter] section, usual_text=
+
+    -- user defined tests
+        modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
+        each class must have run() method
 """
 
 
@@ -30,11 +37,18 @@ from splinter import Browser
 # from tests_splinter import TESTCLASSES   # later: import from tests_splinter requires the TestBase class
 
 from gluon import current
+from gluon.contrib.appconfig import AppConfig
 
+
+myconf = AppConfig()
 
 TESTS_ARE_ON_MSG = 'TEST MODE IS ENABLED'
 TESTS_ARE_OFF_MSG = 'TEST MODE IS OFF -> STANDARD MODE'
 OLD_TESTS_MSG = 'Previous tests are active. If this is 100 % sure not truth, you can remove models/_tests.py (WARNING: If you do so and tests are still running, they will damage the main application database!)'
+try:
+    USUAL_TEXT = myconf.take('splinter.usual_text')
+except:
+    USUAL_TEXT = 'Copyright'
 
 
 class TestBase(object):
@@ -43,21 +57,58 @@ class TestBase(object):
         self.url = url
 
     def log_test(self, test_name):
-        self.log(5, 'TEST', test_name)
+        self.log(2, 'TEST', test_name)
 
     @staticmethod
     def log(level, label, name):
         print level * 4 * ' ' + label + ' : ' + name
         print
 
-    def check_page(self, urlpath, check_text='Copyright'):
+    def check_page(self, urlpath, check_text=USUAL_TEXT, silent=False):
         self.br.visit(urljoin(self.url, urlpath))
         if check_text:
-            assert self.br.is_text_present(check_text)
+            result = self.br.is_text_present(check_text)
+            if silent:
+                return result
+            else:
+                assert result
+        return True
 
 
 from tests_splinter import TESTCLASSES
 from tests_splinter import *  # test classes themselves (because of python problems with instantiatig classes from names - see #**)
+
+
+class TestUnloggedAll(TestBase):
+    def run(self):
+        self.test_unlogged_all()
+
+    def test_unlogged_all(self, appfolder=None, request=None):
+        if appfolder is None:
+            if request is None:
+                request = current.request
+            appfolder = request.folder
+
+        self.log_test('TestUnloggedAll')
+
+        for controller in os.listdir(urljoin(appfolder, 'controllers')):
+            if controller[-3:] == '.py' and not controller == 'appadmin.py':
+                controller_name = controller[:-3]
+                self.log(3, 'controller', controller)
+                with open(urljoin(appfolder, 'controllers', controller)) as hnd:
+                    codelines = hnd.readlines()
+                self.parse_controller(controller_name, codelines)
+
+    def parse_controller(self, controller_name, codelines):
+        for ln in codelines:
+            ln = ln.rstrip()  # - \n
+
+            if ln[:4] == 'def ' and ln[-3:] == '():':  # function without parameters, maybe Web2py action
+                action = ln[4:-3].strip()
+                if action[:2] != '__':                 # Web2py action
+                    self.log(4, 'action', action)
+                    if not self.check_page(urljoin(controller_name, action), silent=True):
+                        self.log(5, 'WARNING', 'Usual text is missing.')
 
 
 class TestStatus(object):
@@ -155,6 +206,12 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
     br = Browser(browser, **extra_params)
 
     if TestStatus.remote_testdb_on(br, url):
+        # default tests
+        if frmvars.unlogged_all:
+            testObj = TestUnloggedAll(br, url)  # make instance of the class (how to ~ better in py?)
+            testObj.run()
+
+        # user defined tests from modules/tests_splinter
         for TestClass in TESTCLASSES:
             if frmvars['all_tests'] or frmvars.get('test_' + testClass, False):
                 TestBase.log(2, 'TESTCLASS', TestClass)
@@ -162,6 +219,8 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
                 test_obj = globals()[TestClass](br, url)  #** see imports
                 test_obj.run()
         # seems not necessary and not good here: TestStatus.remote_testdb_off(br, url)
+    else:
+        TestBase.log(2, 'FATAL', 'Cannot log in.')
 
     br.quit()
     print
