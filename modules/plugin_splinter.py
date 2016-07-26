@@ -31,6 +31,7 @@
 
 
 import os
+import re
 from posixpath import join as urljoin
 
 from splinter import Browser
@@ -119,18 +120,26 @@ class TestUnloggedAll(TestBase):
             self.log(3, 'OK', 'All tested actions render a page with a usual_text inside: ' + USUAL_TEXT)
 
     def parse_controller(self, controller_name, codelines, ignored, failed):
+        skip_next = False
         for ln in codelines:
             ln = ln.rstrip()  # - \n
 
             if ln[:4] == 'def ' and ln[-3:] == '():':  # function without parameters, maybe Web2py action
-                action = ln[4:-3].strip()
-                if action[:2] != '__':                 # Web2py action
-                    url = urljoin(controller_name, action)
-                    if not url in ignored:
-                        self.log(5, 'action', action)
-                        if not self.check_page(url, silent=True):
-                            failed.append(url)
-                            self.log(6, 'WARNING', 'Usual text is missing.')
+                if skip_next:
+                    skip_next = False
+                else:
+                    action = ln[4:-3].strip()
+                    if action[:2] != '__':                 # Web2py action
+                        url = urljoin(controller_name, action)
+                        if not url in ignored:
+                            self.log(5, 'action', action)
+                            if not self.check_page(url, silent=True):
+                                failed.append(url)
+                                self.log(6, 'WARNING', 'Usual text is missing.')
+            elif re.match('^#\s*ajax$', ln):   #  # ajax
+                skip_next = True
+            elif ln == '':
+                skip_next = False
 
 
 class TestStatus(object):
