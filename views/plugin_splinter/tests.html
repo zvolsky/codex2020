@@ -1,11 +1,15 @@
 {{extend 'layout.html'}}
 
-<p>Tests run in database defined in (tested machine) private/<b>appconfig.ini</b>, key <b>db.urit</b>.</p>
+<p>Tests run in database defined in (tested machine) private/<b>appconfig.ini</b>, key <b>db.urit</b> {{=urit}}</p>
 
 {{=form}}
 
-<mark>Following is not valid for Scheduler tests (and notes should be updated)</mark>
+<mark>Tests without Scheduler</mark>
 
-<p>See server terminal. Successful tests should finish with FINISHED, failed tests with failed test label/name.</p>
+<p>See server terminal. Successful tests should finish with FINISHED, for failed test you will see where it will hang.</p>
 
 <p>pdb.set_trace should work (and will occur in same server terminal).</p>
+
+<mark>Scheduler tests</mark>
+
+<p>If test (a browser window) will hang then see db table 'scheduler_run'. You will see terminal output ("where") in 'run_output' column and reason ("why") in 'traceback' column.</p>

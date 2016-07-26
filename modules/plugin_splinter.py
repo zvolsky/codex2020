@@ -242,7 +242,7 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
         url = server['url']
 
         # default tests
-        if frmvars.unlogged_all:
+        if frmvars['unlogged_all']:
             TestBase.log(2, 'TESTCLASS', 'TestUnloggedAll')
             testObj = TestUnloggedAll(br, url)  # make instance of the class (how to ~ better in py?)
             testObj.run()

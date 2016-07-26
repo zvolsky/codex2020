@@ -17,9 +17,7 @@ from plugin_splinter import TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, TE
 from tests_splinter import TESTCLASSES
 
 
-#URLLOCAL = 'http://localhost:8000/'              # request.application will be auto-added
-#PRODUCTION = myconf.take('splinter.production')  # with or without application (without: if supressed in routes)
-
+TESTS_TIMEOUT = 30000  # ~ 8 hours
 try:
     TESTADMIN = myconf.take('splinter.testgroup')
 except BaseException:
@@ -83,7 +81,12 @@ def tests():
             if form.vars.scheduler:
                 scheduler.queue_task(run_tests,
                         pvars={'form_vars': form.vars, 'servers': servers},
-                        timeout=3600)
+                        timeout=TESTS_TIMEOUT)
             else:
                 run_tests(form.vars, servers)  # debug
-    return dict(form=form)
+
+    try:
+        urit = myconf.take('db.urit') and ''  # do not show because contains a password
+    except BaseException:
+        urit = ' -- Not configured. Tests will fail.'
+    return dict(form=form, urit=urit)
