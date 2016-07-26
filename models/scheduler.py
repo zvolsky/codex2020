@@ -29,9 +29,9 @@ def task_catalogize(question_id, question, asked):
             'retrieved': retrieved, 'inserted': inserted}
     db.commit()
 
-def run_tests(form_vars, urls):
-    for url in urls:
-        run_for_server(url, form_vars, myconf)
+def run_tests(form_vars, servers):
+    for server in servers:
+        run_for_server(server, form_vars, myconf)
 
 
 scheduler = Scheduler(db)

@@ -57,7 +57,7 @@ class TestBase(object):
         self.url = url
 
     def log_test(self, test_name):
-        self.log(2, 'TEST', test_name)
+        self.log(3, 'TEST', test_name)
 
     @staticmethod
     def log(level, label, name):
@@ -91,24 +91,46 @@ class TestUnloggedAll(TestBase):
 
         self.log_test('TestUnloggedAll')
 
+        try:
+            ignored = myconf.take('splinter.ignore_unlogged')
+        except:
+            ignored = ''
+        ignored = ignored.split(',')
+        ignored = [action.strip() for action in ignored if action.strip()]
+        failed = []
+
         for controller in os.listdir(urljoin(appfolder, 'controllers')):
             if controller[-3:] == '.py' and not controller == 'appadmin.py':
                 controller_name = controller[:-3]
-                self.log(3, 'controller', controller)
+                self.log(4, 'controller', controller)
                 with open(urljoin(appfolder, 'controllers', controller)) as hnd:
                     codelines = hnd.readlines()
-                self.parse_controller(controller_name, codelines)
+                self.parse_controller(controller_name, codelines, ignored, failed)
 
-    def parse_controller(self, controller_name, codelines):
+        if failed:
+            failed = ', '.join(failed)
+            self.log(3, 'FAILED', failed)
+            txt = 'If this is an expected (correct) result then you should modify private/appconfig.ini: '
+            if ignored:
+                self.log(3, 'TIP', txt + 'add new items into configuration item [splinter] ignore_unlogged = ...: ' + failed)
+            else:
+                self.log(3, 'TIP', txt + 'add an item [splinter] ignore_unlogged = ' + failed)
+        else:
+            self.log(3, 'OK', 'All tested actions render a page with a usual_text inside: ' + USUAL_TEXT)
+
+    def parse_controller(self, controller_name, codelines, ignored, failed):
         for ln in codelines:
             ln = ln.rstrip()  # - \n
 
             if ln[:4] == 'def ' and ln[-3:] == '():':  # function without parameters, maybe Web2py action
                 action = ln[4:-3].strip()
                 if action[:2] != '__':                 # Web2py action
-                    self.log(4, 'action', action)
-                    if not self.check_page(urljoin(controller_name, action), silent=True):
-                        self.log(5, 'WARNING', 'Usual text is missing.')
+                    url = urljoin(controller_name, action)
+                    if not url in ignored:
+                        self.log(5, 'action', action)
+                        if not self.check_page(url, silent=True):
+                            failed.append(url)
+                            self.log(6, 'WARNING', 'Usual text is missing.')
 
 
 class TestStatus(object):
@@ -138,28 +160,30 @@ class TestStatus(object):
     # set testing mode on remote url
 
     @staticmethod
-    def remote_testdb_on(br, url):
-        test_obj = TestStatus.login(br, url)
+    def remote_testdb_on(br, server):
+        test_obj = TestStatus.login(br, server)
         test_obj.check_page('plugin_splinter/testdb_on', check_text=None)
         enabled = br.is_text_present(TESTS_ARE_ON_MSG)
         return enabled
 
     @staticmethod
-    def remote_testdb_off(br, url):
-        test_obj = TestStatus.login(br, url)
+    def remote_testdb_off(br, server):
+        test_obj = TestStatus.login(br, server)
         test_obj.check_page('plugin_splinter/testdb_off', check_text=TESTS_ARE_OFF_MSG)
 
     @staticmethod
-    def login(br, url):
+    def login(br, server):
+        url = server['url']
         test_obj = TestBase(br, url)
         TestStatus.logout(br, url, test_obj=test_obj)
         test_obj.check_page('default/user/login')
         name_el = br.find_by_name('username')
         if not name_el:
             name_el = br.find_by_name('email')
-        # TODO: tested user probably should be defined on the target server; serverR definitions should be without user/pwd
-        name_el.type('xxxxxxxxxx')
-        br.find_by_name('password').type('xxxxxxxxxxxxx')
+        # do not see any way how to configure user/pwd on the target server and safely use them from remote test
+        #   so we store user/pwd (in the target servers list) on the controlling machine
+        name_el.type(server['user'])
+        br.find_by_name('password').type(server['pwd'])
         br.find_by_id('submit_record__row').find_by_tag('input').click()
         return test_obj
 
@@ -181,23 +205,23 @@ def get_tested_servers(myconf):
             break
         server_settings = server_settings.split(';', 2)
         if len(server_settings) == 3:
-            tested_servers.append({'fldname': fldname, 'url': server_settings[0],
-                                   'user': server_settings[1], 'pwd': server_settings[2]})
+            tested_servers.append({'fldname': fldname, 'url': server_settings[0].strip(),
+                                   'user': server_settings[1].strip(), 'pwd': server_settings[2].strip()})
         server_no += 1
     return tested_servers
 
-def run_for_server(url, frmvars, myconf):
-    TestBase.log(0, 'SERVER', url)
+def run_for_server(server, frmvars, myconf):
+    TestBase.log(0, 'SERVER', server['url'])
 
     if frmvars['chrome']:  # frmvars don't use Storage (frmvars.attr) syntax to allow Scheduler mode
         CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
-        run_for_browser(url, frmvars, 'chrome', CHROME_PATH)
+        run_for_browser(server, frmvars, 'chrome', CHROME_PATH)
     if frmvars['firefox']:
-        run_for_browser(url, frmvars, 'firefox')
+        run_for_browser(server, frmvars, 'firefox')
 
     print 'FINISHED'
 
-def run_for_browser(url, frmvars, browser, extra_params=None):
+def run_for_browser(server, frmvars, browser, extra_params=None):
     if extra_params is None:
         extra_params = {}
 
@@ -205,20 +229,23 @@ def run_for_browser(url, frmvars, browser, extra_params=None):
 
     br = Browser(browser, **extra_params)
 
-    if TestStatus.remote_testdb_on(br, url):
+    if TestStatus.remote_testdb_on(br, server):
+        url = server['url']
+
         # default tests
         if frmvars.unlogged_all:
+            TestBase.log(2, 'TESTCLASS', 'TestUnloggedAll')
             testObj = TestUnloggedAll(br, url)  # make instance of the class (how to ~ better in py?)
             testObj.run()
 
         # user defined tests from modules/tests_splinter
         for TestClass in TESTCLASSES:
-            if frmvars['all_tests'] or frmvars.get('test_' + testClass, False):
+            if frmvars['all_tests'] or frmvars.get('test_' + TestClass, False):
                 TestBase.log(2, 'TESTCLASS', TestClass)
 
                 test_obj = globals()[TestClass](br, url)  #** see imports
                 test_obj.run()
-        # seems not necessary and not good here: TestStatus.remote_testdb_off(br, url)
+        # seems not necessary and not good here: TestStatus.remote_testdb_off(br, server)
     else:
         TestBase.log(2, 'FATAL', 'Cannot log in.')
 

@@ -65,7 +65,7 @@ def tests():
         formstyle=formstyle_bootstrap3_compact_factory()
         )
     if form.process().accepted:
-        urls = []
+        servers = []
         server_no = 1
         while True:
             fldname = 'server%s' % server_no
@@ -75,15 +75,15 @@ def tests():
             if server_do:
                 for server in tested_servers:  # without building the index on fldname, because we have few servers only
                     if server['fldname'] == fldname:
-                        urls.append(server['url'])
+                        servers.append(server)
                         break
             server_no += 1
 
-        if urls:
+        if servers:
             if form.vars.scheduler:
                 scheduler.queue_task(run_tests,
-                        pvars={'form_vars': form.vars, 'urls': urls},
+                        pvars={'form_vars': form.vars, 'servers': servers},
                         timeout=3600)
             else:
-                run_tests(form.vars, urls)  # debug
+                run_tests(form.vars, servers)  # debug
     return dict(form=form)
