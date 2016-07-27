@@ -10,10 +10,11 @@
 #   in case of broken test you have to remove models/_tests.py (to allow normal mode from testers ip)
 
 
-from posixpath import join as urljoin
+import base64
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
-from plugin_splinter import TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG
+from plugin_splinter import (TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG,
+                            TEST_PWD)
 from tests_splinter import TESTCLASSES
 
 
@@ -23,6 +24,7 @@ try:
 except BaseException:
     TESTADMIN = 'admin'
 
+
 @auth.requires_membership(TESTADMIN)
 def testdb_on():
     if TestStatus().tests_on():
@@ -30,10 +32,12 @@ def testdb_on():
     else:
         return OLD_TESTS_MSG
 
+
 @auth.requires_membership(TESTADMIN)
 def testdb_off():
     TestStatus().tests_off()
     return TESTS_ARE_OFF_MSG
+
 
 @auth.requires_membership(TESTADMIN)
 def tests():
@@ -90,3 +94,65 @@ def tests():
     except BaseException:
         urit = ' -- Not configured. Tests will fail.'
     return dict(form=form, urit=urit)
+
+
+def ensure_users():
+    """
+        this will insert into the test database(!) users from private/appconfig.ini, [splinter], ensure_users=
+        format is: ensure_users = usr1, usr2, ..  where usrN is username or email or username#group or email#group
+        obligatory auth_user fields (first_name, last_name, email) will be added automatically
+        for additional obligatory auth_user fields please use request.vars
+    """
+    if not session.testdb or db is db0:     # this action is to danger ...
+        redirect(URL('default', 'index'))   # ... if this is not the testing database then disable this call
+
+    if 'username' in request.vars:  # additional fields for db.auth_user.insert()
+        del request.vars['username']
+    if 'password' in request.vars:
+        del request.vars['password']
+
+    for usrgrp in request.args:
+        usrgrp = (base64.b32decode(usrgrp) + '#').split('#')
+        usr = usrgrp[0]
+        grp = usrgrp[1]
+
+        try:
+            row = db(db.auth_user.username == usr).select().first()
+            username_used = True
+        except AttributeError:
+            row = db(db.auth_user.email == usr).select().first()
+            username_used = False
+
+        usr_id = None
+        NAME_PREFIX = 'plugin_splinter_'
+        if row:
+            if row.last_name[:len(NAME_PREFIX)] == NAME_PREFIX:
+                usr_id = row.id
+            else:
+                # we must delete the user, because we need to know the password (we will use TEST_PWD)
+                if username_used:
+                    db(db.auth_user.username == usr).delete()
+                else:
+                    db(db.auth_user.email == usr).delete()
+
+        if usr_id is None:
+            usrflds = request.vars.copy()
+            usrflds['first_name'] = usrflds.get('first_name', usr)
+            usrflds['last_name'] = usrflds.get('last_name', NAME_PREFIX + usr)  # plugin_splinter_.. users will have TEST_PWD password already
+            if username_used:
+                if 'email' in usrflds:
+                    email = usrflds['email']
+                    del usrflds['email']
+                else:
+                    email = usr + '@' + NAME_PREFIX + 'domain.com'
+                usr_id = db.auth_user.insert(username=usr, password=TEST_PWD, email=email, **usrflds)
+            else:
+                usr_id = db.auth_user.insert(email=usr, password=TEST_PWD, **usrflds)
+
+        if grp:
+            grp_id = db(db.auth_group.role == grp).select(db.auth_group.id).first()
+            if not grp_id:
+                grp_id = db.auth_group.insert(role=grp)
+            db.auth_membership.insert(user_id=usr_id, group_id=grp_id)
+
+    redirect(URL('default', 'index'))

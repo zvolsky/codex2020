@@ -22,6 +22,7 @@
 - tests
     -- defined already in plugin (TestUnloggedAll,..)
         --- TestUnloggedAll will check all controller actions if the page contains USUAL_TEXT
+            actions from private/appconfig.ini: [splinter] section, ignore_unlogged=c/f,.. will be skipped
             USUAL_TEXT default: Copyright ; or you can set it in private/appconfig.ini: [splinter] section, usual_text=
 
     -- user defined tests
@@ -30,14 +31,16 @@
 """
 
 
+import base64
 import os
 import re
 from posixpath import join as urljoin
 
 from splinter import Browser
-# from tests_splinter import TESTCLASSES   # later: import from tests_splinter requires the TestBase class
+# from tests_splinter import TESTCLASSES, MORE_AUTH_USER_FIELDS   # later: import from tests_splinter requires the TestBase class
 
 from gluon import current
+from gluon.html import URL
 from gluon.contrib.appconfig import AppConfig
 
 
@@ -50,6 +53,8 @@ try:
     USUAL_TEXT = myconf.take('splinter.usual_text')
 except:
     USUAL_TEXT = 'Copyright'
+
+TEST_PWD = 'a23456789'
 
 
 class TestBase(object):
@@ -75,9 +80,16 @@ class TestBase(object):
                 assert result
         return True
 
+try:
+    from tests_splinter import MORE_AUTH_USER_FIELDS
+except ImportError:
+    MORE_AUTH_USER_FIELDS = {}
 
-from tests_splinter import TESTCLASSES
-from tests_splinter import *  # test classes themselves (because of python problems with instantiatig classes from names - see #**)
+try:
+    from tests_splinter import TESTCLASSES
+    from tests_splinter import *  # test classes themselves (because of python problems with instantiating classes from names - see #**)
+except ImportError:
+    TESTCLASSES = []
 
 
 class TestUnloggedAll(TestBase):
@@ -94,7 +106,7 @@ class TestUnloggedAll(TestBase):
 
         try:
             ignored = myconf.take('splinter.ignore_unlogged')
-        except:
+        except BaseException:
             ignored = ''
         ignored = ignored.split(',')
         ignored = [action.strip() for action in ignored if action.strip()]
@@ -241,6 +253,16 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
     if TestStatus.remote_testdb_on(br, server):
         url = server['url']
 
+        try:
+            ensure_users = myconf.take('splinter.ensure_users')
+        except BaseException:
+            ensure_users = None
+        if ensure_users:
+            ensure_users = ensure_users.split(',')
+            ensure_users = [base64.b32encode(eusr.strip()) for eusr in ensure_users]  # Web2py args failure?
+            suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users, vars=MORE_AUTH_USER_FIELDS)[3:]
+            br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
+
         # default tests
         if frmvars['unlogged_all']:
             TestBase.log(2, 'TESTCLASS', 'TestUnloggedAll')
@@ -262,8 +284,8 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
     print
 
 
-
-def login():
+'''
+def login(br):
     br.visit(URLBASE)
     br.find_by_id('username_login').fill('test')
     br.find_by_id('password_login').fill('0f331d07fd4ea60ba7be4613e019421ace2f2b8b')
@@ -285,3 +307,4 @@ def runTests():
 
 if __name__ == '__main__':
     run_for_browser('http://localhost:8000', None, 'firefox')
+'''
