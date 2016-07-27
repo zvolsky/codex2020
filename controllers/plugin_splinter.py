@@ -136,6 +136,7 @@ def ensure_users():
                     db(db.auth_user.email == usr).delete()
 
         if usr_id is None:
+            pwd = db.auth_user.password.validate(TEST_PWD)[0]  # convert plain value into database value (validator returns tuple like: (converted, problem) )
             usrflds = request.vars.copy()
             usrflds['first_name'] = usrflds.get('first_name', usr)
             usrflds['last_name'] = usrflds.get('last_name', NAME_PREFIX + usr)  # plugin_splinter_.. users will have TEST_PWD password already
@@ -145,14 +146,15 @@ def ensure_users():
                     del usrflds['email']
                 else:
                     email = usr + '@' + NAME_PREFIX + 'domain.com'
-                usr_id = db.auth_user.insert(username=usr, password=TEST_PWD, email=email, **usrflds)
+                usr_id = db.auth_user.insert(username=usr, password=pwd, email=email, **usrflds)
             else:
-                usr_id = db.auth_user.insert(email=usr, password=TEST_PWD, **usrflds)
+                usr_id = db.auth_user.insert(email=usr, password=pwd, **usrflds)
 
         if grp:
             grp_id = db(db.auth_group.role == grp).select(db.auth_group.id).first()
             if not grp_id:
                 grp_id = db.auth_group.insert(role=grp)
-            db.auth_membership.insert(user_id=usr_id, group_id=grp_id)
+            if not db((db.auth_membership.user_id == usr_id) & (db.auth_membership.group_id == grp_id)).select().first():
+                db.auth_membership.insert(user_id=usr_id, group_id=grp_id)
 
     redirect(URL('default', 'index'))

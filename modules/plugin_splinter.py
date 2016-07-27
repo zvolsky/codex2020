@@ -18,6 +18,12 @@
            url           : url of tested server (include application, which can be omitted if suppressed by routes)
            testgroupuser : name of the user of group defined in the testgroup= (default group: admin)
            password      : password of the user
+- if you want auto-create testing users, set in private/appconfig.ini: [splinter] section, ensure_users= usr1, usr2,..
+        where usrN is: user (user without group membership) or user#group (user in group); user is username if it's used, otherwise email
+        if db.auth_user_insert requires more obligatory fields as (first_name, last_name, email) you can set them in modules/tests_splinter.py using dictionary MORE_AUTH_USER_FIELDS
+        password is 'a23456789' for all such users
+        you can create users manually too (recommended password is 'a23456789'),
+            however users mentioned in ensure_users= will be rewritten; to avoid this set the last_name: plugin_splinter_..
 
 - tests
     -- defined already in plugin (TestUnloggedAll,..)
