@@ -1,5 +1,12 @@
 {{extend 'layout.html'}}
 
+{{if session.testdb:}}
+    <p>You cannot control tests from TESTING database. If you are sure that tests aren't running, you can
+        <a href="{{=URL('testdb_off')}}">switch to STANDARD database</a>
+    </p>
+{{else:}}
+
+
 <p>Tests run in database defined in (tested machine) private/<b>appconfig.ini</b>, key <b>db.urit</b> {{=urit}}</p>
 
 {{=form}}
@@ -13,3 +20,6 @@
 <mark>Scheduler tests</mark>
 
 <p>If test (a browser window) will hang then see db table 'scheduler_run'. You will see terminal output ("where") in 'run_output' column and reason ("why") in 'traceback' column.</p>
+
+
+{{pass}}

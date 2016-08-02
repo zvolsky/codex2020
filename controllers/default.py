@@ -79,27 +79,40 @@ def user():
     to decorate functions that need access control
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
+    if session.testdb:
+        auth.settings.keep_session_onlogout = True  # this will prevent to leave the TESTING database
+
     #from mail_send import mail_send
     from plugin_mz import admin_mail
 
-    def on_new_lib(form):
+    def userinfo(form):
+        return ('\n'
+                + '\n' + form.vars.first_name
+                + '\n' + form.vars.last_name
+                + '\n' + form.vars.email)
+
+    def on_new_user(usr):
+        mail.send(admin_mail,
+                  subject='%s - %s' % (request.env.http_host, T("nový uživatel")),
+                  message=T("Přihlásil se nový uživatel:") + usr
+                  )
+
+    def on_new_lib(usr):
         mail.send(admin_mail,
                   subject='%s - %s' % (request.env.http_host, T("nová knihovna")),
-                  message=T("Uživatel si zakládá knihovnu:")
-                          + '\n'
-                          + '\n' + form.vars.first_name
-                          + '\n' + form.vars.last_name
-                          + '\n' + form.vars.email
+                  message=T("Uživatel si zakládá knihovnu:") + usr
                   )
         redirect(URL('library', 'new'))
 
     def onaccept_new(form):
+        usr = userinfo(form)
+        on_new_user(usr)
         if form.vars.librarian:
-            on_new_lib(form)
+            on_new_lib(usr)
 
     def onaccept_edit(form):
         if form.vars.librarian and (not auth.user.library_id or auth.user.library_id == [TESTING_LIB_ID]):
-            on_new_lib(form)
+            on_new_lib(userinfo(form))
 
     auth.settings.register_onaccept.append(onaccept_new)
     auth.settings.profile_onaccept.append(onaccept_edit)

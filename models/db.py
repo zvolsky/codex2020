@@ -22,8 +22,12 @@ if not request.env.web2py_runtime_gae:
     db0 = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
     session.connect(request, response, db=db0)
-    if session.testdb:  # TESTING database
-        db = DAL(myconf.take('db.urit'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+    if session.testdb:
+        if request.args(0) == 'login' and request.vars._next and 'plugin_splinter/testdb_off' in request.vars._next:
+            del session.testdb
+            db = db0
+        else:
+            db = DAL(myconf.take('db.urit'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
     else:               # MAIN database
         db = db0

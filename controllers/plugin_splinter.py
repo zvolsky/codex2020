@@ -54,8 +54,9 @@ def tests():
         server_comment = ''
         server_default = False
 
-    dynamic_flds.append(Field('unlogged_all', 'boolean', label='TestUnloggedAll', comment='TESTS', default=True))
-    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from tests_splinter.py)', comment='', default=True))
+    dynamic_flds.append(Field('unlogged_all', 'boolean', label='TestUnloggedAll', comment='TESTS (plugin/config defined)', default=True))
+    dynamic_flds.append(Field('configured_logged', 'boolean', label='TestConfiguredLogged', comment='', default=True))
+    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from tests_splinter.py)', comment='TESTS (developer/code defined)', default=True))
     for testClass in TESTCLASSES:
         dynamic_flds.append(Field('test_' + testClass, 'boolean', label=testClass, comment='', default=False))
 
