@@ -26,10 +26,27 @@
             however users mentioned in ensure_users= will be rewritten; to avoid this set the last_name: plugin_splinter_..
 
 - tests
-    -- defined already in plugin (TestUnloggedAll,..)
-        --- TestUnloggedAll will check all controller actions if the page contains USUAL_TEXT
-            actions from private/appconfig.ini: [splinter] section, ignore_unlogged=c/f,.. will be skipped
-            USUAL_TEXT default: Copyright ; or you can set it in private/appconfig.ini: [splinter] section, usual_text=
+    -- defined already in plugin (tests based on user_/skip_ setting for unlogged user and for user_<user>/skip_<user> for defined users)
+        --- TestActions will check all controller actions if the page contains [ USUAL_TEXT | text after $... ]
+            user_= (unlogged) and user_<user>= settings defines tested urls
+                controller/* (or *) will test all actions (all actions of all controllers) which AREN'T explicitly used in user_/skip_ settings of that user
+                user_ items can terminate with $text1$text2... - test will check presence of such texts (implicit: from usual_text= if used else "Copyright")
+            skip_= and skip_<user> will exclude actions from testing
+            for unlogged user will @auth. decorated actions be skipped too
+
+            Example:
+                app actions are: default/index, default/home, default/user, students/list, students/edit
+                appconfig.ini:
+                    ensure_users = mary, joe#admin
+                    user_ = default/*$Please log in.
+                    skip_ = default/user
+                    user_mary = *, students/edit/1?defaultteacher=Smith$Lastname$Teacher
+                    skip_mary = default/user
+                    user_joe = *$You have admin rights.
+                means we test
+                 - unlogged user: urls default/index, default/home for text Please log in. ; @auth. decorated will be skipped
+                 - user mary: urls default/index, default/home, students/list for text Copyright, students/edit/.. for texts Lastname and Teacher
+                 - user joe: all actions for text You have admin rights.
 
     -- user defined tests
         modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
@@ -93,7 +110,7 @@ class TestBase(object):
         """
         self.br.visit(urljoin(self.url, urlpath))
         if check_testingdb and self.br.is_element_present_by_xpath('//div'):
-            assert self.br.is_text_present('TESTING DATABASE')
+            assert self.br.is_text_present('TESTING DATABASE'), "Not running on testing database. Apply recommended code patches for default/user, db=DAL() and inside layout.html (if session.testdb:)."
         if check_text:
             if isinstance(check_text, basestring):
                 check_text = (check_text,)
@@ -109,6 +126,102 @@ class TestBase(object):
 
     def login(self, usr):
         TestStatus.login(self.br, {'url': self.url}, usr, TEST_PWD)
+
+    # all actions (*) generator
+
+    def controllers(self, appfolder):
+        """
+            yields names of all controllers (without .py) except off appadmin
+        """
+        for controller in os.listdir(urljoin(appfolder, 'controllers')):
+            if controller[-3:] == '.py' and not controller == 'appadmin.py':
+                yield controller[:-3]
+
+    def get_controller_codelines(self, appfolder, controller):
+        controller = controller.split('/')[0]  # <controller> or <controller/*> can be used
+        with open(urljoin(appfolder, 'controllers', controller + '.py')) as hnd:
+            codelines = hnd.readlines()
+        return codelines
+
+    def actions(self, appfolder, controller, skipped, skip_auth=False):
+        """
+        Generator.
+        Parse codelines from controller code and yield '<controller>/<action>' strings.
+
+        Args:
+            appfolder: application folder
+            controller: name of the controller (without .py) ['<controller>/*' will be converted into 'controller']
+            skipped: list of actions we want to skip/ignore them
+            skip_auth: if True, all @auth. decorated actions will be skipped too (useful for unlogged user)
+        """
+        controller = controller.split('/')[0]  # <controller> or <controller/*> can be used
+        codelines = self.get_controller_codelines(appfolder, controller)
+        skip_next = False
+        for ln in codelines:
+            ln = ln.rstrip()  # - \n
+
+            if ln[:4] == 'def ' and ln[-3:] == '():':  # function without parameters, maybe Web2py action
+                if skip_next:
+                    skip_next = False
+                else:
+                    action = ln[4:-3].strip()
+                    if action[:2] != '__':                 # Web2py action
+                        url = urljoin(controller, action)
+                        if not url in skipped:
+                            yield url
+            elif skip_auth and ln[:6] == '@auth.' or re.match('^#\s*ajax$', ln):   #  unlogged user + need authorize --or-- # ajax
+                skip_next = True
+            elif ln == '':
+                skip_next = False
+
+    def gen_urls(self, requested, skipped=None, skip_auth=False, usual_text="Copyright", appfolder=None, request=None):
+        """
+        Cycles through all actions and yields (url, (testedText1, testedText2, ..))
+
+        Args:
+            requested: list from user_...= setting (appconfig.ini [splinter])
+            skipped: list from skip_...= setting (appconfig.ini [splinter])
+            skip_auth: if True, actions preceded by @auth. will be skipped too (suitable for unlogged user)
+            usual_text: testedText1 for user_.. items without $ (probably use the value from usual_text= setting)
+        rare used:
+            appfolder: [ explicit | implicit from request.folder ]
+            request: (if appfolder is None only) [ explicit | implicit: current.request ]
+        """
+        explicitly_tested = []  # controller/action
+        for url in requested:   # strip controller/action from maybe longer url
+            parts = (url.replace('?', '/').replace('#', '/').replace('$', '/') + '//').split('/', 2)
+            explicitly_tested.append(parts[0] + '/' + parts[1])
+
+        if skipped is None:
+            skipped = []
+        skipped = skipped + explicitly_tested + ['plugin_splinter/testdb_on', 'plugin_splinter/testdb_off']
+
+        if appfolder is None:
+            if request is None:
+                request = current.request
+            appfolder = request.folder
+
+        for url_item in requested:
+            url_item_parts = url_item.split('$')
+            url = url_item_parts[0]
+            if url:
+                if len(url_item_parts) == 1:
+                    tested_texts = [usual_text]
+                else:
+                    tested_texts = []
+                    for txt in url_item_parts[1:]:
+                        if txt:
+                            tested_texts.append(txt)
+                if url[-1] != '*':
+                    yield((url, tested_texts))
+                elif url == '*':
+                    for controller in self.controllers(appfolder):
+                        for actionpath in self.actions(appfolder, controller, skipped, skip_auth):
+                            yield((actionpath, tested_texts))
+                elif '/' in url:  # controller/*
+                    for actionpath in self.actions(appfolder, url, skipped, skip_auth):
+                        yield((actionpath, tested_texts))
+
 
 try:
     from tests_splinter import MORE_AUTH_USER_FIELDS
@@ -159,6 +272,11 @@ class TestConfiguredLogged(TestBase):
 
 
 class TestUnloggedAll(TestBase):
+    def run(self):
+        for url, tested_texts in self.gen_urls(['default/home/xx?p=2$aa$bb $', 'default/*'], skipped=None, skip_auth=False, usual_text="Copyright"):
+            print url, tested_texts
+
+class xTestUnloggedAll(TestBase):
     def run(self):
         self.test_unlogged_all()
 
