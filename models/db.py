@@ -27,7 +27,7 @@ if not request.env.web2py_runtime_gae:
             del session.testdb
             db = db0
         else:
-            db = DAL(myconf.take('db.urit'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+            db = DAL(myconf.take('db.testuri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
     else:               # MAIN database
         db = db0

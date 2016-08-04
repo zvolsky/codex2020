@@ -91,10 +91,10 @@ def tests():
                 run_tests(form.vars, servers)  # debug
 
     try:
-        urit = myconf.take('db.urit') and ''  # do not show because contains a password
+        testuri = myconf.take('db.testuri') and ''  # do not show because contains a password
     except BaseException:
-        urit = ' -- Not configured. Tests will fail.'
-    return dict(form=form, urit=urit)
+        testuri = ' -- Not configured. Tests will fail.'
+    return dict(form=form, testuri=testuri)
 
 
 def ensure_users():

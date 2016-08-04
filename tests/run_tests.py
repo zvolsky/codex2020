@@ -17,7 +17,7 @@ APP = 'codex2020'
 def run_tests(filename='test*.py'):
     app_root = os.path.join(os.getcwd(), 'applications', APP)
     files = os.path.join(app_root, 'tests', filename)
-    db = DAL(myconf.take('db.urit'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+    db = DAL(myconf.take('db.testuri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
     suite = unittest.TestSuite()
     for file in glob.glob(files):
         execfile(file, locals())

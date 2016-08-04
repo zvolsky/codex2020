@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-- this will run webtests in TESTING database (db.urit from appconfig.ini)
+- this will run webtests in TESTING database (db.testuri= from appconfig.ini)
 - use sessions inside database: session.connect(request, response, db=db)
     --or-- if you use shared file system sessions then always have same auth_user rows for used users in both databases
 
@@ -10,7 +10,7 @@
 - download and unzip from google the current chromedriver
 - tested server must be running
 
-- in private/appconfig.ini: [db] section, urit= (testing database; connection string similar to uri=)
+- in private/appconfig.ini: [db] section, testuri= (testing database; connection string similar to uri=)
 - in private/appconfig.ini: [splinter] section, chromedriver= (pathname of chromedriver binary)
 - in private/appconfig.ini: [splinter] section, testgroup= (default group: admin) - see testgroupuser bellow
 - in private/appconfig.ini: [splinter] section, server1=, server2=, ...
