@@ -20,7 +20,7 @@
            password      : password of the user
 - if you want auto-create testing users, set in private/appconfig.ini: [splinter] section, ensure_users= usr1, usr2,..
         where usrN is: user (user without group membership) or user#group (user in group); user is username if it's used, otherwise email
-        if db.auth_user_insert requires more obligatory fields as (first_name, last_name, email) you can set them in modules/tests_splinter.py using dictionary MORE_AUTH_USER_FIELDS
+        if db.auth_user_insert requires more obligatory fields as (first_name, last_name, email) you can set them in modules/plugin_splinter_tests.py using dictionary MORE_AUTH_USER_FIELDS
         password is 'a23456789' for all such users
         you can create users manually too (recommended password is 'a23456789'),
             however users mentioned in ensure_users= will be rewritten; to avoid this set the last_name: plugin_splinter_..
@@ -49,7 +49,7 @@
                  - user joe: all actions for text You have admin rights.
 
     -- user defined tests
-        modules/tests_splinter.py must contain list TESTCLASSES with strings: names of testing classes
+        modules/plugin_splinter_tests.py must contain list TESTCLASSES with strings: names of testing classes
         each class must have run() method
 """
 
@@ -60,7 +60,7 @@ import re
 from posixpath import join as urljoin
 
 from splinter import Browser
-# from tests_splinter import TESTCLASSES, MORE_AUTH_USER_FIELDS   # later: import from tests_splinter requires the TestBase class
+# from plugin_splinter_tests import TESTCLASSES, MORE_AUTH_USER_FIELDS   # later: import from plugin_splinter_tests requires the TestBase class
 
 from gluon import current
 from gluon.html import URL
@@ -72,7 +72,7 @@ myconf = AppConfig()
 TESTS_ARE_ON_MSG = 'TEST MODE IS ENABLED'
 TESTS_ARE_OFF_MSG = 'TEST MODE IS OFF -> STANDARD MODE'
 OLD_TESTS_MSG = 'Previous tests are active. If this is 100 % sure not truth, you can remove models/_tests.py (WARNING: If you do so and tests are still running, they will damage the main application database!)'
-NOT_CONFIGURED = ' - NOT CONFIGURED'
+CFGTXT = 'In private/appconfig.ini [splinter] you can set'
 
 try:
     USUAL_TEXT = myconf.take('splinter.usual_text')
@@ -88,6 +88,11 @@ class TestBase(object):
     def __init__(self, br, url):
         self.br = br
         self.url = url
+
+        try:
+            self.usual_text = myconf.take('splinter.usual_text')
+        except BaseException:
+            self.usual_text = "Copyright"
 
     def log_test(self, test_name):
         self.log(3, 'TEST', test_name)
@@ -125,7 +130,7 @@ class TestBase(object):
         return True
 
     def login(self, usr):
-        TestStatus.login(self.br, {'url': self.url}, usr, TEST_PWD)
+        TestMode.login(self.br, {'url': self.url}, usr, TEST_PWD)
 
     # all actions (*) generator
 
@@ -224,20 +229,230 @@ class TestBase(object):
 
 
 try:
-    from tests_splinter import MORE_AUTH_USER_FIELDS
+    from plugin_splinter_tests import MORE_AUTH_USER_FIELDS
 except ImportError:
     MORE_AUTH_USER_FIELDS = {}
 
 try:
-    from tests_splinter import TESTCLASSES
-    from tests_splinter import *  # test classes themselves (because of python problems with instantiating classes from names - see #**)
+    from plugin_splinter_tests import TESTCLASSES
+    from plugin_splinter_tests import *  # test classes themselves (because of python problems with instantiating classes from names - see #**)
 except ImportError:
     TESTCLASSES = []
+
+try:
+    from plugin_splinter_initdb import InitDb
+except ImportError:
+    pass
 
 
 # plugin/appconfig defined tests -----------------------------
 
-class TestConfiguredLogged(TestBase):
+class TestConfiguredUsers(TestBase):
+    def __init__(self, br, url):
+        super(TestConfiguredUsers, self).__init__(br, url)
+
+        try:
+            users = myconf.take('splinter.ensure_users')
+        except BaseException:
+            users = ''
+        users = users.split(',')
+        self.users = [usr.strip() for usr in users if usr]   # with #groups
+
+    def run(self):
+        self.log_test("Configured actions, unlogged")
+        self.testConfiguredUsr()  # run as unlogged
+        if self.users:
+            for usr in self.users:
+                usr = usr.split('#', 1)[0].strip()   # [usr | usr#grp] -> usr
+                self.log_test("Configured actions, user %s" % usr)
+                self.testConfiguredUsr(usr)
+        else:
+            self.log(3, "None configured users. %s ensure_users=usr1,.. where usr1=[usr | usr#grp]" % CFGTXT)
+
+    def testConfiguredUsr(self, usr=''):
+        try:
+            requested = myconf.take('splinter.user_' + usr)
+        except BaseException:
+            requested = ''
+        requested = [req.strip() for req in requested.split(',') if req]
+        if not requested:
+            self.log_text("Not configured: will test all actions without args/vars. %s user_%s to customize actions. Learn about skip_%s, initdb_%s too."
+                          % (CFGTXT, usr, usr, usr))
+            requested = ['*']
+        try:
+            skipped = myconf.take('splinter.skip_' + usr)
+        except BaseException:
+            skipped = ''
+        skipped = [skp.strip() for skp in skipped.split(',') if skp]
+
+        self.gen_urls(requested, skipped, skip_auth=not usr, usual_text=self.usual_text)
+        for url, tested_texts in self.gen_urls(['default/home/xx?p=2$aa$bb $', 'default/*'], skipped=None, skip_auth=False, usual_text="Copyright"):
+            print url, tested_texts
+
+# test mode control -----------------------------
+
+class TestMode(object):
+    # set testing mode on this machine
+
+    def tests_running(self):
+        session = current.session
+        return session.testdb  # in (at least) models/db.py we use session.testdb directly
+
+    def tests_off(self, session=None):
+        session = current.session
+        # if self.tests_running():  # we cannot test this here, because it is already cleared from login?next=
+        if 'auth' in session:
+            del session.auth
+        if 'testdb' in session:     # maybe this is never true: see above ; but to be sure (what about if the user can be logged and login page is skipped?)
+            del session.testdb
+
+    def tests_on(self, session=None):
+        session = current.session
+        if self.tests_running():
+            print OLD_TESTS_MSG
+            return False
+        if 'auth' in session:
+            del session.auth
+        session.testdb = True
+        return True
+
+    # set testing mode on remote url
+
+    @staticmethod
+    def remote_testdb_on(br, server):
+        test_obj = TestMode.login(br, server)
+        test_obj.check_page('plugin_splinter/testdb_on', check_text=None)
+        enabled = br.is_text_present(TESTS_ARE_ON_MSG)
+        return enabled
+
+    @staticmethod
+    def remote_testdb_off(br, server):
+        test_obj = TestMode.login(br, server)
+        test_obj.check_page('plugin_splinter/testdb_off', check_text=TESTS_ARE_OFF_MSG)
+
+    @staticmethod
+    def login(br, server, usr=None, pwd=None):
+        pwd = pwd if usr else server['pwd']
+        usr = usr or server['user']
+        url = server['url']
+        test_obj = TestBase(br, url)
+        TestMode.logout(br, url, test_obj=test_obj)
+        test_obj.check_page('default/user/login', check_testingdb=False)
+        name_el = br.find_by_name('username')
+        if not name_el:
+            name_el = br.find_by_name('email')
+        # do not see any way how to configure user/pwd on the target server and safely use them from remote test
+        #   so we store user/pwd (in the target servers list) on the controlling machine
+        name_el.type(usr)
+        br.find_by_name('password').type(pwd)
+        br.find_by_id('submit_record__row').find_by_tag('input').click()
+        return test_obj
+
+    @staticmethod
+    def logout(br, url, test_obj=None):
+        """
+        Args:
+            test_obj: example: TestBase(br, url) ; can be reused if you have one already prepared
+        """
+        if test_obj is None:
+            test_obj = TestBase(br, url)
+        test_obj.check_page('default/user/logout', check_testingdb=False)
+
+
+# starting of tests: server list, server, browser ---------------------------
+
+def get_tested_servers(myconf):
+    tested_servers = []
+    server_no = 1
+    while True:
+        fldname = 'server%s' % server_no
+        try:
+            server_settings = myconf.take('splinter.' + fldname)
+        except BaseException:
+            break
+        server_settings = server_settings.split(';', 2)
+        if len(server_settings) == 3:
+            tested_servers.append({'fldname': fldname, 'url': server_settings[0].strip(),
+                                   'user': server_settings[1].strip(), 'pwd': server_settings[2].strip()})
+        server_no += 1
+    return tested_servers
+
+def run_for_server(server, frmvars, myconf):
+    TestBase.log(0, 'SERVER', server['url'])
+
+    if frmvars['chrome']:  # frmvars don't use Storage (frmvars.attr) syntax to allow Scheduler mode
+        CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
+        run_for_browser(server, frmvars, 'chrome', CHROME_PATH)
+    if frmvars['firefox']:
+        run_for_browser(server, frmvars, 'firefox')
+
+    print 'FINISHED'
+
+def run_for_browser(server, frmvars, browser, extra_params=None):
+    if extra_params is None:
+        extra_params = {}
+    url = server['url']
+
+    TestBase.log(1, 'BROWSER', browser)
+
+    br = Browser(browser, **extra_params)
+
+    if TestMode.remote_testdb_on(br, server):
+        test_obj = TestConfiguredUsers(br, url)
+
+        try:
+            ensure_users = myconf.take('splinter.ensure_users')
+        except BaseException:
+            ensure_users = None
+        if ensure_users:
+            ensure_users = ensure_users.split(',')
+            ensure_users = [eusr.strip() for eusr in ensure_users]
+            ensure_users_encoded = [base64.b32encode(eusr) for eusr in ensure_users]  # Web2py args failure?
+            suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
+            br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
+            br.is_text_present(test_obj.usual_text)
+
+        # default tests
+        test_obj.run()
+
+        # user defined tests from modules/plugin_splinter_tests
+        for TestClass in TESTCLASSES:
+            if frmvars['all_tests'] or frmvars.get('test_' + TestClass, False):
+                TestBase.log(2, 'TESTCLASS', TestClass)
+
+                test_obj = globals()[TestClass](br, url)  #** see imports
+                test_obj.run()
+        # seems not necessary and not good here: TestMode.remote_testdb_off(br, server)
+    else:
+        TestBase.log(2, 'FATAL', 'Cannot log in.')
+
+    br.quit()
+    print
+
+
+'''
+if __name__ == '__main__':
+    run_for_browser('http://localhost:8000', None, 'firefox')
+'''
+
+'''to be deleted:
+
+NOT_CONFIGURED = ' - NOT CONFIGURED'
+
+        if frmvars['unlogged_all']:
+            TestBase.log(2, 'TESTCLASS', 'TestUnloggedAll')
+            testObj = TestUnloggedAll(br, url)
+            testObj.run()
+        if frmvars['configured_logged']:
+            if ensure_users:
+                TestBase.log(2, 'TESTCLASS', 'TestConfiguredLogged')
+                testObj = TestConfiguredLogged(br, url, ensure_users)
+                testObj.run()
+            else:
+                TestBase.log(2, 'TESTCLASS', 'TestConfiguredLogged' + NOT_CONFIGURED)
+                TestBase.log(3, 'Configure private/appconfig.ini [splinter] ensure_users= usr1, usr2,.. ; usr1 = usr1 | usr1#grp1')
+
+class xTestConfiguredLogged(TestBase):
     def __init__(self, br, url, ensure_users):
         super(TestConfiguredLogged, self).__init__(br, url)
         self.ensure_users = ensure_users
@@ -269,13 +484,6 @@ class TestConfiguredLogged(TestBase):
                     tested_texts = test_config[1:]
                     TestBase.log(4, urlpath, '; '.join(tested_texts) or USUAL_TEXT)
                     self.check_page(urlpath, check_text=tested_texts)
-
-
-class TestUnloggedAll(TestBase):
-    def run(self):
-        for url, tested_texts in self.gen_urls(['default/home/xx?p=2$aa$bb $', 'default/*'], skipped=None, skip_auth=False, usual_text="Copyright"):
-            print url, tested_texts
-
 class xTestUnloggedAll(TestBase):
     def run(self):
         self.test_unlogged_all()
@@ -337,157 +545,4 @@ class xTestUnloggedAll(TestBase):
                 skip_next = True
             elif ln == '':
                 skip_next = False
-
-# test mode control -----------------------------
-
-class TestStatus(object):
-    # set testing mode on this machine
-
-    def tests_running(self):
-        session = current.session
-        return session.testdb  # in (at least) models/db.py we use session.testdb directly
-
-    def tests_off(self, session=None):
-        session = current.session
-        # if self.tests_running():  # we cannot test this here, because it is already cleared from login?next=
-        if 'auth' in session:
-            del session.auth
-        if 'testdb' in session:     # maybe this is never true: see above ; but to be sure (what about if the user can be logged and login page is skipped?)
-            del session.testdb
-
-    def tests_on(self, session=None):
-        session = current.session
-        if self.tests_running():
-            print OLD_TESTS_MSG
-            return False
-        if 'auth' in session:
-            del session.auth
-        session.testdb = True
-        return True
-
-    # set testing mode on remote url
-
-    @staticmethod
-    def remote_testdb_on(br, server):
-        test_obj = TestStatus.login(br, server)
-        test_obj.check_page('plugin_splinter/testdb_on', check_text=None)
-        enabled = br.is_text_present(TESTS_ARE_ON_MSG)
-        return enabled
-
-    @staticmethod
-    def remote_testdb_off(br, server):
-        test_obj = TestStatus.login(br, server)
-        test_obj.check_page('plugin_splinter/testdb_off', check_text=TESTS_ARE_OFF_MSG)
-
-    @staticmethod
-    def login(br, server, usr=None, pwd=None):
-        pwd = pwd if usr else server['pwd']
-        usr = usr or server['user']
-        url = server['url']
-        test_obj = TestBase(br, url)
-        TestStatus.logout(br, url, test_obj=test_obj)
-        test_obj.check_page('default/user/login', check_testingdb=False)
-        name_el = br.find_by_name('username')
-        if not name_el:
-            name_el = br.find_by_name('email')
-        # do not see any way how to configure user/pwd on the target server and safely use them from remote test
-        #   so we store user/pwd (in the target servers list) on the controlling machine
-        name_el.type(usr)
-        br.find_by_name('password').type(pwd)
-        br.find_by_id('submit_record__row').find_by_tag('input').click()
-        return test_obj
-
-    @staticmethod
-    def logout(br, url, test_obj=None):
-        """
-        Args:
-            test_obj: example: TestBase(br, url) ; can be reused if you have one already prepared
-        """
-        if test_obj is None:
-            test_obj = TestBase(br, url)
-        test_obj.check_page('default/user/logout', check_testingdb=False)
-
-
-# starting of tests: server list, server, browser ---------------------------
-
-def get_tested_servers(myconf):
-    tested_servers = []
-    server_no = 1
-    while True:
-        fldname = 'server%s' % server_no
-        try:
-            server_settings = myconf.take('splinter.' + fldname)
-        except BaseException:
-            break
-        server_settings = server_settings.split(';', 2)
-        if len(server_settings) == 3:
-            tested_servers.append({'fldname': fldname, 'url': server_settings[0].strip(),
-                                   'user': server_settings[1].strip(), 'pwd': server_settings[2].strip()})
-        server_no += 1
-    return tested_servers
-
-def run_for_server(server, frmvars, myconf):
-    TestBase.log(0, 'SERVER', server['url'])
-
-    if frmvars['chrome']:  # frmvars don't use Storage (frmvars.attr) syntax to allow Scheduler mode
-        CHROME_PATH = {'executable_path': myconf.take('splinter.chromedriver')}
-        run_for_browser(server, frmvars, 'chrome', CHROME_PATH)
-    if frmvars['firefox']:
-        run_for_browser(server, frmvars, 'firefox')
-
-    print 'FINISHED'
-
-def run_for_browser(server, frmvars, browser, extra_params=None):
-    if extra_params is None:
-        extra_params = {}
-    url = server['url']
-
-    TestBase.log(1, 'BROWSER', browser)
-
-    br = Browser(browser, **extra_params)
-
-    if TestStatus.remote_testdb_on(br, server):
-        try:
-            ensure_users = myconf.take('splinter.ensure_users')
-        except BaseException:
-            ensure_users = None
-        if ensure_users:
-            ensure_users = ensure_users.split(',')
-            ensure_users = [eusr.strip() for eusr in ensure_users]
-            ensure_users_encoded = [base64.b32encode(eusr) for eusr in ensure_users]  # Web2py args failure?
-            suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
-            br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
-
-        # default tests
-        if frmvars['unlogged_all']:
-            TestBase.log(2, 'TESTCLASS', 'TestUnloggedAll')
-            testObj = TestUnloggedAll(br, url)
-            testObj.run()
-        if frmvars['configured_logged']:
-            if ensure_users:
-                TestBase.log(2, 'TESTCLASS', 'TestConfiguredLogged')
-                testObj = TestConfiguredLogged(br, url, ensure_users)
-                testObj.run()
-            else:
-                TestBase.log(2, 'TESTCLASS', 'TestConfiguredLogged' + NOT_CONFIGURED)
-                TestBase.log(3, 'Configure private/appconfig.ini [splinter] ensure_users= usr1, usr2,.. ; usr1 = usr1 | usr1#grp1')
-
-        # user defined tests from modules/tests_splinter
-        for TestClass in TESTCLASSES:
-            if frmvars['all_tests'] or frmvars.get('test_' + TestClass, False):
-                TestBase.log(2, 'TESTCLASS', TestClass)
-
-                test_obj = globals()[TestClass](br, url)  #** see imports
-                test_obj.run()
-        # seems not necessary and not good here: TestStatus.remote_testdb_off(br, server)
-    else:
-        TestBase.log(2, 'FATAL', 'Cannot log in.')
-
-    br.quit()
-    print
-
-
-'''
-if __name__ == '__main__':
-    run_for_browser('http://localhost:8000', None, 'firefox')
 '''

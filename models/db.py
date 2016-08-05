@@ -18,21 +18,29 @@ myconf = AppConfig(reload=request.is_local)
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
-    #mz ++z
-    db0 = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+    #mz ++z plugin_splinter
+    def get_db(db_uri):
+        return DAL(myconf.take(db_uri), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
                             #, fake_migrate_all=True)
+
+    db0 = get_db('db.uri')
     session.connect(request, response, db=db0)
     if session.testdb:
         if request.args(0) == 'login' and request.vars._next and 'plugin_splinter/testdb_off' in request.vars._next:
             del session.testdb
             db = db0
         else:
-            db = DAL(myconf.take('db.testuri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
-                            #, fake_migrate_all=True)
+            db = get_db('db.testuri')
     else:               # MAIN database
         db = db0
+
+    from gluon import current
+    # export for modules
+    current.db = db
+    current.db0 = db0
+
     # print db._uri  # debug: standard/testing database
-    #mz ++k
+    #mz ++k plugin_splinter
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db0 = DAL('google:datastore+ndb')

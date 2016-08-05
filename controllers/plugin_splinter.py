@@ -13,9 +13,9 @@
 import base64
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
-from plugin_splinter import (TestStatus, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG,
-                            TEST_PWD)
-from tests_splinter import TESTCLASSES
+from plugin_splinter import (TestMode, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG,
+                             TEST_PWD)
+from plugin_splinter_tests import TESTCLASSES
 
 
 TESTS_TIMEOUT = 30000  # ~ 8 hours
@@ -27,7 +27,7 @@ except BaseException:
 
 @auth.requires_membership(TESTADMIN)
 def testdb_on():
-    if TestStatus().tests_on():
+    if TestMode().tests_on():
         return TESTS_ARE_ON_MSG
     else:
         return OLD_TESTS_MSG
@@ -35,7 +35,7 @@ def testdb_on():
 
 @auth.requires_membership(TESTADMIN)
 def testdb_off():
-    TestStatus().tests_off()
+    TestMode().tests_off()
     return TESTS_ARE_OFF_MSG
 
 
@@ -54,9 +54,8 @@ def tests():
         server_comment = ''
         server_default = False
 
-    dynamic_flds.append(Field('unlogged_all', 'boolean', label='TestUnloggedAll', comment='TESTS (plugin/config defined)', default=True))
-    dynamic_flds.append(Field('configured_logged', 'boolean', label='TestConfiguredLogged', comment='', default=True))
-    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from tests_splinter.py)', comment='TESTS (developer/code defined)', default=True))
+    dynamic_flds.append(Field('configured_users', 'boolean', label='TestConfiguredUsers', comment='TESTS (plugin/config defined)', default=True))
+    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from plugin_splinter_tests.py)', comment='TESTS (developer/code defined)', default=True))
     for testClass in TESTCLASSES:
         dynamic_flds.append(Field('test_' + testClass, 'boolean', label=testClass, comment='', default=False))
 

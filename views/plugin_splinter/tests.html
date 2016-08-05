@@ -1,6 +1,6 @@
 {{extend 'layout.html'}}
 
-{{if session.testdb:}}
+{{if db is not db0:}}
     <p>You cannot control tests from TESTING database. If you are sure that tests aren't running, you can
         <a href="{{=URL('testdb_off')}}">switch to STANDARD database</a>
     </p>

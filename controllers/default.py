@@ -79,8 +79,10 @@ def user():
     to decorate functions that need access control
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
-    if session.testdb:
+    #mz ++z plugin_splinter
+    if db is not db0:
         auth.settings.keep_session_onlogout = True  # this will prevent to leave the TESTING database
+    #mz ++k plugin_splinter
 
     #from mail_send import mail_send
     from plugin_mz import admin_mail

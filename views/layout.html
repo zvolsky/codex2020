@@ -87,11 +87,11 @@
       </div>
     </nav>
     <!-- Masthead ===================================== -->    
-    <!-- #mz ++z -->
-    {{if session.testdb:}}
+    <!-- #mz ++z plugin_splinter -->
+    {{if db is not db0:}}
         <mark>TESTING DATABASE</mark>
     {{pass}}
-    <!-- #mz ++k -->
+    <!-- #mz ++k plugin_splinter -->
     {{block header}}
     {{end}}
     <!-- Main ========================================= -->
