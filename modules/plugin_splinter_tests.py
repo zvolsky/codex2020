@@ -22,6 +22,13 @@ TESTCLASSES = ['TestUnlogged']
 
 class TestUnlogged(TestBase):
     def run(self):
+        # here you can load database fixture(s) via InitDb
+
+        # here you can call self.ensure_users(<usr>) or (for all configured) .ensure_users()
+        #   if validations in auth_user requires specific additional fields then you can either
+        #       - insert user through fixture/InitDb; .ensure_users() will ensure the group membership only
+        #       - set MORE_AUTH_USER_FIELDS dict; this dict will be appended in the db.auth_user.insert(...)
+
         self.test_unlogged_default()
 
     def test_unlogged_default(self):

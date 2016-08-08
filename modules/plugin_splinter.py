@@ -94,6 +94,12 @@ class TestBase(object):
         except BaseException:
             self.usual_text = "Copyright"
 
+        try:
+            users = myconf.take('splinter.ensure_users')
+        except BaseException:
+            users = ''
+        self.users = [usr.strip() for usr in users.split(',') if usr]   # with #groups
+
     def log_test(self, test_name):
         self.log(3, 'TEST', test_name)
 
@@ -131,6 +137,20 @@ class TestBase(object):
 
     def login(self, usr):
         TestMode.login(self.br, {'url': self.url}, usr, TEST_PWD)
+
+    def load_fixture(self, fixt):
+        if fixt:
+            pass  # TODO: call InitDb
+
+    def ensure_users(self, usr=None):
+        if usr:
+            users = [usr for eusr in self.users if eusr.split('#')[0] == usr]  # 1 item only
+        else:
+            users = self.users
+        ensure_users_encoded = [base64.b32encode(eusr) for eusr in users]  # if without encode: Web2py args failure?
+        suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
+        br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
+        br.is_text_present(test_obj.usual_text)
 
     # all actions (*) generator
 
@@ -248,16 +268,6 @@ except ImportError:
 # plugin/appconfig defined tests -----------------------------
 
 class TestConfiguredUsers(TestBase):
-    def __init__(self, br, url):
-        super(TestConfiguredUsers, self).__init__(br, url)
-
-        try:
-            users = myconf.take('splinter.ensure_users')
-        except BaseException:
-            users = ''
-        users = users.split(',')
-        self.users = [usr.strip() for usr in users if usr]   # with #groups
-
     def run(self):
         self.log_test("Configured actions, unlogged")
         self.testConfiguredUsr()  # run as unlogged
@@ -270,6 +280,22 @@ class TestConfiguredUsers(TestBase):
             self.log(3, "None configured users. %s ensure_users=usr1,.. where usr1=[usr | usr#grp]" % CFGTXT)
 
     def testConfiguredUsr(self, usr=''):
+        """
+        Args:
+            usr: without it for Unlogged
+        """
+
+        # load database fixture(s)
+        try:
+            fixtures = myconf.take('splinter.user_' + usr)
+        except BaseException:
+            fixtures = ''
+        for fixt in fixtures.split(','):
+            self.load_fixture(fixt.strip())
+
+        if usr and self.users:      # after loaded db fixture...
+            self.ensure_users(usr)  # ..we can handle additional auth_user fields in fixture (or without fixture via MORE_AUTH_USER_FIELDS dict)
+
         try:
             requested = myconf.take('splinter.user_' + usr)
         except BaseException:
@@ -398,21 +424,8 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
     br = Browser(browser, **extra_params)
 
     if TestMode.remote_testdb_on(br, server):
-        test_obj = TestConfiguredUsers(br, url)
-
-        try:
-            ensure_users = myconf.take('splinter.ensure_users')
-        except BaseException:
-            ensure_users = None
-        if ensure_users:
-            ensure_users = ensure_users.split(',')
-            ensure_users = [eusr.strip() for eusr in ensure_users]
-            ensure_users_encoded = [base64.b32encode(eusr) for eusr in ensure_users]  # Web2py args failure?
-            suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
-            br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
-            br.is_text_present(test_obj.usual_text)
-
         # default tests
+        test_obj = TestConfiguredUsers(br, url)
         test_obj.run()
 
         # user defined tests from modules/plugin_splinter_tests
