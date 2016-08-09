@@ -74,10 +74,11 @@ TESTS_ARE_OFF_MSG = 'TEST MODE IS OFF -> STANDARD MODE'
 OLD_TESTS_MSG = 'Previous tests are active. If this is 100 % sure not truth, you can remove models/_tests.py (WARNING: If you do so and tests are still running, they will damage the main application database!)'
 CFGTXT = 'In private/appconfig.ini [splinter] you can set'
 
+USUAL_TEXT_DEFAULT = 'Copyright'
 try:
     USUAL_TEXT = myconf.take('splinter.usual_text')
 except:
-    USUAL_TEXT = 'Copyright'
+    USUAL_TEXT = USUAL_TEXT_DEFAULT
 
 TEST_PWD = 'a23456789'
 
@@ -85,9 +86,15 @@ TEST_PWD = 'a23456789'
 # base class for tests -----------------------------
 
 class TestBase(object):
-    def __init__(self, br, url):
+    def __init__(self, br, url, frmvars=None):
+        """
+        Args:
+            frmvars: if set, then .gen_urls() is limited to allowed controllers from frmvars (.controllers() isn't limited)
+        """
+
         self.br = br
         self.url = url
+        self.frmvars = frmvars
 
         try:
             self.usual_text = myconf.take('splinter.usual_text')
@@ -149,12 +156,13 @@ class TestBase(object):
             users = self.users
         ensure_users_encoded = [base64.b32encode(eusr) for eusr in users]  # if without encode: Web2py args failure?
         suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
-        br.visit(urljoin(url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
-        br.is_text_present(test_obj.usual_text)
+        self.br.visit(urljoin(self.url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
+        self.br.is_text_present(self.usual_text)
 
     # all actions (*) generator
 
-    def controllers(self, appfolder):
+    @staticmethod
+    def controllers(appfolder):
         """
             yields names of all controllers (without .py) except off appadmin
         """
@@ -199,7 +207,7 @@ class TestBase(object):
             elif ln == '':
                 skip_next = False
 
-    def gen_urls(self, requested, skipped=None, skip_auth=False, usual_text="Copyright", appfolder=None, request=None):
+    def gen_urls(self, requested, skipped=None, skip_auth=False, appfolder=None, request=None):
         """
         Cycles through all actions and yields (url, (testedText1, testedText2, ..))
 
@@ -207,11 +215,14 @@ class TestBase(object):
             requested: list from user_...= setting (appconfig.ini [splinter])
             skipped: list from skip_...= setting (appconfig.ini [splinter])
             skip_auth: if True, actions preceded by @auth. will be skipped too (suitable for unlogged user)
-            usual_text: testedText1 for user_.. items without $ (probably use the value from usual_text= setting)
         rare used:
             appfolder: [ explicit | implicit from request.folder ]
             request: (if appfolder is None only) [ explicit | implicit: current.request ]
         """
+
+        def allowed_controller(frmvars, controller):
+            return frmvars is None or frmvars.all_controllers or eval('frmvars.cntr_' + controller)
+
         explicitly_tested = []  # controller/action
         for url in requested:   # strip controller/action from maybe longer url
             parts = (url.replace('?', '/').replace('#', '/').replace('$', '/') + '//').split('/', 2)
@@ -226,26 +237,32 @@ class TestBase(object):
                 request = current.request
             appfolder = request.folder
 
-        for url_item in requested:
-            url_item_parts = url_item.split('$')
-            url = url_item_parts[0]
+        for commands in requested:
+            commands_list = commands.split('$')
+            for url_pos, part in enumerate(commands_list):
+                part = part.strip()
+                if '*' in part or '/' in part:
+                    url = part
+                    break
+            else:
+                url = None
+
             if url:
-                if len(url_item_parts) == 1:
-                    tested_texts = [usual_text]
-                else:
-                    tested_texts = []
-                    for txt in url_item_parts[1:]:
-                        if txt:
-                            tested_texts.append(txt)
-                if url[-1] != '*':
-                    yield((url, tested_texts))
-                elif url == '*':
+                if url == '*':  # all actions in all controllers
                     for controller in self.controllers(appfolder):
-                        for actionpath in self.actions(appfolder, controller, skipped, skip_auth):
-                            yield((actionpath, tested_texts))
-                elif '/' in url:  # controller/*
-                    for actionpath in self.actions(appfolder, url, skipped, skip_auth):
-                        yield((actionpath, tested_texts))
+                        if allowed_controller(self.frmvars, controller):
+                            for actionpath in self.actions(appfolder, controller, skipped, skip_auth):
+                                commands_list[url_pos] = actionpath
+                                yield(commands_list)
+                else:
+                    controller = url.split('/')[0]
+                    if allowed_controller(self.frmvars, controller):
+                        if url[-2:] == '/*':  # all actions in requested controller
+                            for actionpath in self.actions(appfolder, url, skipped, skip_auth):
+                                commands_list[url_pos] = actionpath
+                                yield(commands_list)
+                        else:           # requested action
+                            yield(commands_list)
 
 
 try:
@@ -302,8 +319,12 @@ class TestConfiguredUsers(TestBase):
             requested = ''
         requested = [req.strip() for req in requested.split(',') if req]
         if not requested:
-            self.log_text("Not configured: will test all actions without args/vars. %s user_%s to customize actions. Learn about skip_%s, initdb_%s too."
-                          % (CFGTXT, usr, usr, usr))
+            self.log_text("Not configured: You can make configuration in private/appconfig.ini, section [splinter].")
+            self.log_text("Will test all actions without args/vars for text %s (%s usual_text=)."
+                          % (self.usual_text,
+                             "you can configure" if self.usual_text == USUAL_TEXT_DEFAULT else "from configured"))
+            self.log_text("To select actions you can configure user_%s= to customize actions. Learn about skip_%s=, initdb_%s= too."
+                          % (usr, usr, usr))
             requested = ['*']
         try:
             skipped = myconf.take('splinter.skip_' + usr)
@@ -311,9 +332,30 @@ class TestConfiguredUsers(TestBase):
             skipped = ''
         skipped = [skp.strip() for skp in skipped.split(',') if skp]
 
-        self.gen_urls(requested, skipped, skip_auth=not usr, usual_text=self.usual_text)
-        for url, tested_texts in self.gen_urls(['default/home/xx?p=2$aa$bb $', 'default/*'], skipped=None, skip_auth=False, usual_text="Copyright"):
-            print url, tested_texts
+        for commands in self.gen_urls(requested, skipped, skip_auth=not usr):
+            need_texttest = False
+            wait_url = True
+            print
+            print
+            for command in commands:
+                if command:  # to be sure
+                    if command.lstrip()[0] == '!':  # run function
+                        command = command.strip()
+                        need_texttest = False
+                        # TODO
+                        print command
+                    elif wait_url and '/' in command:
+                        command = command.strip()
+                        wait_url = False
+                        need_texttest = True
+                        print command
+                    else:
+                        need_texttest = False
+                        self.br.is_text_present(command)
+                        print '$', command
+            if need_texttest:
+                self.br.is_text_present(self.usual_text)
+                print '$', self.usual_text
 
 # test mode control -----------------------------
 
@@ -413,6 +455,7 @@ def run_for_server(server, frmvars, myconf):
         run_for_browser(server, frmvars, 'firefox')
 
     print 'FINISHED'
+    print 20 * '='
 
 def run_for_browser(server, frmvars, browser, extra_params=None):
     if extra_params is None:
@@ -425,7 +468,7 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
 
     if TestMode.remote_testdb_on(br, server):
         # default tests
-        test_obj = TestConfiguredUsers(br, url)
+        test_obj = TestConfiguredUsers(br, url, frmvars)
         test_obj.run()
 
         # user defined tests from modules/plugin_splinter_tests
@@ -449,6 +492,35 @@ if __name__ == '__main__':
 '''
 
 '''to be deleted:
+            url = url_item_parts[0]
+            if url:
+                if len(url_item_parts) == 1:
+                    tested_texts = [usual_text]
+                else:
+                    tested_texts = []
+                    for txt in url_item_parts[1:]:
+                        if txt:
+                            tested_texts.append(txt)
+                if url[-1] != '*':
+                    yield((url, tested_texts))
+                elif url == '*':
+                    for controller in self.controllers(appfolder):
+                        for actionpath in self.actions(appfolder, controller, skipped, skip_auth):
+                            yield((actionpath, tested_texts))
+                elif '/' in url:  # controller/*
+                    for actionpath in self.actions(appfolder, url, skipped, skip_auth):
+                        yield((actionpath, tested_texts))
+
+
+
+
+
+
+
+
+
+
+
 
 NOT_CONFIGURED = ' - NOT CONFIGURED'
 
@@ -558,4 +630,21 @@ class xTestUnloggedAll(TestBase):
                 skip_next = True
             elif ln == '':
                 skip_next = False
+
+
+
+
+
+
+
+
+    def controllers(self, appfolder):
+        """
+            yields names of all controllers (without .py) except off appadmin
+        """
+        for controller in os.listdir(urljoin(appfolder, 'controllers')):
+            if controller[-3:] == '.py' and not controller == 'appadmin.py':
+                controller = controller[:-3]
+                if self.frmvars is None or self.frmvars.all_controllers or eval('self.frmvars.cntr_' + controller):
+                    yield controller
 '''

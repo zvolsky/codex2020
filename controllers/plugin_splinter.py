@@ -13,8 +13,8 @@
 import base64
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
-from plugin_splinter import (TestMode, get_tested_servers, TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG,
-                             TEST_PWD)
+from plugin_splinter import (TestMode, get_tested_servers, TestBase,
+                             TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG, TEST_PWD)
 from plugin_splinter_tests import TESTCLASSES
 
 
@@ -24,6 +24,9 @@ try:
 except BaseException:
     TESTADMIN = 'admin'
 
+
+def index():
+    redirect(URL('tests'))
 
 @auth.requires_membership(TESTADMIN)
 def testdb_on():
@@ -53,6 +56,10 @@ def tests():
                                   comment=server_comment, default=server_default))
         server_comment = ''
         server_default = False
+
+    dynamic_flds.append(Field('all_controllers', 'boolean', label='all controllers', comment='CONTROLLERS', default=True))
+    for controller in TestBase.controllers(request.folder):
+        dynamic_flds.append(Field('cntr_' + controller, 'boolean', label=controller, comment='', default=False))
 
     dynamic_flds.append(Field('configured_users', 'boolean', label='TestConfiguredUsers', comment='TESTS (plugin/config defined)', default=True))
     dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from plugin_splinter_tests.py)', comment='TESTS (developer/code defined)', default=True))
@@ -104,7 +111,7 @@ def ensure_users():
         for additional obligatory auth_user fields please use request.vars
     """
     if not session.testdb or db is db0:     # this action is to danger ...
-        redirect(URL('default', 'index'))   # ... if this is not the testing database then disable this call
+        return "Not allowed: TESTING database isn't turned on"
 
     if 'username' in request.vars:  # additional fields for db.auth_user.insert()
         del request.vars['username']
