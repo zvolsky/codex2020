@@ -20,10 +20,12 @@
            password      : password of the user
 - if you want auto-create testing users, set in private/appconfig.ini: [splinter] section, ensure_users= usr1, usr2,..
         where usrN is: user (user without group membership) or user#group (user in group); user is username if it's used, otherwise email
-        if db.auth_user_insert requires more obligatory fields as (first_name, last_name, email) you can set them in modules/plugin_splinter_tests.py using dictionary MORE_AUTH_USER_FIELDS
+        if db.auth_user_insert requires additional obligatory fields except of standard fields (first_name, last_name, email)
+            you can set them in modules/_plugin_splinter_tests.py using dictionary MORE_AUTH_USER_FIELDS
         password is 'a23456789' for all such users
-        you can create users manually too (recommended password is 'a23456789'),
-            however users mentioned in ensure_users= will be rewritten; to avoid this set the last_name: plugin_splinter_..
+        you can create users manually too, this is however more difficult:
+            - recommended password is 'a23456789' but you need encode it, see Web2py google group,
+            - users mentioned in ensure_users= will be rewritten (because password must be known); to avoid this set the last_name: plugin_splinter_..
 
 - tests
     -- defined already in plugin (tests based on user_/skip_ setting for unlogged user and for user_<user>/skip_<user> for defined users)
@@ -49,7 +51,7 @@
                  - user joe: all actions for text You have admin rights.
 
     -- user defined tests
-        modules/plugin_splinter_tests.py must contain list TESTCLASSES with strings: names of testing classes
+        modules/_plugin_splinter_tests.py must contain list TESTCLASSES with strings: names of testing classes
         each class must have run() method
 """
 
@@ -58,9 +60,10 @@ import base64
 import os
 import re
 from posixpath import join as urljoin
+import uuid
 
 from splinter import Browser
-# from plugin_splinter_tests import TESTCLASSES, MORE_AUTH_USER_FIELDS   # later: import from plugin_splinter_tests requires the TestBase class
+# from _plugin_splinter_tests import TESTCLASSES, MORE_AUTH_USER_FIELDS   # later: import from plugin_splinter_tests requires the TestBase class
 
 from gluon import current
 from gluon.html import URL
@@ -69,6 +72,7 @@ from gluon.contrib.appconfig import AppConfig
 
 myconf = AppConfig()
 
+REMOTE_DONE = 'remote action done : '
 TESTS_ARE_ON_MSG = 'TEST MODE IS ENABLED'
 TESTS_ARE_OFF_MSG = 'TEST MODE IS OFF -> STANDARD MODE'
 OLD_TESTS_MSG = 'Previous tests are active. If this is 100 % sure not truth, you can remove models/_tests.py (WARNING: If you do so and tests are still running, they will damage the main application database!)'
@@ -145,9 +149,10 @@ class TestBase(object):
     def login(self, usr):
         TestMode.login(self.br, {'url': self.url}, usr, TEST_PWD)
 
-    def load_fixture(self, fixt):
-        if fixt:
-            pass  # TODO: call InitDb
+    def truncate_testingdb(self, usr):
+        token = str(uuid.uuid4())
+        suburl = URL(a='x', c='plugin_splinter', f='truncate_testingdb', args=(token, base64.b32encode(usr) if usr else '-'))[3:]
+        self.check_page(suburl, check_text=REMOTE_DONE + token)
 
     def ensure_users(self, usr=None):
         if usr:
@@ -155,7 +160,7 @@ class TestBase(object):
         else:
             users = self.users
         ensure_users_encoded = [base64.b32encode(eusr) for eusr in users]  # if without encode: Web2py args failure?
-        suburl = URL(a='x',c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
+        suburl = URL(a='x', c='plugin_splinter', f='ensure_users', args=ensure_users_encoded, vars=MORE_AUTH_USER_FIELDS)[3:]
         self.br.visit(urljoin(self.url, suburl))  # prepare user from [splinter]ensure_users= setting inside the testing database
         self.br.is_text_present(self.usual_text)
 
@@ -193,19 +198,18 @@ class TestBase(object):
         for ln in codelines:
             ln = ln.rstrip()  # - \n
 
-            if ln[:4] == 'def ' and ln[-3:] == '():':  # function without parameters, maybe Web2py action
-                if skip_next:
-                    skip_next = False
-                else:
+            if ln[:4] == 'def ':  # function without parameters, maybe Web2py action
+                if not skip_next and ln[-3:] == '():':
                     action = ln[4:-3].strip()
                     if action[:2] != '__':                 # Web2py action
                         url = urljoin(controller, action)
-                        if not url in skipped:
+                        if url not in skipped:
                             yield url
+                skip_next = False
             elif skip_auth and ln[:6] == '@auth.' or re.match('^#\s*ajax$', ln):   #  unlogged user + need authorize --or-- # ajax
                 skip_next = True
-            elif ln == '':
-                skip_next = False
+            #elif ln == '':
+            #    skip_next = False
 
     def gen_urls(self, requested, skipped=None, skip_auth=False, appfolder=None, request=None):
         """
@@ -266,18 +270,22 @@ class TestBase(object):
 
 
 try:
-    from plugin_splinter_tests import MORE_AUTH_USER_FIELDS
+    from _plugin_splinter_tests import MORE_AUTH_USER_FIELDS
 except ImportError:
     MORE_AUTH_USER_FIELDS = {}
 
 try:
-    from plugin_splinter_tests import TESTCLASSES
-    from plugin_splinter_tests import *  # test classes themselves (because of python problems with instantiating classes from names - see #**)
+    from _plugin_splinter_tests import TESTCLASSES
+    from _plugin_splinter_tests import *  # test classes themselves (because of python problems with instantiating classes from names - see #**)
 except ImportError:
     TESTCLASSES = []
 
 try:
-    from plugin_splinter_initdb import InitDb
+    from _plugin_splinter_initdb import InitDb  # for user_..= !... config-directives (initialize testing database)
+except ImportError:
+    pass
+try:
+    from _plugin_splinter_localcalls import LocalCalls    # for user_..= ?... config-directives (code-defined test parts)
 except ImportError:
     pass
 
@@ -299,16 +307,8 @@ class TestConfiguredUsers(TestBase):
     def testConfiguredUsr(self, usr=''):
         """
         Args:
-            usr: without it for Unlogged
+            usr: without it (ie. usr='') for Unlogged
         """
-
-        # load database fixture(s)
-        try:
-            fixtures = myconf.take('splinter.user_' + usr)
-        except BaseException:
-            fixtures = ''
-        for fixt in fixtures.split(','):
-            self.load_fixture(fixt.strip())
 
         if usr and self.users:      # after loaded db fixture...
             self.ensure_users(usr)  # ..we can handle additional auth_user fields in fixture (or without fixture via MORE_AUTH_USER_FIELDS dict)
@@ -323,8 +323,8 @@ class TestConfiguredUsers(TestBase):
             self.log_text("Will test all actions without args/vars for text %s (%s usual_text=)."
                           % (self.usual_text,
                              "you can configure" if self.usual_text == USUAL_TEXT_DEFAULT else "from configured"))
-            self.log_text("To select actions you can configure user_%s= to customize actions. Learn about skip_%s=, initdb_%s= too."
-                          % (usr, usr, usr))
+            self.log_text("To select actions you can configure user_%s= to customize actions. Learn about skip_%s= too."
+                          % (usr, usr))
             requested = ['*']
         try:
             skipped = myconf.take('splinter.skip_' + usr)
@@ -332,30 +332,56 @@ class TestConfiguredUsers(TestBase):
             skipped = ''
         skipped = [skp.strip() for skp in skipped.split(',') if skp]
 
+        failed = []
+        failed_simple = []  # failed having url = c/f
         for commands in self.gen_urls(requested, skipped, skip_auth=not usr):
-            need_texttest = False
-            wait_url = True
-            print
-            print
+            url = None
+            localcalls_ok = texttests_ok = True
+            need_texttest_later = False
             for command in commands:
+                if command.lstrip()[:1] == '%':     # clear database
+                    self.truncate_testingdb(usr)
+                    command = command.lstrip()[1:]  # in this case and only in this case continue with rest of string ()
                 if command:  # to be sure
-                    if command.lstrip()[0] == '!':  # run function
+                    if command.lstrip()[0] in '!?':  # run initdb / localcalls function
                         command = command.strip()
-                        need_texttest = False
-                        # TODO
-                        print command
-                    elif wait_url and '/' in command:
-                        command = command.strip()
-                        wait_url = False
-                        need_texttest = True
-                        print command
+                        fnc = command[1:].lstrip()
+                        need_texttest_later = False
+                        if command[0] == '!':  # initdb method (remote)
+                            InitDb.run(fnc)             # if you want use !.. directives, define InitDb (copy modified plugin_splinter/_plugin_splinter_initdb.py into modules/)
+                        else:  # '?'           # localcalls method
+                            localcalls_ok = LocalCalls.run(fnc) and localcalls_ok
+                                                        # if you want use ?.. directives, define LocalCalls (copy modified plugin_splinter/_plugin_splinter_localcalls.py into modules/)
+
+                    elif url is None and '/' in command:
+                        need_texttest_later = True
+                        url = command.strip()
+                        self.check_page(url)
+
                     else:
-                        need_texttest = False
-                        self.br.is_text_present(command)
-                        print '$', command
-            if need_texttest:
-                self.br.is_text_present(self.usual_text)
-                print '$', self.usual_text
+                        need_texttest_later = False
+                        texttests_ok = self.br.is_text_present(command) and texttests_ok
+            if need_texttest_later:
+                texttests_ok = self.br.is_text_present(self.usual_text) and texttests_ok
+
+            if url and (not localcalls_ok or not texttests_ok):
+                if url.replace('/', '', 1).replace('_', '').isalnum():
+                    failed_simple.append(url)
+                failed.append(url)
+
+        if failed:
+            failed = ', '.join(failed)
+            self.log(3, 'FAILED', failed)
+            if failed_simple:
+                failed_simple = ', '.join(failed_simple)
+                txt = 'If this is an expected (correct) result then you should modify private/appconfig.ini: '
+                if skipped:
+                    self.log(3, 'TIP', txt + ('add new items into configuration item [splinter] skip_%s = ...: %s' + (usr, failed_simple)))
+                else:
+                    self.log(3, 'TIP', txt + ('add an item [splinter] skip_%s = %s' % (usr, failed_simple)))
+        else:
+            self.log(3, 'OK', 'All tested actions render a page with a usual_text inside: ' + USUAL_TEXT)
+
 
 # test mode control -----------------------------
 
@@ -446,6 +472,7 @@ def get_tested_servers(myconf):
     return tested_servers
 
 def run_for_server(server, frmvars, myconf):
+    TestBase.log(0, 20 * '=')
     TestBase.log(0, 'SERVER', server['url'])
 
     if frmvars['chrome']:  # frmvars don't use Storage (frmvars.attr) syntax to allow Scheduler mode
@@ -454,8 +481,8 @@ def run_for_server(server, frmvars, myconf):
     if frmvars['firefox']:
         run_for_browser(server, frmvars, 'firefox')
 
-    print 'FINISHED'
-    print 20 * '='
+    TestBase.log(0, 'FINISHED')
+    TestBase.log(0, 20 * '=')
 
 def run_for_browser(server, frmvars, browser, extra_params=None):
     if extra_params is None:
@@ -471,7 +498,7 @@ def run_for_browser(server, frmvars, browser, extra_params=None):
         test_obj = TestConfiguredUsers(br, url, frmvars)
         test_obj.run()
 
-        # user defined tests from modules/plugin_splinter_tests
+        # user defined tests from modules/_plugin_splinter_tests
         for TestClass in TESTCLASSES:
             if frmvars['all_tests'] or frmvars.get('test_' + TestClass, False):
                 TestBase.log(2, 'TESTCLASS', TestClass)

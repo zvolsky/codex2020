@@ -6,7 +6,14 @@
 from plugin_splinter import TestBase
 
 try:
-    from plugin_splinter_initdb import InitDb
+    from _plugin_splinter_initdb import InitDb  # for methods which initialize testing database
+except ImportError:
+    pass
+
+# there is no reason to use LocalCalls from here, because it is intended for config-defined (user_..=) tests
+#   and you can define code directly here; however LocalCalls allow reuse code from some config-defined test here
+try:
+    from _plugin_splinter_localcalls import LocalCalls    # for test parts inside _plugin_splinter_localcalls
 except ImportError:
     pass
 

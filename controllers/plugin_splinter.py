@@ -14,8 +14,8 @@ import base64
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 from plugin_splinter import (TestMode, get_tested_servers, TestBase,
-                             TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG, TEST_PWD)
-from plugin_splinter_tests import TESTCLASSES
+                             TESTS_ARE_ON_MSG, TESTS_ARE_OFF_MSG, OLD_TESTS_MSG, TEST_PWD, REMOTE_DONE)
+from _plugin_splinter_tests import TESTCLASSES
 
 
 TESTS_TIMEOUT = 30000  # ~ 8 hours
@@ -62,7 +62,7 @@ def tests():
         dynamic_flds.append(Field('cntr_' + controller, 'boolean', label=controller, comment='', default=False))
 
     dynamic_flds.append(Field('configured_users', 'boolean', label='TestConfiguredUsers', comment='TESTS (plugin/config defined)', default=True))
-    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from plugin_splinter_tests.py)', comment='TESTS (developer/code defined)', default=True))
+    dynamic_flds.append(Field('all_tests', 'boolean', label='all tests bellow (from _plugin_splinter_tests.py)', comment='TESTS (developer/code defined)', default=True))
     for testClass in TESTCLASSES:
         dynamic_flds.append(Field('test_' + testClass, 'boolean', label=testClass, comment='', default=False))
 
@@ -101,6 +101,20 @@ def tests():
     except BaseException:
         testuri = ' -- Not configured. Tests will fail.'
     return dict(form=form, testuri=testuri)
+
+
+def init_testingdb():
+    from _plugin_splinter_initdb import init_testdb
+    if len(request.args) == 2 and db is not db0:
+        init_testdb(request.args[1])
+        return REMOTE_DONE + request.args[0]
+
+
+def truncate_testingdb():
+    if len(request.args) == 2 and db is not db0:   # TESTING database?
+        usr = '' if request.args[1] == '-' else base64.b32decode(request.args[1])
+        # TODO: truncate + fixture for usr
+        return REMOTE_DONE + request.args[0]
 
 
 def ensure_users():
