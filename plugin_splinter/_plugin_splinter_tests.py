@@ -43,7 +43,6 @@ class TestUnlogged(TestBase):
 
         self.check_page('default/models', 'finished ok')
         self.check_page('default/index')
-        self.check_page('default/home')
         self.check_page('default/theme')
         self.check_page('default/wiki')
         self.check_page('default/welcome')

@@ -9,9 +9,6 @@ def diag():   # debug (broken migrations, ..)
     return dict()
 
 def index():
-    redirect(URL('home'))
-
-def home():
     return dict()
 
 def theme():

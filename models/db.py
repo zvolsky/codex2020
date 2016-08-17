@@ -144,6 +144,7 @@ db.define_table('library',
               label=T("Stat.dělení výtisků ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat výtisky (tip: i pro oddělení dosp/děts, pokud výtisky titulu mohou být přiděleny do různých oddělení)")),
         Field('st_tit_st', 'boolean', notnull=True, default=False,  # libstyle['gr'][2] = S
               label=T("Stat.dělení titulů ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat tituly")),
+        Field('imp_proc', 'decimal(5,2)', readable=False, writable=False, default=100.0),  # import position in %
         format='%(library)s'
         )
 

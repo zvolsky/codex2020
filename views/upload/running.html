@@ -1,0 +1,21 @@
+{{extend 'layout.html'}}
+
+<h3>{{=T("Probíhá přenos katalogu na web.")}}</h3>
+
+<div class="alert alert-info">
+    {{if started is not None:}}
+        <p>{{=T("Import zahájen:")}} {{=started.strftime('{0} %H:%M'.format(T('%d.%m.%Y')))}}</p>
+    {{pass}}
+
+    {{if imp_proc:}}
+        <p>{{=T("Dokončeno")}} <small>({{=datetime.datetime.now().strftime('%H:%M')}})</small>: {{=imp_proc}}%</p>
+    {{pass}}
+</div>
+
+{{=T("Průběh se aktualizuje po 2 minutách.")}} <a href="{{=URL()}}" class="btn btn-sm btn-default">{{=T("Aktualizovat stav importu nyní")}}</a>
+
+<script>
+    window.setTimeout(function() {
+        window.location.reload();
+    }, 120000);
+</script>

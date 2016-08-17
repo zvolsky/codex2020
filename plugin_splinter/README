@@ -1,5 +1,6 @@
 For basic config-defined tests (in private/appconfig.ini, section [splinter]) none of _plugin_splinter_*.py files is needed.
 
+_plugin_splinter_*.py files in plugin_splinter/ directory are only examples.
 However you can move these files (modified) into modules/ ....
 
 _plugin_splinter_initdb      to use !.. directives in user_..= (usually to initialize database on the remote side)

@@ -5,11 +5,13 @@
 # TODO: change to git sub-repo
 
 
+import datetime
+import time
+
 from gluon import current
 
 from gluon.html import URL, SPAN, DIV, CAT, UL, TEXTAREA, INPUT, LABEL, SELECT, P
 from gluon.sqlhtml import add_class
-from gluon.validators import IS_NOT_EMPTY, IS_IN_DB
 
 
 admin_mail = 'admin@' + '.'.join(current.request.env.http_host.rsplit('.')[-2:])
@@ -100,6 +102,11 @@ def formstyle_bootstrap3_compact_factory(col_label_size=2, col_help_size=6,
             parent.append(DIV(label, _controls, _help, _class='row', _id=id))
         return DIV(parent, _class='form-group')
     return _inner
+
+def utc_to_local(utc_datetime):
+    now_timestamp = time.time()
+    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+    return utc_datetime + offset
 
 def lpdb(txt):
     import os

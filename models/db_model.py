@@ -281,6 +281,8 @@ db.define_table('lib_descr',
               label=T("Popis"), comment=T("bibliografický popis, pozměněný pro potřeby knihovny")),
         )
 
+FOUND_AL_LBL = T("nalezen naposledy")
+FOUND_AL_CMT = T("zda byl součástí minulého (neinkrementálního) importu")
 db.define_table('owned_book',
         Field('library_id', db.library,
               default=auth.library_id,
@@ -296,6 +298,8 @@ db.define_table('owned_book',
         Field('cnt', 'integer',
               default=0,
               label=T("Výtisků"), comment=T("počet výtisků v knihovně")),
+        Field('found_at_last', 'boolean', notnull=True, default=True,
+              label=FOUND_AL_LBL, comment=FOUND_AL_CMT),
         common_filter=lambda query: (db.owned_book.library_id == auth.library_id) & (db.owned_book.cnt > 0),
         )
 
@@ -415,6 +419,8 @@ db.define_table('impression',
         Field('haction', 'string', length=2, default='+o',
               notnull=True, requires=IS_IN_SET(HACTIONS), writable=False,
               label=T("Poslední akce"), comment=T("naposledy provedená činnost s výtiskem")),
+        Field('found_at_last', 'boolean', notnull=True, default=True,
+              label=FOUND_AL_LBL, comment=FOUND_AL_CMT),
         common_filter=lambda query: (db.impression.library_id == auth.library_id) & (db.impression.live == True),
         format=T('čís.') + ' %(iorder)s'
         )   # htime, haction: redundant info for easier and faster access to the last impr_hist entry
@@ -442,6 +448,35 @@ db.define_table('impr_hist',
         Field('haction', 'string', length=2, default='+o',
               notnull=True, requires=IS_IN_SET(HACTIONS), writable=False,
               label=T("Akce"), comment=T("provedená činnost")),
+        )
+
+db.define_table('import_run',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('incremental', 'boolean', notnull=True, default=False,
+              label=T("inkrementální"), comment=T("pouze inkrementální import")),
+        Field('started', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True, writable=False,
+              label=T("Čas začátku"), comment=T("čas zahájení importu")),
+        Field('finished', 'datetime', writable=False,
+              label=T("Čas ukončení"), comment=T("čas ukončení importu")),
+        common_filter=lambda query: db.import_run.library_id == auth.library_id,
+        )
+
+db.define_table('import_book',
+        Field('library_id', db.library,
+              default=auth.library_id,
+              readable=False, writable=False,
+              notnull=True, ondelete='RESTRICT',
+              label=T("Knihovna"), comment=T("jméno knihovny")),
+        Field('md5imp', 'string', length=32,
+              label=T("md5imp"), comment=T("md5imp")),
+        Field('found_at_last', 'boolean', notnull=True, default=True,
+              label=FOUND_AL_LBL, comment=FOUND_AL_CMT),
+        common_filter=lambda query: db.import_book.library_id == auth.library_id,
         )
 
 def book_cnt_insert(flds, id):
