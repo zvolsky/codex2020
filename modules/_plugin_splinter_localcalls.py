@@ -21,6 +21,6 @@ class LocalCalls(object):
     def run(self, br, method):
         # call the method here
         retval = eval('self.%s')(br)
-        return False if retval is False or True
+        return False if retval is False else True
 
     # def method(br): ....

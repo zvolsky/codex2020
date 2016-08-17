@@ -1,0 +1,12 @@
+{{extend 'layout.html'}}
+
+{{if not auth.user.librarian:}}
+    <div class="alert alert-warning">{{=XML(T("Nemáte vytvořenu knihovnu. Vytvořte si pro ni vlastní databázi %s.") % A(T("v profilu"), _href=URL('default', 'user', args='profile')))}}</div>
+
+{{else:}}
+    <div class="alert alert-warning">
+        <p>{{=T("V Nastavení, Údaje o knihovně zadejte %s.") % db.library.imp_system.label}}</p>
+        <p>{{=T("Pokud import z vašeho systému zatím není podporován, domluvte se s administrátorem: %s") % email}}</p>
+    </div>
+
+{{pass}}

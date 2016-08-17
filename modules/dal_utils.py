@@ -33,6 +33,13 @@ def add_impr_hist(imp_id, haction, reader_id=None, bill_id=None, db=None):
     db.impr_hist.insert(impression_id=imp_id, reader_id=reader_id, bill_id=bill_id, haction=haction, htime=htime)
     db.impression[imp_id] = dict(haction=haction, htime=htime)
 
+def get_library(db=None, auth=None):
+    if db is None:
+        db = current.db
+    if auth is None:
+        auth = current.auth
+    return db(db.library.id == auth.library_id).select().first()
+
 def get_libstyle(db=None, session=None, auth=None):
     """provides information about allowed/disabled fields
     from session.libstyle if present
@@ -49,7 +56,7 @@ def get_libstyle(db=None, session=None, auth=None):
     if auth is None:
         auth = current.auth
 
-    library = db(db.library.id == auth.library_id).select().first()
+    library = get_library(db, auth)
 
     libstyle = {}
     libstyle['id'] = (('I' if library.st_imp_id else ' ') +

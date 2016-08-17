@@ -108,13 +108,19 @@ def init_testingdb():
     if len(request.args) == 2 and db is not db0:
         init_testdb(request.args[1])
         return REMOTE_DONE + request.args[0]
+    raise HTTP(401)
 
 
 def truncate_testingdb():
     if len(request.args) == 2 and db is not db0:   # TESTING database?
         usr = '' if request.args[1] == '-' else base64.b32decode(request.args[1])
+
+        for tbl in db._tables:
+            if tbl[:10] != 'scheduler' and tbl[:15] != 'web2py_session_':
+                tbl.truncate()
         # TODO: truncate + fixture for usr
         return REMOTE_DONE + request.args[0]
+    raise HTTP(401)
 
 
 def ensure_users():

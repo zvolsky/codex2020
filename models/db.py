@@ -81,17 +81,20 @@ service = Service()
 plugins = PluginManager()
 
 #mz ++z
+    # not moved to modules/ with regard to current.T()
 LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
                  ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
                  ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
                  ('tst', T("jen pro odzkoušení")), ('oth', T("jiné, nelze zařadit")),
                 )
+IMPORT_SOURCES = (('codex', T("codex/DOS")),)  # key is used in URL, use proper characters (but we do encode it)
+
 db.define_table('library',
         Field('library', 'string', length=128, requires=IS_NOT_EMPTY(),
-              label=T("Jméno knihovny"), comment=T("jméno vaší knihovny")),
+              label=T("Jméno knihovny"), comment=T("jméno vaší knihovny (nejedná-li se o zcela oficiální titul knihovny, vynechte typ knihovny - zadáte jej níže v samostatném údaji), pro osobní knihovnu např. zadejte Petr Starý, Kladno")),
         Field('slug', 'string', length=32,
               requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.slug')],
-              label=T("URL jméno"), comment=T("jméno do URL adresy [malá písmena, číslice, pomlčka/podtržítko]")),
+              label=T("URL jméno"), comment=T("jméno do URL adresy [malá písmena, číslice, pomlčka/podtržítko] (příklad: petr_stary_kladno)")),
         Field('street', 'string', length=48,
               label=T("Ulice"), comment=T("ulice (nepovinné)")),
         Field('city', 'string', length=48,
@@ -103,6 +106,9 @@ db.define_table('library',
               label=T("Typ knihovny"), comment=T("typ knihovny")),
         Field('old_system', 'string', length=48,
               label=T("Jiný systém"), comment=T("předchozí nebo hlavní evidenční knihovnický systém")),
+        Field('imp_system', 'string', length=18,
+              requires=IS_EMPTY_OR(IS_IN_SET(IMPORT_SOURCES)),
+              label=T("Importovat z .."), comment=T("(pro import z dosud nepodporovaného zdroje kontaktujte administrátora)")),
         Field('created', 'datetime', default=datetime.datetime.utcnow(),
               notnull=True, writable=False,
               label=T("Vytvořeno"), comment=T("čas vytvoření evidence")),
@@ -114,7 +120,7 @@ db.define_table('library',
         Field('st_imp_id', 'boolean', notnull=True, default=False,  # libstyle['id'][0] = I
               label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
         Field('st_imp_idx', 'integer', notnull=True, default=1,  # libstyle['id'][1] = 0|1|2|.. which number-part of ID should be incremented
-              label=T("Typ inkrementování"), comment=T("0 nezvětšovat přír.číslo; 1 zvětšovat resp. zvětšovat první nalezené podčíslo; 2 zvětšovat druhé nalezené podčíslo (např. při stylu: rok/číslo)")),
+              label=T("Typ inkrementování"), comment=T("0 nezvětšovat přír.číslo; 1 zvětšovat resp. zvětšovat první nalezené číslo; 2 zvětšovat druhé nalezené podčíslo (např. při stylu: rok/číslo)")),
         Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle['id'][2] = O
               label=T("Čís.výtisku ?"), comment=T("označte, pokud se má zobrazovat číslo výtisku jako rozlišení výtisků každé publikace")),
         Field('st_imp_rik', 'integer',  # libstyle['lrik'] = 2/3/4/5/6
