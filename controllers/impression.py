@@ -6,7 +6,7 @@ from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, form
 
 from dal_utils import get_libstyle, add_impr_hist
 
-from c_utils import publ_hash, ean_to_fbi, make_fastinfo
+from c_utils import publ_fastinfo_and_hash, ean_to_fbi
 from dal_utils import answer_by_ean, answer_by_hash
 from c_db import PublLengths
 from plugin_mz import formstyle_bootstrap3_compact_factory
@@ -73,7 +73,7 @@ def list():
         return None
 
     def parse_descr(descr):
-        """we have full description (valid for current library) and need ean+fastinfo+md5publ for (library independent) answer
+        """we have full description (valid for current library) and need ean + basic attributes for (library independent) answer
         """
         descr_dict = {item[0]: item[1:].strip() for item in descr if len(item) > 1}
         ean = descr_dict.get('E', '')
@@ -83,8 +83,7 @@ def list():
         author = descr_dict.get('A', '')
         publisher = ' : '.join(filter(lambda a: a, (descr_dict.get('p', ''), descr_dict.get('P', ''))))
         pubyear = descr_dict.get('Y', '')
-        fastinfo = make_fastinfo(title, author, publisher, pubyear)
-        return fastinfo, ean, title, author, publisher, pubyear
+        return ean, title, author, publisher, pubyear
 
     question_id = request.args(0)
     answer_id = request.args(1)
@@ -99,7 +98,7 @@ def list():
         rik = answer.rik
     else:
         if session.addbook:    # new book with local description only (from impression/description)
-            fastinfo, ean, title, author, publisher, pubyear = parse_descr(session.addbook)
+            ean, title, author, publisher, pubyear = parse_descr(session.addbook)
             rik = ean_to_fbi(ean)
         else:
             redirect(URL('default', 'index'))
@@ -183,14 +182,14 @@ def list():
             else:
                 owned_book_id = db.owned_book.insert(answer_id=answer_id)
         else:           # new book with local description only (from impression/description)
-            # we already have parsed local description here: fastinfo + title, author, publisher, pubyear
-            md5publ = publ_hash(title, author, publisher, pubyear)
+            # we already have parsed local description here: title, author, publisher, pubyear
+            fastinfo, md5publ = publ_fastinfo_and_hash(title, author, publisher, pubyear)
             # do we have answer?
             answer_id = existing_answer()  # check by ean, md5publ
             if answer_id is None:
                 pubyears = parse_pubyear(pubyear)
-                answer_id = db.answer.insert(md5publ=md5publ, ean=ean, rik=rik, fastinfo=fastinfo,
-                                             year_from=pubyears[0], year_to=pubyears[1])
+                answer_id = db.answer.insert(md5publ=md5publ, z39stamp=datetime.datetime.utcnow(), ean=ean, rik=rik,
+                                             fastinfo=fastinfo, year_from=pubyears[0], year_to=pubyears[1])
             # do we have this library description?
             lib_descr = db((db.lib_descr.answer_id == answer_id) & (db.lib_descr.descr == session.addbook)).select(db.lib_descr.id).first()
             if lib_descr:

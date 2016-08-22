@@ -15,12 +15,12 @@ from c_db import PublLengths
 from marc_dialects import MarcFrom_AlephCz
 
 
-def parse_Marc_and_updatedb(results):
+def parse_Marc_and_updatedb(results, z39stamp=None):
     touched = []
     inserted = 0
     for r in results:
         for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
-            inserted += updatedb(record, touched)
+            inserted += updatedb(record, touched, z39stamp)
     duration_marc = datetime.datetime.utcnow()
 
     for answer_id, marcrec, record, fastinfo in touched:
@@ -31,7 +31,7 @@ def parse_Marc_and_updatedb(results):
     return len(results), inserted, duration_marc
 
 
-def updatedb(record, touched):
+def updatedb(record, touched, z39stamp=None):
     db = current.db
     def exists_update():
         if row:                           # same ean or same significant data -> same book
@@ -49,7 +49,7 @@ def updatedb(record, touched):
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
-    answer = dict(md5publ=md5publ, md5marc=md5marc, ean=ean, marc=marc,
+    answer = dict(md5publ=md5publ, md5marc=md5marc, z39stamp=z39stamp or datetime.datetime.utcnow(), ean=ean, marc=marc,
                   country=marcrec.country[:PublLengths.country],
                   year_from=marcrec.pubyears[0], year_to=marcrec.pubyears[1])
 

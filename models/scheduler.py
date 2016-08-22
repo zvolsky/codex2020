@@ -19,7 +19,7 @@ def task_catalogize(question_id, question, asked):
         retrieved = inserted = 0
         duration_marc = None
     else:
-        retrieved, inserted, duration_marc = parse_Marc_and_updatedb(results)
+        retrieved, inserted, duration_marc = parse_Marc_and_updatedb(results, duration_z39)
         duration_marc = round((duration_marc - asked).total_seconds(), 0)
 
     db.question[question_id] = {

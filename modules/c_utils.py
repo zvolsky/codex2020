@@ -9,9 +9,38 @@ import random
 import re
 import string
 
+from mzutils import hash_prepared
+
+
+def publ_fastinfo_and_hash(title, author, publisher, pubyear):
+    return (make_fastinfo(title, author, publisher, pubyear),
+            publ_hash(title, author, publisher, pubyear))
 
 def publ_hash(title, author, publisher, pubyear):
-    src = '%s|%s|%s|%s' % (title, author, publisher, pubyear)
+    """
+    publisher: location publisher1 publisher2 ...
+    pubyear: we use digits only
+    """
+    def hash_prepared_author(author):
+        """
+        Novák == Novák,J. == Novák, Jan == Novák,Jan == Novák Jan == Novák B.J.
+        """
+        take = True
+        space_ignore = True
+        easier = ''
+        for ch in author:
+            if ch in ', ' and not space_ignore:
+                take = False
+            elif ch in ';:':
+                take = True
+                space_ignore = True
+            elif take:
+                easier += ch
+                space_ignore = False
+        return hash_prepared(easier)
+
+    src = '%s|%s|%s|%s' % (hash_prepared(title), hash_prepared_author(author),
+                           hash_prepared(publisher), filter(lambda d: d.isdigit(), 'pubyear'))
     if type(src) == unicode:
         src = src.encode('utf-8')
     return hashlib.md5(src).hexdigest()

@@ -49,6 +49,16 @@ pip install pymarc
 
 ------
 
+pip install dbf_read_iffy   # for import Codex/DOS; aenum install error is not problem
+
+------
+
+	for plugin_splinter:
+pip install selenium
+pip install splinter
+
+------
+
 static/css/bootstrap.min.css -> static/css/bootstrap/bootstrap.min.css
 download themes from bootswatch.com into static/css/bootstrap/ (rename them: bootstrap.min.css -> <theme>.min.css)
   # their names are hardcoded in controller/default.py;theme() - update this list if you use others/additional
