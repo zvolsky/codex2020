@@ -2,4 +2,15 @@
 
 <h3>Import Codex/DOS</h3>
 
-{{=form}}
+<ul class="alert alert-info">
+    <li>V dialogu výběru souborů najděte adresář /codex/dbfs/.
+    <li>Držte Control a klepněte myší na soubor AUTORI.DBF. <i>Tak ale potřebujete označit všechny soubory:</i>
+    <li>Držte Control a označte klikáním myší všechny soubory (autori, knihy,..) nebo alespoň .dbf a .fpt (.cdx nejsou potřeba).
+    <li>Místo předchozího zkuste stisknout Ctrl-A. Označí se vše. Ale pokud existují a označí se i podadresáře (např. import/), držte nadále Ctrl a klikáním zrušte jejich označení, aby označené zůstaly jen soubory.
+    <li>Nakonec stiskněte Odeslat.
+</ul>
+
+<form enctype="multipart/form-data" method="post">
+    <input type="file" name="codex" multiple>
+    <input type="submit" class="btn btn-default">
+</form>

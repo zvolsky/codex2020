@@ -468,6 +468,15 @@ db.define_table('import_run',
         common_filter=lambda query: db.import_run.library_id == auth.library_id,
         )
 
+db.define_table('import_redirect',
+        Field('md5publ', 'string', length=32,
+              label=T("md5publ"), comment=T("md5publ")),
+        Field('answer_id', db.answer,
+              ondelete='CASCADE',
+              label=T("Odpověď"), comment=T("přesměrovat na odpověď")),
+        )
+
+'''
 db.define_table('import_book',
         Field('library_id', db.library,
               default=auth.library_id,
@@ -480,6 +489,7 @@ db.define_table('import_book',
               label=FOUND_AL_LBL, comment=FOUND_AL_CMT),
         common_filter=lambda query: db.import_book.library_id == auth.library_id,
         )
+'''
 
 def book_cnt_insert(flds, id):
     db((db.owned_book.id == flds['owned_book_id']) & (db.owned_book.library_id == auth.library_id),
