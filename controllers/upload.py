@@ -69,11 +69,8 @@ def codex():
         for f in request.vars.codex:
             fn = f.filename.lower()
             if fn in handle:
-                import pdb;pdb.set_trace()
-
-                content = f.read_binary()
                 with open(os.path.join(uploadfolder, fn), 'w') as fw:
-                    fw.write(content)
+                    fw.write(f.value)
 
         redirect(URL())
     return dict()
