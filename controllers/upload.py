@@ -80,6 +80,7 @@ def codex():
 
         for f in request.vars.codex:
             fn = f.filename.lower()
+            # fn = filter(lambda s: s.replace('_', 'a').isalnum(), fn)  # for security disallow non-alphanum characters // no need to do it, because we will choose some names only
             if fn in handle:
                 with open(os.path.join(uploadfolder, fn), 'w') as fw:
                     fw.write(f.value)
