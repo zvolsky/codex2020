@@ -20,20 +20,22 @@ fix_init(dbf)
 from dal_import import load_redirects
 
 
-def main(location):
+def imp_codex(db, library_id, src_folder):
+    """
+        This is the main (entry) function.
+    """
     redirects = load_redirects()
 
-    autori = read_xbase_as_dict(os.path.join(location, 'autori.dbf'))
-    k_autori = read_xbase_as_list_dict(os.path.join(location, 'k_autori.dbf'), key='id_publ')
-    klsl = read_xbase_as_dict(os.path.join(location, 'klsl.dbf'))
-    k_klsl = read_xbase_as_list_dict(os.path.join(location, 'k_klsl.dbf'), key='id_publ')
-    dt = read_xbase_as_dict(os.path.join(location, 'dt.dbf'))
-    k_dt = read_xbase_as_list_dict(os.path.join(location, 'k_dt.dbf'), key='id_publ')
-    nakl = read_xbase_as_dict(os.path.join(location, 'dodavat.dbf'))
-    k_nakl = read_xbase_as_list_dict(os.path.join(location, 'k_nakl.dbf'), key='id_publ')
-    vytisky = read_xbase_as_list_dict(os.path.join(location, 'vytisk.dbf'), key='id_publ')
+    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'))
+    k_autori = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')
+    klsl = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'))
+    k_klsl = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')
+    dt = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'))
+    k_dt = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')
+    nakl = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'))
+    vytisky = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ')
 
-    read_xbase(os.path.join(location, 'k_nakl.dbf'), import_publ, locals())
+    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, locals())
 
 def import_publ(vars):
     # vars['redirects'], vars['autori'], ...

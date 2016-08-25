@@ -29,6 +29,16 @@ def task_catalogize(question_id, question, asked):
             'retrieved': retrieved, 'inserted': inserted}
     db.commit()
 
+
+def do_import(imp_func, library_id, src_folder=None, full=False):
+    set_imp_proc(library_id, 1.0)
+    if full:
+        db(db.owned_book.library_id == library_id).update(found_at_last=False)
+        db(db.impression.library_id == library_id).update(found_at_last=False)
+    imp_func(db, library_id, src_folder)
+    set_imp_finished(library_id)
+
+
 def run_tests(form_vars, servers):
     for server in servers:
         run_for_server(server, form_vars, myconf)

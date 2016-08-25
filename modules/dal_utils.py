@@ -9,6 +9,9 @@ import datetime
 
 from gluon import current
 
+if False:
+    from web2py.gluon import current
+
 
 def answer_by_ean(db, ean, flds):
     """return: row or None
@@ -18,10 +21,12 @@ def answer_by_ean(db, ean, flds):
     else:
         return db(db.answer.ean == ean).select(*flds).first()
 
+
 def answer_by_hash(db, md5publ, flds):
     """return: row or None
     """
     return db(db.answer.md5publ == md5publ).select(*flds).first()
+
 
 def add_impr_hist(imp_id, haction, reader_id=None, bill_id=None, db=None):
     """add impression history in a consistent way (into impr_hist and into impression together)
@@ -33,12 +38,14 @@ def add_impr_hist(imp_id, haction, reader_id=None, bill_id=None, db=None):
     db.impr_hist.insert(impression_id=imp_id, reader_id=reader_id, bill_id=bill_id, haction=haction, htime=htime)
     db.impression[imp_id] = dict(haction=haction, htime=htime)
 
+
 def get_library(db=None, auth=None):
     if db is None:
         db = current.db
     if auth is None:
         auth = current.auth
     return db(db.library.id == auth.library_id).select().first()
+
 
 def get_libstyle(db=None, session=None, auth=None):
     """provides information about allowed/disabled fields
@@ -76,3 +83,17 @@ def get_libstyle(db=None, session=None, auth=None):
     # session.libstyle = {'id':'I.O.', 'bc':'B+', 'sg':'G..', 'sgsep':'???', 'gr':'PsS'}  # character position IS important
     session.libstyle = libstyle
     return libstyle
+
+
+def set_imp_proc(library_id, proc=2.0, db=None):
+    if db is None:
+        db = current.db
+
+    library = db.library[library_id]
+    if proc > library.imp_proc:
+        db.library[library_id] = {'imp_proc': min(proc, 100.0)}
+        db.commit()
+
+
+def set_imp_finished(library_id, db=None):
+    set_imp_proc(library_id, proc=100.0, db=db)
