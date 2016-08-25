@@ -21,6 +21,9 @@ if False:  # for IDE only, need web2py/__init__.py
     from web2py.applications.codex2020.modules.plugin_mz import utc_to_local
 
 
+MAX_FILE_SIZE = 67108864   # upload max 64 MB single FoxPro file
+
+
 @auth.requires_login()
 def main():
     email = None
@@ -83,7 +86,10 @@ def codex():
             # fn = filter(lambda s: s.replace('_', 'a').isalnum(), fn)  # for security disallow non-alphanum characters // no need to do it, because we will choose some names only
             if fn in handle:
                 with open(os.path.join(uploadfolder, fn), 'w') as fw:
-                    fw.write(f.value)
+                    content = f.value
+                    if len(content) > MAX_FILE_SIZE:
+                        break
+                    fw.write(content)
 
         do_import(imp_codex, auth.library_id, src_folder=uploadfolder, full=True)  # debug
         redirect(URL('default', 'index'))
