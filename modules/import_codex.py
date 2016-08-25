@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 import dbf
 from dbf_read_iffy import fix_init, fix_895
 fix_init(dbf)
-    """
+"""
     Read from dbf's with codepage unsupported by modules dbf and codecs (like 895 cz Kamenicky)
 
     import dbf
@@ -15,7 +17,7 @@ fix_init(dbf)
     for record in t:
         print fix_895(record.autor)
     t.close()
-    """
+"""
 
 from dal_import import load_redirects
 
@@ -57,7 +59,7 @@ def read_xbase_as_dict(filename, key='id'):
     """
         get rows as dict where keys are primary keys, values are records (without primary key)
     """
-    def rec_to_dict(key, rows):
+    def rec_to_dict(record, key, rows):
         current_id = record[key]
         del record[key]
         rows[current_id] = record
@@ -70,7 +72,7 @@ def read_xbase_as_list_dict(filename, key):
     """
         get rows as dict where keys are given keys (can be non-unique), values are list records (without given key)
     """
-    def rec_to_list_dict(key, rows):
+    def rec_to_list_dict(record, key, rows):
         current_id = record[key]
         del record[key]
         if current_id in rows:

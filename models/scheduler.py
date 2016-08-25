@@ -3,6 +3,12 @@
 from z39 import get_from_large_library
 from c2_marc import parse_Marc_and_updatedb
 
+from dal_import import set_imp_proc, set_imp_finished
+
+if False:  # for IDE only, need web2py/__init__.py
+    from web2py.applications.codex2020.modules.dal_import import set_imp_proc, set_imp_finished
+
+
 from gluon.scheduler import Scheduler
 
 from plugin_splinter import run_for_server

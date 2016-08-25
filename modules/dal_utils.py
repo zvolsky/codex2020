@@ -9,7 +9,7 @@ import datetime
 
 from gluon import current
 
-if False:
+if False:  # for IDE only, need web2py/__init__.py
     from web2py.gluon import current
 
 
@@ -83,17 +83,3 @@ def get_libstyle(db=None, session=None, auth=None):
     # session.libstyle = {'id':'I.O.', 'bc':'B+', 'sg':'G..', 'sgsep':'???', 'gr':'PsS'}  # character position IS important
     session.libstyle = libstyle
     return libstyle
-
-
-def set_imp_proc(library_id, proc=2.0, db=None):
-    if db is None:
-        db = current.db
-
-    library = db.library[library_id]
-    if proc > library.imp_proc:
-        db.library[library_id] = {'imp_proc': min(proc, 100.0)}
-        db.commit()
-
-
-def set_imp_finished(library_id, db=None):
-    set_imp_proc(library_id, proc=100.0, db=db)

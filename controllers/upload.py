@@ -13,7 +13,7 @@ from c2_config import get_contact
 
 from plugin_mz import utc_to_local
 
-if False:  # for IDE only
+if False:  # for IDE only, need web2py/__init__.py
     from web2py.applications.codex2020.models.scheduler import do_import
 
     from web2py.applications.codex2020.modules.dal_utils import get_library
