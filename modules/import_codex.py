@@ -6,17 +6,30 @@ import dbf
 from dbf_read_iffy import fix_init, fix_895
 fix_init(dbf)
 """
+<<<<<<< Updated upstream
     Read from dbf's with codepage unsupported by modules dbf and codecs (like 895 cz Kamenicky)
+=======
+Read from dbf's with codepage unsupported by modules dbf and codecs (like 895 cz Kamenicky)
+>>>>>>> Stashed changes
 
-    import dbf
-    from dbf_read_iffy import fix_init, fix_895
+import dbf
+from dbf_read_iffy import fix_init, fix_895
 
+<<<<<<< Updated upstream
     fix_init(dbf)
     t = dbf.Table('autori.dbf')
     t.open('read-only')
     for record in t:
         print fix_895(record.autor)
     t.close()
+=======
+fix_init(dbf)
+t = dbf.Table('autori.dbf')
+t.open('read-only')
+for record in t:
+    print fix_895(record.autor)
+t.close()
+>>>>>>> Stashed changes
 """
 
 from dal_import import load_redirects
@@ -28,7 +41,7 @@ def imp_codex(db, library_id, src_folder):
     """
     redirects = load_redirects()
 
-    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'))
+    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf', key='id_autora'))
     k_autori = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')
     klsl = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'))
     k_klsl = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')
