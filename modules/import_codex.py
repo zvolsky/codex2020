@@ -30,19 +30,24 @@ def imp_codex(db, library_id, src_folder):
     """
     redirects = load_redirects()
 
-    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf', key='id_autora'))
-    k_autori = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')
-    klsl = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'))
-    k_klsl = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')
-    dt = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'))
-    k_dt = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')
-    nakl = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'))
-    vytisky = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ')
+    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , ","->", "
+    k_autori = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')  # VZTAH, ID_AUTORA
+    klsl = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'), key='id_klsl')  # KLSL
+    k_klsl = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')  # ID_KLSL
+    dt = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
+    k_dt = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')  # POM_ZNAK, DT
+    nakl = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'), key='id_dodav')  # ICO, NAZEV1, NAZEV2, NAZEV_ZKR, MISTO
+    vytisky = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
+                # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
+    # TODO: VYPUJCKY?
 
     read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, locals())
 
-def import_publ(vars):
-    # vars['redirects'], vars['autori'], ...
+def import_publ(record, vars):
+    # vars['redirects'], vars['autori'], ... --- dict!
+    #   ['k_klsl', 'library_id', 'redirects', 'vytisky', 'k_dt', 'db', 'autori', 'klsl', 'nakl', 'k_autori', 'dt', 'src_folder']
+    # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
+    #       JAZYK, VYDANI, IMPRESUM, ANOTACE, ISBN, KS_CELK, KS, KS_JE, POZNAMKA, STUDOVNA, ID_NAKL
     pass
 
 
@@ -63,26 +68,26 @@ def read_xbase_as_dict(filename, key='id'):
     """
     def rec_to_dict(record, key, rows):
         current_id = record[key]
-        del record[key]
         rows[current_id] = record
 
     rows = {}
     read_xbase(filename, rec_to_dict, key, rows)
     return rows
 
-def read_xbase_as_list_dict(filename, key):
+def read_xbase_as_list_dict(filename, key, left=None):
     """
         get rows as dict where keys are given keys (can be non-unique), values are list records (without given key)
     """
-    def rec_to_list_dict(record, key, rows):
+    def rec_to_list_dict(record, key, rows, left):
         current_id = record[key]
-        del record[key]
+        if left:
+            current_id = current_id[:left]
         if current_id in rows:
             rows[current_id].append(record)
         else:
             rows[current_id] = [record]
 
     rows = {}
-    read_xbase(filename, rec_to_list_dict, key, rows)
+    read_xbase(filename, rec_to_list_dict, key, rows, left)
     return rows
 #TODO: end
