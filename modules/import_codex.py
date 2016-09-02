@@ -6,6 +6,8 @@
 
 import os
 
+from c_utils import parse_year_from_text
+
 import dbf
 from dbf_read_iffy import fix_init, fix_895
 fix_init(dbf)
@@ -48,8 +50,12 @@ def import_publ(record, vars):
     #   ['k_klsl', 'library_id', 'redirects', 'vytisky', 'k_dt', 'db', 'autori', 'klsl', 'nakl', 'k_autori', 'dt', 'src_folder']
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
     #       JAZYK, VYDANI, IMPRESUM, ANOTACE, ISBN, KS_CELK, KS, KS_JE, POZNAMKA, STUDOVNA, ID_NAKL
-    pass
-
+    nazev = fix_895(record['nazev'].strip())
+    podnazev = fix_895(record['podnazev'].strip())
+    nakladatel = nakl[record['id_nakl']]
+    misto = fix_895(nakladatel['misto'].strip())
+    nakladatel = fix_895(nakladatel['nazev1'].strip() or nakladatel['nazev_zkr'].strip())  # prefer Nazev1 ?
+    rok = parse_year_from_text(record['impresum'])
 
 #TODO: rest should be moved into modules/c_import with next xBase import (import dbf + fix_init(dbf) can be used in c_import too)
 def read_xbase(filename, callback, *args, **kwargs):

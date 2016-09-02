@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from books import parse_pubyear
+from c_utils import REPEATJOINER
 
 
 class MarcFrom(object):
@@ -8,7 +9,6 @@ class MarcFrom(object):
     TODO: initially made for Aleph/cz; if more systems will be implemented later,
      move specific behaviour into derived MarcFrom_AlephCz class
     """
-    repeatJoiner = '; '
 
     def __init__(self, record):
         self.record = record
@@ -92,7 +92,7 @@ class MarcFrom(object):
                 self.publishers.append(aut_publisher)
                 self.publishers_by_place.append(self.join(self.pubplace, aut_publisher))
                 self.publishers_by_name.append(self.join(aut_publisher, self.pubplace))
-        self.publisher = self.pubplace + ' : ' + self.repeatJoiner.join(self.publishers)
+        self.publisher = self.pubplace + ' : ' + REPEATJOINER.join(self.publishers)
 
     def parse_title(self):
         def spec_append(part):
@@ -140,7 +140,7 @@ class MarcFrom(object):
         self.title_parts = parts
 
     def parse_authors(self):
-        """will call self.parse_authorities() and establish self.authorities and self.authors
+        """will call self.parse_authorities() and establish self.authorities and self.authors (list) + self.author (string)
         list of tuples (TODO: fix here) :
         0: author name ($a+$b+$c),
         return name of 110 author which is suitable as publisher
@@ -151,7 +151,7 @@ class MarcFrom(object):
             if authority[5] in ('aut'):
                 authors.append(authority[0])
         self.authors = authors
-        self.author = self.repeatJoiner.join(self.authors)
+        self.author = REPEATJOINER.join(self.authors)
         return publishers
 
     def parse_authorities(self):
@@ -197,12 +197,6 @@ class MarcFrom(object):
                         '792', '793', '796', '797', '798', '799'))    # tags from .addedentries() without 700, 710
         self.authorities = authorities
         return publishers
-
-    def joined_authors(self):
-        """will return all authors as single string,
-        authors are separated by join_char
-        """
-        return self.repeatJoiner.join(self.authors)
 
     def parse_lang(self):
         languages = self.record['041']

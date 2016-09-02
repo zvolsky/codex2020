@@ -44,7 +44,7 @@ def updatedb(record, touched, z39stamp=None):
     md5marc = hashlib.md5(marc).hexdigest()
 
     marcrec = MarcFrom_AlephCz(record)
-    md5publ = publ_hash(marcrec.title, marcrec.joined_authors(), marcrec.publisher, marcrec.pubyear)
+    md5publ = publ_hash(marcrec.title, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
 
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)

@@ -4,6 +4,7 @@
 """
 
 from collections import defaultdict
+import datetime
 import hashlib
 import random
 import re
@@ -12,41 +13,64 @@ import string
 from mzutils import hash_prepared
 
 
-def publ_fastinfo_and_hash(title, author, publisher, pubyear):
-    return (make_fastinfo(title, author, publisher, pubyear),
-            publ_hash(title, author, publisher, pubyear))
+REPEATJOINER = '; '
 
-def publ_hash(title, author, publisher, pubyear):
+
+def join_author(authors):
     """
+    Unique way to convert tuple/list into string
+    """
+    return REPEATJOINER.join(authors)
+
+
+def normalize_authors(authors, string_surnamed=False, string_full=False):
+    """
+    Args:
+        authors: recommended as tuple/list, however if string is used, it is converted (allowed separators: ; or :)
+        string_..: force the appropriate retval tuple item as string
+    Return: tuple: (shorten to surname, full); both as list by default (but as string if forced via string_.. param)
+    """
+    if type(authors) not in (tuple, list):
+        authors = authors.replace(':', ';').split(';')
+    surnamed = []  # Novák == Novák,J. == Novák, Jan == Novák,Jan == Novák Jan == Novák B.J.
+    full = []
+    for author in authors:
+        author = author.strip()
+        if author:
+            author = author.replace('\t', ' ')
+            while '  ' in author:
+                author = author.replace('  ', ' ')
+            while ', ' in author:
+                author = author.replace(', ', ',')
+            surnamed.append(author.replace(' ', ',').split(',', 1)[0].rstrip())
+            full.append(author.replace(',', ', ').rstrip())
+    return join_author(surnamed) if string_surnamed else surnamed, join_author(full) if string_full else full
+
+
+def publ_fastinfo_and_hash(title, surnamed_author, author, publisher, pubyear):
+    return (make_fastinfo(title, author, publisher, pubyear),
+            publ_hash(title, surnamed_author, publisher, pubyear))
+
+
+def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
+    """
+    author: prefered use is 'surname shortened'string. For anything else (list, not shortened,..) please set author_need_normalize
     publisher: location publisher1 publisher2 ...
     pubyear: we use digits only
     """
-    def hash_prepared_author(author):
-        """
-        Novák == Novák,J. == Novák, Jan == Novák,Jan == Novák Jan == Novák B.J.
-        """
-        take = True
-        space_ignore = True
-        easier = ''
-        for ch in author:
-            if ch in ', ' and not space_ignore:
-                take = False
-            elif ch in ';:':
-                take = True
-                space_ignore = True
-            elif take:
-                easier += ch
-                space_ignore = False
-        return hash_prepared(easier)
+    if author_need_normalize:
+        author, _full = normalize_authors(authors, string_surnamed=True)
 
-    src = '%s|%s|%s|%s' % (hash_prepared(title), hash_prepared_author(author),
-                           hash_prepared(publisher), filter(lambda d: d.isdigit(), 'pubyear'))
+    src = '%s|%s|%s|%s' % (hash_prepared(title), hash_prepared(author),
+                           hash_prepared(publisher), filter(lambda d: d.isdigit(), pubyear))
     if type(src) == unicode:
         src = src.encode('utf-8')
     return hashlib.md5(src).hexdigest()
 
+
 def make_fastinfo(title, author, publisher, pubyear):
     return 'T' + title + '\nA' + author + '\nP' + publisher + '\nY' + pubyear
+
 
 def parse_fbi(question, libstyle, reverted=True):
     """can asked string be a rik(fbi)?
@@ -73,12 +97,14 @@ def parse_fbi(question, libstyle, reverted=True):
     else:
         return rik, iorder
 
+
 def ean_to_fbi(ean):
     """convert last numbers of EAN into (reverted) rik(fbi) or creates a random one
     rik(fbi) is designed to find books easier without barcode readers
     """
     return ean[:-7:-1] if (ean and len(ean) >= 6) else ''.join(random.choice(string.digits) for _ in range(6))
     # 7,6,6 pro len(rik)==6
+
 
 def limit_rows(rows, limitby):
     """will shorten an iterable to limitby items
@@ -93,6 +119,7 @@ def limit_rows(rows, limitby):
     else:
         return rows, False
 
+
 def parse_fastinfo(fastinfo):
     """will parse fastinfo blob into tuple: (title, author, publisher, pubyear)
     """
@@ -100,4 +127,13 @@ def parse_fastinfo(fastinfo):
     for ln in fastinfo.splitlines():
         if len(ln) > 1:
             book_dict[ln[:1]].append(ln[1:])
-    return '; '.join(book_dict['T']), '; '.join(book_dict['A']), '; '.join(book_dict['P']), '; '.join(book_dict['Y'])  # tit, aut, pub, puy
+    return REPEATJOINER.join(book_dict['T']), REPEATJOINER.join(book_dict['A']), REPEATJOINER.join(book_dict['P']), REPEATJOINER.join(book_dict['Y'])  # tit, aut, pub, puy
+
+
+def parse_year_from_text(txt, minyear=1600, maxyear=datetime.date.today().year + 3, as_string=False):
+    year = ''
+    for num in re.findall('\d+', txt):
+        if minyear <= int(num) <= maxyear:
+            year = num
+            break
+    return year if as_string else (int(year) if year else None)

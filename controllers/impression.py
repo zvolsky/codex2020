@@ -6,7 +6,7 @@ from books import can_be_isxn, isxn_to_ean, parse_pubyear, analyze_barcode, form
 
 from dal_utils import get_libstyle, add_impr_hist
 
-from c_utils import publ_fastinfo_and_hash, ean_to_fbi
+from c_utils import REPEATJOINER, publ_fastinfo_and_hash, ean_to_fbi, normalize_authors
 from dal_utils import answer_by_ean, answer_by_hash
 from c_db import PublLengths
 from plugin_mz import formstyle_bootstrap3_compact_factory
@@ -45,8 +45,8 @@ def description():
         session.addbook = ['T' + eof_out(form.vars.title),   # title first (at least as it is displayed in impression/list)
                            't' + eof_out(form.vars.subtitle),
                            'E' + eof_out(form.vars.EAN),
-                           'A' + eof_out(form.vars.authority, joiner='; '),
-                           'P' + eof_out(form.vars.publisher, joiner='; '),
+                           'A' + eof_out(form.vars.authority, joiner=REPEATJOINER),
+                           'P' + eof_out(form.vars.publisher, joiner=REPEATJOINER),
                            'p' + eof_out(form.vars.pubplace),
                            'Y' + eof_out(form.vars.pubyear),
                            'D' + eof_out(form.vars.edition),
@@ -183,7 +183,8 @@ def list():
                 owned_book_id = db.owned_book.insert(answer_id=answer_id)
         else:           # new book with local description only (from impression/description)
             # we already have parsed local description here: title, author, publisher, pubyear
-            fastinfo, md5publ = publ_fastinfo_and_hash(title, author, publisher, pubyear)
+            surnamed_author, full_author = normalize_authors(author, string_surnamed=True, string_full=True)
+            fastinfo, md5publ = publ_fastinfo_and_hash(title, surnamed_author, full_author, publisher, pubyear)
             # do we have answer?
             answer_id = existing_answer()  # check by ean, md5publ
             if answer_id is None:
