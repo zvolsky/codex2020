@@ -47,17 +47,19 @@ def normalize_authors(authors, string_surnamed=False, string_full=False):
     return join_author(surnamed) if string_surnamed else surnamed, join_author(full) if string_full else full
 
 
-def publ_fastinfo_and_hash(title, surnamed_author, author, publisher, pubyear):
-    return (make_fastinfo(title, author, publisher, pubyear),
-            publ_hash(title, surnamed_author, publisher, pubyear))
+def publ_fastinfo_and_hash(title, surnamed_author, author, publisher, pubyear, subtitle=None, keys=None):
+    return (make_fastinfo(title, author, publisher, pubyear, subtitle=subtitle, keys=keys),
+            publ_hash(title, surnamed_author, publisher, pubyear, subtitle=subtitle))
 
 
-def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
+def publ_hash(title, author, publisher, pubyear, subtitle=None, author_need_normalize=False):
     """
     author: prefered use is 'surname shortened'string. For anything else (list, not shortened,..) please set author_need_normalize
     publisher: location publisher1 publisher2 ...
     pubyear: we use digits only
     """
+    if subtitle:
+        title = title + subtitle  # connection not important: hash_prepared() removes all
     if author_need_normalize:
         author, _full = normalize_authors(authors, string_surnamed=True)
 
@@ -68,9 +70,24 @@ def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
     return hashlib.md5(src).hexdigest()
 
 
-def make_fastinfo(title, author, publisher, pubyear):
-    return 'T' + title + '\nA' + author + '\nP' + publisher + '\nY' + pubyear
-
+def make_fastinfo(title, author, publisher=None, pubyear=None, subtitle=None, keys=None):
+    """
+    Args:
+        keys: accepts iterable (recommended) or string (use REPEATJOINER please)
+    """
+    fastinfo = 'T' + title
+    if subtitle:
+        fastinfo += '\nt' + subtitle
+    fastinfo += '\nA' + author
+    if publisher:
+        fastinfo += '\nP' + publisher
+    if pubyear:
+        fastinfo += '\nY%s' % pubyear
+    if keys:
+        if type(keys) in (tuple, list):
+            keys = REPEATJOINER.join(keys)
+        fastinfo += '\nK' + keys
+    return fastinfo
 
 def parse_fbi(question, libstyle, reverted=True):
     """can asked string be a rik(fbi)?

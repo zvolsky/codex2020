@@ -6,7 +6,7 @@
 
 import os
 
-from c_utils import parse_year_from_text
+from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
 
 import dbf
 from dbf_read_iffy import fix_init, fix_895
@@ -32,11 +32,11 @@ def imp_codex(db, library_id, src_folder):
     """
     redirects = load_redirects()
 
-    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , ","->", "
+    autori = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , need ","->", "
     k_autori = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')  # VZTAH, ID_AUTORA
     klsl = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'), key='id_klsl')  # KLSL
     k_klsl = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')  # ID_KLSL
-    dt = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
+    #dt = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
     k_dt = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')  # POM_ZNAK, DT
     nakl = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'), key='id_dodav')  # ICO, NAZEV1, NAZEV2, NAZEV_ZKR, MISTO
     vytisky = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
@@ -47,7 +47,7 @@ def imp_codex(db, library_id, src_folder):
 
 def import_publ(record, vars):
     # vars['redirects'], vars['autori'], ... --- dict!
-    #   ['k_klsl', 'library_id', 'redirects', 'vytisky', 'k_dt', 'db', 'autori', 'klsl', 'nakl', 'k_autori', 'dt', 'src_folder']
+    #   ['k_klsl', 'library_id', 'redirects', 'vytisky', 'k_dt', 'db', 'autori', 'klsl', 'nakl', 'k_autori', ('dt',) 'src_folder']
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
     #       JAZYK, VYDANI, IMPRESUM, ANOTACE, ISBN, KS_CELK, KS, KS_JE, POZNAMKA, STUDOVNA, ID_NAKL
     nazev = fix_895(record['nazev'].strip())
@@ -55,7 +55,29 @@ def import_publ(record, vars):
     nakladatel = nakl[record['id_nakl']]
     misto = fix_895(nakladatel['misto'].strip())
     nakladatel = fix_895(nakladatel['nazev1'].strip() or nakladatel['nazev_zkr'].strip())  # prefer Nazev1 ?
-    rok = parse_year_from_text(record['impresum'])
+    pubyear = parse_year_from_text(record['impresum'])
+
+    klsl = []
+    for klic in k_klsl['id_publ']:
+        klsl.append(fix_895(klsl[klic['id_klsl']]['klsl']))
+    for klic in k_dt['id_publ']:
+        klsl.append(fix_895(klic['dt']))   # zatím neukládám k_dt.pom_znak a dt.dt_txt
+    surnamed = []
+    full = []
+    for osoba in k_autori['id_publ']:
+        osoba_tuple = (fix_895(autori[osoba['id_autora']]['autor']),)
+        surnamed1, full1 = normalize_authors(osoba_tuple, string_surnamed=True, string_full=True)
+        if osoba['vztah'] == 'aut':
+            surnamed.append(surnamed1)
+            full.append(full1)
+        else:  # ostatní osoby
+            klsl.append(full1)   # zatím neukládám k_autori.vztah
+    surnamed = REPEATJOINER.join(surnamed)
+    full = REPEATJOINER.join(full)
+
+    #TODO: publisher = misto, nakladatel
+    fastinfo, md5publ = publ_fastinfo_and_hash(title, surnamed, full, publisher, pubyear, subtitle=podnazev, keys=klsl)
+
 
 #TODO: rest should be moved into modules/c_import with next xBase import (import dbf + fix_init(dbf) can be used in c_import too)
 def read_xbase(filename, callback, *args, **kwargs):
