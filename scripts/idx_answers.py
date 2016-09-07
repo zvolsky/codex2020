@@ -57,9 +57,13 @@ def index_row(row, updating=False)
         marc_obj = MARCReader(row.marc, to_unicode=True).next()
         c2_parsed = MarcFrom_AlephCz(marc_obj)   # if marc is source, .fastinfo & .parsed_fastinfo are missing
     else:
+        marc_obj = None
+        # we use 'marc_obj is None' and non empty row.fastinfo to avoid fastinfo rewrite
         c2_parsed = C2_parsed(row.fastinfo):
         c2_parsed.title = c2_parsed.parsed_fastinfo.get('T')
+        c2_parsed.subtitle = c2_parsed.parsed_fastinfo.get('t')
         c2_parsed.author = c2_parsed.parsed_fastinfo.get('A')
+        c2_parsed.pubplace = c2_parsed.parsed_fastinfo.get('L')
         c2_parsed.publisher = c2_parsed.parsed_fastinfo.get('P')
         c2_parsed.pubyear = c2_parsed.parsed_fastinfo.get('Y')
     # TODO: add user descriptions here

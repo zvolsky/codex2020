@@ -96,6 +96,7 @@ def parse_pubyear(pubyear):
     else:
         return (None, None)
 
+
 # librarian (impressions agenda)
 
 def analyze_barcode(barcode):

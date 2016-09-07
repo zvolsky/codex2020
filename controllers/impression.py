@@ -47,7 +47,7 @@ def description():
                            'E' + eof_out(form.vars.EAN),
                            'A' + eof_out(form.vars.authority, joiner=REPEATJOINER),
                            'P' + eof_out(form.vars.publisher, joiner=REPEATJOINER),
-                           'p' + eof_out(form.vars.pubplace),
+                           'L' + eof_out(form.vars.pubplace),
                            'Y' + eof_out(form.vars.pubyear),
                            'D' + eof_out(form.vars.edition),
                            ]
@@ -79,11 +79,12 @@ def list():
         ean = descr_dict.get('E', '')
         if ean:
             ean = isxn_to_ean(ean) if can_be_isxn(ean) else ''
-        title = ' : '.join(filter(lambda a: a, (descr_dict.get('T', ''), descr_dict.get('t', ''))))
+        title = ' : '.join(filter(None, (descr_dict.get('T', ''), descr_dict.get('t', ''))))
         author = descr_dict.get('A', '')
-        publisher = ' : '.join(filter(lambda a: a, (descr_dict.get('p', ''), descr_dict.get('P', ''))))
+        pubplace = descr_dict.get('L', '')
+        publisher = descr_dict.get('P', '')
         pubyear = descr_dict.get('Y', '')
-        return ean, title, author, publisher, pubyear
+        return ean, title, author, pubplace, publisher, pubyear
 
     question_id = request.args(0)
     answer_id = request.args(1)
@@ -98,7 +99,7 @@ def list():
         rik = answer.rik
     else:
         if session.addbook:    # new book with local description only (from impression/description)
-            ean, title, author, publisher, pubyear = parse_descr(session.addbook)
+            ean, title, author, pubplace, publisher, pubyear = parse_descr(session.addbook)
             rik = ean_to_fbi(ean)
         else:
             redirect(URL('default', 'index'))
@@ -182,9 +183,9 @@ def list():
             else:
                 owned_book_id = db.owned_book.insert(answer_id=answer_id)
         else:           # new book with local description only (from impression/description)
-            # we already have parsed local description here: title, author, publisher, pubyear
+            # we already have parsed local description here: title, author, pubplace, publisher, pubyear
             surnamed_author, full_author = normalize_authors(author, string_surnamed=True, string_full=True)
-            fastinfo, md5publ = publ_fastinfo_and_hash(title, surnamed_author, full_author, publisher, pubyear)
+            fastinfo, md5publ = publ_fastinfo_and_hash(title, surnamed_author, full_author, pubplace, publisher, pubyear)
             # do we have answer?
             answer_id = existing_answer()  # check by ean, md5publ
             if answer_id is None:

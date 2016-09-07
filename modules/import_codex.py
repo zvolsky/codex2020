@@ -43,31 +43,31 @@ def imp_codex(db, library_id, src_folder):
                 # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
     # TODO: VYPUJCKY?
 
-    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, locals())
+    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ,
+               vytisky, nakl, k_autori, autori, k_klsl, klsl, k_dt)
 
-def import_publ(record, vars):
-    # vars['redirects'], vars['autori'], ... --- dict!
-    #   ['k_klsl', 'library_id', 'redirects', 'vytisky', 'k_dt', 'db', 'autori', 'klsl', 'nakl', 'k_autori', ('dt',) 'src_folder']
+def import_publ(record, vytisky, nakl, k_autori, autori, k_klsl, klsl, k_dt):
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
     #       JAZYK, VYDANI, IMPRESUM, ANOTACE, ISBN, KS_CELK, KS, KS_JE, POZNAMKA, STUDOVNA, ID_NAKL
+    id_publ = record['id_publ']
     nazev = fix_895(record['nazev'].strip())
     podnazev = fix_895(record['podnazev'].strip())
     nakladatel = nakl[record['id_nakl']]
-    misto = fix_895(nakladatel['misto'].strip())
-    nakladatel = fix_895(nakladatel['nazev1'].strip() or nakladatel['nazev_zkr'].strip())  # prefer Nazev1 ?
+    pubplace = fix_895(nakladatel['misto'].strip())
+    publisher = fix_895(nakladatel['nazev1'].strip() or nakladatel['nazev_zkr'].strip())  # prefer Nazev1 ?
     pubyear = parse_year_from_text(record['impresum'])
 
     klsl = []
-    for klic in k_klsl['id_publ']:
+    for klic in k_klsl.get(id_publ, ()):
         klsl.append(fix_895(klsl[klic['id_klsl']]['klsl']))
-    for klic in k_dt['id_publ']:
+    for klic in k_dt.get(id_publ, ()):
         klsl.append(fix_895(klic['dt']))   # zatím neukládám k_dt.pom_znak a dt.dt_txt
     surnamed = []
     full = []
-    for osoba in k_autori['id_publ']:
+    for osoba in k_autori.get(id_publ, ()):
         osoba_tuple = (fix_895(autori[osoba['id_autora']]['autor']),)
         surnamed1, full1 = normalize_authors(osoba_tuple, string_surnamed=True, string_full=True)
-        if osoba['vztah'] == 'aut':
+        if osoba['vztah'] == 'A':  # aut
             surnamed.append(surnamed1)
             full.append(full1)
         else:  # ostatní osoby
@@ -75,8 +75,7 @@ def import_publ(record, vars):
     surnamed = REPEATJOINER.join(surnamed)
     full = REPEATJOINER.join(full)
 
-    #TODO: publisher = misto, nakladatel
-    fastinfo, md5publ = publ_fastinfo_and_hash(title, surnamed, full, publisher, pubyear, subtitle=podnazev, keys=klsl)
+    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, surnamed, full, pubplace, publisher, pubyear, subtitle=podnazev, keys=klsl)
 
 
 #TODO: rest should be moved into modules/c_import with next xBase import (import dbf + fix_init(dbf) can be used in c_import too)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from books import parse_pubyear
-from c_utils import REPEATJOINER
+from c_utils import REPEATJOINER, get_publisher, get_place_publisher
 
 
 class MarcFrom(object):
@@ -16,7 +16,7 @@ class MarcFrom(object):
         # to make pylint happy; parse_...() will set them
         self.title_ignore_chars = 0
         self.title_parts = []
-        self.title = self.pubplace = self.publisher = self.pubyear = self.author = self.series = ''
+        self.title = self.pubplace = self.publisher = self.place_publisher = self.pubyear = self.author = self.series = ''
         self.country = self.language_orig = ''
         self.pubyears = (None, None)  # from/to
         self.languages = []
@@ -92,7 +92,8 @@ class MarcFrom(object):
                 self.publishers.append(aut_publisher)
                 self.publishers_by_place.append(self.join(self.pubplace, aut_publisher))
                 self.publishers_by_name.append(self.join(aut_publisher, self.pubplace))
-        self.publisher = self.pubplace + ' : ' + REPEATJOINER.join(self.publishers)
+        self.publisher = get_publisher(self.publishers)
+        self.place_publisher = get_place_publisher(self.pubplace, self.publisher)
 
     def parse_title(self):
         def spec_append(part):

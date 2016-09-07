@@ -31,7 +31,7 @@ def normalize_authors(authors, string_surnamed=False, string_full=False):
     Return: tuple: (shorten to surname, full); both as list by default (but as string if forced via string_.. param)
     """
     if type(authors) not in (tuple, list):
-        authors = authors.replace(':', ';').split(';')
+        authors = authors.replace(':', ';').split(';')  # strip() must/will follow
     surnamed = []  # Novák == Novák,J. == Novák, Jan == Novák,Jan == Novák Jan == Novák B.J.
     full = []
     for author in authors:
@@ -47,8 +47,8 @@ def normalize_authors(authors, string_surnamed=False, string_full=False):
     return join_author(surnamed) if string_surnamed else surnamed, join_author(full) if string_full else full
 
 
-def publ_fastinfo_and_hash(title, surnamed_author, author, publisher, pubyear, subtitle=None, keys=None):
-    return (make_fastinfo(title, author, publisher, pubyear, subtitle=subtitle, keys=keys),
+def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, pubyear, subtitle=None, keys=None):
+    return (make_fastinfo(title, author, pubplace=pubplace, publisher=publisher, pubyear=pubyear, subtitle=subtitle, keys=keys),
             publ_hash(title, surnamed_author, publisher, pubyear, subtitle=subtitle))
 
 
@@ -70,15 +70,21 @@ def publ_hash(title, author, publisher, pubyear, subtitle=None, author_need_norm
     return hashlib.md5(src).hexdigest()
 
 
-def make_fastinfo(title, author, publisher=None, pubyear=None, subtitle=None, keys=None):
+def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, subtitle=None, keys=None):
     """
     Args:
         keys: accepts iterable (recommended) or string (use REPEATJOINER please)
     """
-    fastinfo = 'T' + title
+    title = title.split(' : ')
+    fastinfo = 'T' + title.pop(0).strip()
     if subtitle:
-        fastinfo += '\nt' + subtitle
+        title.append(subtitle)
+    title = filter(None, map(lambda a: a.strip(), title))
+    if title:
+        fastinfo += '\nt' + '. '.join(title)
     fastinfo += '\nA' + author
+    if pubplace:
+        fastinfo += '\nL' + pubplace
     if publisher:
         fastinfo += '\nP' + publisher
     if pubyear:
@@ -154,3 +160,15 @@ def parse_year_from_text(txt, minyear=1600, maxyear=datetime.date.today().year +
             year = num
             break
     return year if as_string else (int(year) if year else None)
+
+
+def get_publisher(publishers, src_joiner=';'):
+    if type(publishers) not in (tuple, list):
+        publishers = [publisher.strip() for publisher in publishers.split(src_joiner)]
+    return REPEATJOINER.join(publishers)
+
+
+def get_place_publisher(pubplace, publisher):
+    if type(publisher) in (tuple, list):
+        publisher = get_publisher(publisher)
+    return ' : '.join((pubplace, publisher))
