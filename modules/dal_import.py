@@ -16,8 +16,26 @@ def load_redirects(db=None):
         db = current.db
 
     redirects = db().select(db.import_redirect.md5publ, db.import_redirect.answer_id)
-    return {redir.md5publ: redir.answer_id for redir in redirects}
+    return {redir.md5publ_computed: redir.md5publ_final for redir in redirects}
 
+def load_places(db=None):
+    if db is None:
+        db = current.db
+
+    places = db().select(db.place.id, db.place.place)
+    return {place.place: place.id for place in places}
+
+def place_to_place_id(places_dict, place, db=None):
+    # see bellow: if db is None: db = current.db
+    if not place:
+        return None
+    place_id = places_dict.get(place)
+    if not place_id:
+        if db is None:
+            db = current.db
+        place_id = db.place.insert(place=place)
+        places_dict[place] = place_id
+    return place_id
 
 def set_imp_proc(library_id, proc=2.0, db=None):
     if db is None:

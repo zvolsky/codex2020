@@ -55,13 +55,13 @@ def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, 
 def publ_hash(title, author, publisher, pubyear, subtitle=None, author_need_normalize=False):
     """
     author: prefered use is 'surname shortened'string. For anything else (list, not shortened,..) please set author_need_normalize
-    publisher: location publisher1 publisher2 ...
+    publisher: publisher1 publisher2 ...
     pubyear: we use digits only
     """
     if subtitle:
         title = title + subtitle  # connection not important: hash_prepared() removes all
     if author_need_normalize:
-        author, _full = normalize_authors(authors, string_surnamed=True)
+        author, _full = normalize_authors(author, string_surnamed=True)
 
     src = '%s|%s|%s|%s' % (hash_prepared(title), hash_prepared(author),
                            hash_prepared(publisher), filter(lambda d: d.isdigit(), pubyear))

@@ -97,7 +97,7 @@ db.define_table('place',
               label=T("Umístění"),
               comment=T("umístění výtisků (např. regál, místnost nebo případně oddělení)")),
         Field('place_id', 'reference place',
-              ondelete='RESTRICT', represent = lambda id, row: id and id.place or '',
+              ondelete='RESTRICT', represent=lambda id, row: id and id.place or '',
               label=T("Nadřazené"), comment=T("patří do (širšího) umístění: takto lze vytvořit hierarchickou strukturu (oddělení, místnost, regál)")),
         common_filter=lambda query: db.place.library_id == auth.library_id,
         singular=T("umístění##singular"), plural=T("umístění##plural"),
@@ -469,11 +469,10 @@ db.define_table('import_run',
         )
 
 db.define_table('import_redirect',
-        Field('md5publ', 'string', length=32,
-              label=T("md5publ"), comment=T("md5publ")),
-        Field('answer_id', db.answer,
-              ondelete='CASCADE',
-              label=T("Odpověď"), comment=T("přesměrovat na odpověď")),
+        Field('md5publ_computed', 'string', length=32,
+              label=T("md5publ_computed"), comment=T("md5publ_computed")),
+        Field('md5publ_final', 'string', length=32,
+              label=T("md5publ_final"), comment=T("md5publ_final")),
         )
 
 '''
