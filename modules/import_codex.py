@@ -89,6 +89,12 @@ def import_publ(record, param):
     surnamed = REPEATJOINER.join(surnamed)
     full = REPEATJOINER.join(full)
 
+    puvod = fix_895(record['puvod'])
+    knpoznamka = fix_895(record['knpoznamka'])
+    impresum = fix_895(record['impresum'])
+    anotace = fix_895(record['anotace'])
+    # TODO: promyslet, jak spojit a kam uložit <<<<<<<<<<<<<<<<<<<<<<
+
     ean = record['ean'].strip()
     if not ean:
         ean = isxn_to_ean(record['isbn'])

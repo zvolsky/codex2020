@@ -15,7 +15,7 @@ def load_redirects(db=None):
     if db is None:
         db = current.db
 
-    redirects = db().select(db.import_redirect.md5publ, db.import_redirect.answer_id)
+    redirects = db().select(db.import_redirect.md5publ_computed, db.import_redirect.md5publ_final)
     return {redir.md5publ_computed: redir.md5publ_final for redir in redirects}
 
 def load_places(db=None):
