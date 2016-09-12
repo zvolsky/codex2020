@@ -6,8 +6,11 @@
 
 import os
 
+from books import isxn_to_ean
+
 from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
-from dal_import import place_to_place_id
+from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,\
+        counter_and_commit, do_commit)
 
 import dbf
 from dbf_read_iffy import fix_init, fix_895
@@ -45,8 +48,10 @@ def imp_codex(db, library_id, src_folder):
     param['vytisky'] = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
                 # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
     # TODO: VYPUJCKY?
+    param['cnt_total'] = param['cnt_new'] = 0
 
     read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param)
+    do_commit()  # tail records after nnn % 100 aren't commited yet
 
 def import_publ(record, param):
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
@@ -54,10 +59,10 @@ def import_publ(record, param):
     def impression_iter(impressions):
         for record in impressions:
             impression = {}
-            impression['pc'] = record['pc']
-            impression['sg'] = record['signatura']
-            impression['bc'] = record['barcode']
-            impression['place'] = place_to_place_id(param['places'], record['umisteni'].strip())
+            impression['iid'] = record['pc']
+            impression['sgn'] = record['signatura']
+            impression['barcode'] = record['barcode']
+            impression['place_id'] = place_to_place_id(param['places'], record['umisteni'].strip())
             yield impression
 
     id_publ = record['id_publ']
@@ -102,14 +107,16 @@ def import_publ(record, param):
     # always, because in case of other system import fastinfo can change together with same ean & md5publ
     fastinfo, md5publ = publ_fastinfo_and_hash(nazev, surnamed, full, pubplace, publisher, pubyear, subtitle=podnazev,
                                                keys=klsl)
-    md5publ = param['redirects'].get(md5publ, md5publ)
 
     impressions = param['vytisky'].get(id_publ, ())
-    answer_id = update_or_insert_answer(ean, md5publ, None, fastinfo)  # None ~ md5marc
-    owned_book_id = update_or_insert_owned_book(answer_id, len(impressions))
+    added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo=fastinfo, md5redirects=param['redirects'])
+    param['cnt_new'] += added
+    owned_book_id = update_or_insert_owned_book(answer_id, fastinfo, len(impressions))
     # impression_gen je generátor podle impression/impressions
     impression_gen = impression_iter(impressions)
-    update_or_insert_impressions(answer_id, owned_book_id, impression_gen, param['places'])
+    update_or_insert_impressions(answer_id, owned_book_id, impression_gen)
+
+    counter_and_commit(param)
 
 
 #TODO: rest should be moved into modules/c_import with next xBase import (import dbf + fix_init(dbf) can be used in c_import too)

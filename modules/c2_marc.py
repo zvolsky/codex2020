@@ -8,10 +8,10 @@ from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 from gluon import current
 
 from books import isxn_to_ean
+from c_db import PublLengths
 from c_utils import publ_hash, ean_to_fbi
 from dal_idx import create_idxs, del_idxs
 from dal_utils import answer_by_ean, answer_by_hash
-from c_db import PublLengths
 from marc_dialects import MarcFrom_AlephCz
 
 
@@ -41,7 +41,7 @@ def updatedb(record, touched, z39stamp=None):
             return True  # row exists, stop next actions
 
     marc = record.as_marc()
-    md5marc = hashlib.md5(marc).hexdigest()
+    md5marc = hashlib.md5(marc).hexdigest()   # pryč
 
     marcrec = MarcFrom_AlephCz(record)
     md5publ = publ_hash(marcrec.title, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
@@ -49,6 +49,7 @@ def updatedb(record, touched, z39stamp=None):
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
+    #-------------------
     answer = dict(md5publ=md5publ, md5marc=md5marc, z39stamp=z39stamp or datetime.datetime.utcnow(), ean=ean, marc=marc,
                   country=marcrec.country[:PublLengths.country],
                   year_from=marcrec.pubyears[0], year_to=marcrec.pubyears[1])
