@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
+# delayed imports inside func do_import: from import_codex import imp_codex, ...
+
 from z39 import get_from_large_library
 from c2_marc import parse_Marc_and_updatedb
-
-from dal_import import set_imp_proc, set_imp_finished
-
-if False:  # for IDE only, need web2py/__init__.py
-    from web2py.applications.codex2020.modules.dal_import import set_imp_proc, set_imp_finished
-
 
 from gluon.scheduler import Scheduler
 
@@ -37,12 +33,17 @@ def task_catalogize(question_id, question, asked):
 
 
 def do_import(imp_func, library_id, src_folder=None, full=False):
-    set_imp_proc(library_id, 1.0)
+    # delayed imports
+    def init_imp_codex():
+        from import_codex import imp_codex
+        return imp_codex
+
+    imp_func = {'imp_codex': init_imp_codex}[imp_func]()
     if full:
         db(db.owned_book.library_id == library_id).update(found_at_last=False)
         db(db.impression.library_id == library_id).update(found_at_last=False)
+        db.commit()
     imp_func(db, library_id, src_folder)
-    set_imp_finished(library_id)
 
 
 def run_tests(form_vars, servers):

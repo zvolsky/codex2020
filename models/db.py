@@ -146,7 +146,13 @@ db.define_table('library',
               label=T("Stat.dělení výtisků ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat výtisky (tip: i pro oddělení dosp/děts, pokud výtisky titulu mohou být přiděleny do různých oddělení)")),
         Field('st_tit_st', 'boolean', notnull=True, default=False,  # libstyle['gr'][2] = S
               label=T("Stat.dělení titulů ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat tituly")),
+        Field('imp_total', 'integer', readable=False, default=0,
+              label=T("Počet v importu"), comment=T("počet publikací, které budou/byly celkově importovány")),
         Field('imp_proc', 'decimal(5,2)', readable=False, writable=False, default=100.0),  # import position in %
+        Field('imp_done', 'integer', readable=False, default=0,
+              label=T("Počet již importovaných"), comment=T("počet již importovaných publikací celkem (nových i existujících)")),  # imp_done cnt
+        Field('imp_new', 'integer', readable=False, default=0,
+              label=T("Počet nových"), comment=T("počet nových již importovaných publikací")),  # imp_new cnt
         format='%(library)s'
         )
 

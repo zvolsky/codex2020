@@ -8,11 +8,26 @@
     {{pass}}
 
     {{if imp_proc:}}
-        <p>{{=T("Dokončeno")}} <small>({{=datetime.datetime.now().strftime('%H:%M')}})</small>: {{=imp_proc}}%</p>
+        <p>
+            <small>({{=datetime.datetime.now().strftime('%H:%M')}})</small><br><br>
+            {{=T("Dokončeno: %s") % counts.imp_proc}} %<br><br>
+            {{=T("Zpracováno publikací: %s, z toho") % counts.imp_done}}<br>
+            {{=' - ' + T("nově přidáno : %s") % counts.imp_new}}<br>
+            {{=' - ' + T("aktualizováno: %s") % (counts.imp_done - counts.imp_new)}}
+        </p>
     {{pass}}
 </div>
 
-{{=T("Průběh se aktualizuje po 2 minutách.")}} <a href="{{=URL()}}" class="btn btn-sm btn-default">{{=T("Aktualizovat stav importu nyní")}}</a>
+{{if msg_fin:}}
+    <p>{{=msg_fin}}</p>
+    <p>{{=A(T("pokračovat na úvodní stránku"), _href=URL('default', 'index'))}}</p>
+{{else:}}
+    <p>{{=T("Průběh se aktualizuje po 2 minutách.")}} <a href="{{=URL()}}" class="btn btn-sm btn-default">{{=T("Aktualizovat stav importu nyní")}}</a></p>
+
+    {{if can_stop:}}
+        <p>{{=T("Jestliže jste si absolutně jist(a), že import nepokračuje nebo že načítá chybné informace, můžete")}} {{=A(T("přerušit tento import"), _href=URL('cancel'))}}.</p>
+    {{pass}}
+{{pass}}
 
 <script>
     window.setTimeout(function() {

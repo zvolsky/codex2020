@@ -9,8 +9,8 @@ import os
 from books import isxn_to_ean
 
 from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
-from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,\
-        counter_and_commit, do_commit)
+from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,
+        counter_and_commit_if_100, finished, init_param, init_import)
 
 import dbf
 from dbf_read_iffy import fix_init, fix_895
@@ -27,17 +27,12 @@ fix_init(dbf)
     t.close()
 """
 
-from dal_import import load_redirects, load_places
-
 
 def imp_codex(db, library_id, src_folder):
     """
         This is the main (entry) function.
     """
-    param = {}
-    param['redirects'] = load_redirects()  # dict: md5publ -> md5publ(main) if book was joined with other (was/will be implemented later)
-    param['places'] = load_places()        # dict: place -> (place_id)
-
+    param = init_param()
     param['autori'] = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , need ","->", "
     param['k_autori'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')  # VZTAH, ID_AUTORA
     param['klsl'] = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'), key='id_klsl')  # KLSL
@@ -48,10 +43,9 @@ def imp_codex(db, library_id, src_folder):
     param['vytisky'] = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
                 # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
     # TODO: VYPUJCKY?
-    param['cnt_total'] = param['cnt_new'] = 0
 
-    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param)
-    do_commit()  # tail records after nnn % 100 aren't commited yet
+    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True)
+    finished(param)  # commit tail records after nnn % 100 and set imp_proc=100.0
 
 def import_publ(record, param):
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
@@ -110,13 +104,12 @@ def import_publ(record, param):
 
     impressions = param['vytisky'].get(id_publ, ())
     added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo=fastinfo, md5redirects=param['redirects'])
-    param['cnt_new'] += added
     owned_book_id = update_or_insert_owned_book(answer_id, fastinfo, len(impressions))
     # impression_gen je generátor podle impression/impressions
     impression_gen = impression_iter(impressions)
     update_or_insert_impressions(answer_id, owned_book_id, impression_gen)
 
-    counter_and_commit(param)
+    counter_and_commit_if_100(param, added)
 
 
 #TODO: rest should be moved into modules/c_import with next xBase import (import dbf + fix_init(dbf) can be used in c_import too)
@@ -126,6 +119,9 @@ def read_xbase(filename, callback, *args, **kwargs):
     """
     t = dbf.Table(filename)
     t.open('read-only')
+    if kwargs.get('do_init'):
+        del kwargs['do_init']  # to avoid error in the callback function
+        init_import(args[0], cnt_total=len(t))  # args[0] ~ param
     for record in t:
         callback(record, *args, **kwargs)
     t.close()

@@ -473,6 +473,12 @@ db.define_table('import_run',
               label=T("Čas začátku"), comment=T("čas zahájení importu")),
         Field('finished', 'datetime', writable=False,
               label=T("Čas ukončení"), comment=T("čas ukončení importu")),
+        Field('cnt_total', 'integer', writable=False,
+              label=T("Publikací"), comment=T("celkem zpracováno publikací")),
+        Field('cnt_new', 'integer', writable=False,
+              label=T("Z toho nových"), comment=T("z toho bylo nově přidáno publikací")),
+        Field('failed', 'boolean', default=False, writable=False,
+              label=T("Nedokončeno"), comment=T("import nebyl řádně dokončen")),
         common_filter=lambda query: db.import_run.library_id == auth.library_id,
         )
 

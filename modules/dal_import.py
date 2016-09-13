@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
 
-"""Dependent on pydal, but independent on the (rest of) Web2py framework.
-The exception is use of current., which makes possible calls from Web2py framework without additional parameters;
+"""From proprietary import call:
+    - param=init_param() and init_import(param, cnt_total) before the import
+    - import functions:
+        -- added, answer_id = update_or_insert_answer()
+        -- owned_book_id = update_or_insert_owned_book()
+        -- update_or_insert_impressions()
+    - counter_and_commit_if_100(param, added) with each imported book;
+            added is (1st tuple item of the) result from update_or_insert_answer()
+    - finished(param) after the import
+
+Dependent on pydal, but independent on the (rest of) Web2py framework.
+    The exception is use of current., which makes possible calls from Web2py framework without additional parameters;
     implicit parameter set via current. is always handled at the beginning of the func
 """
 
@@ -18,20 +28,108 @@ if False:  # for IDE only, need web2py/__init__.py
     from web2py.gluon import current
 
 
-def counter_and_commit(param):
-    param['cnt_total'] += 1
-    if not param['cnt_total'] % 100:
-        print param['cnt_total']
-        do_commit()
+def init_param():
+    """
+        initialize record counts and table dictionaries for places/locations and (md5publ)redirects
+    """
+    param = {}
+    param['cnt_done'] = param['cnt_new'] = 0
+    param['redirects'] = load_redirects()  # dict: md5publ -> md5publ(main) if book was joined with other (was/will be implemented later)
+    param['places'] = load_places()        # dict: place -> (place_id)
+    return param
 
 
-def do_commit(db=None):
+def init_import(param, cnt_total=None, db=None, auth=None):
+    """
+        initialize the import in database
+    """
     if db is None:
         db = current.db
+    if auth is None:
+        auth = current.auth
+
+    if cnt_total is None:
+        st_imp_rik = db(db.library.id == auth.library_id).select().first().st_imp_rik
+        cnt_total = int(0.5 * 10 ** st_imp_rik)
+    param['cnt_total'] = cnt_total
+    db.library[auth.library_id] = dict(imp_total=cnt_total, imp_done=0, imp_new=0, imp_proc=0.0)
+    db.commit()
+
+
+def counter_and_commit_if_100(param, added):
+    """
+        increment counter and commit at the chunk (of length 100 rows) end
+        added - (1st tuple item of the) result from update_or_insert_answer()
+    """
+    param['cnt_new'] += added
+    param['cnt_done'] += 1
+    if not param['cnt_done'] % 100:
+        do_commit(param)
+
+
+def finished(param, db=None):
+    """
+        commit yet uncommitted books and set imp_proc=100.0
+    """
+    if db is None:
+        db = current.db
+
+    running = db(db.import_run.finished == None).select(orderby=~db.import_run.started).first()
+    if running:
+        running.update_record(finished=datetime.datetime.utcnow(), cnt_total=param['cnt_done'], cnt_new=param['cnt_new'])
+        # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
+    do_commit(param, finished=True)
+
+
+def cancel_import(db=None, auth=None):
+    """
+        used by link in views/upload/running.html
+    """
+    if db is None:
+        db = current.db
+    if auth is None:
+        auth = current.auth
+
+    running = db(db.import_run.finished == None).select(orderby=~db.import_run.started)
+    for imp in running:
+        imp.update_record(failed=True, finished=datetime.datetime.utcnow())
+        # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
+    do_commit(None, finished=True)
+
+
+def do_commit(param, finished=False, db=None, auth=None):
+    if db is None:
+        db = current.db
+    if auth is None:
+        auth = current.auth
+
+    if param:
+        upd = dict(imp_done=param['cnt_done'], imp_new=param['cnt_new'], imp_proc=100.0 if finished else min(99.9, 100.0 * param['cnt_done'] / param['cnt_total']))
+    else:  # ie. if cancel!
+        upd = dict(imp_proc=100.0)
+    db.library[auth.library_id] = upd
+    db.commit()
+
+
+def clear_before_import(incremental=False, db=None, auth=None, session=None):
+    if db is None:
+        db = current.db
+    if auth is None:
+        auth = current.auth
+    if session is None:
+        session = current.session
+
+    if 'imp_done' in session:
+        del session['imp_done']
+    db.library[auth.library_id] = dict(imp_done=0, imp_new=0, imp_proc=0.0, imp_total=0)
+    db.import_run.insert(library_id=auth.library_id, incremental=incremental, started=datetime.datetime.utcnow())
     db.commit()
 
 
 def update_or_insert_answer(ean, md5publ, fastinfo=None, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10, db=None):
+    """
+    Returns tuple: (bool, answer_id) ; bool is True if the row wasn't yet in answer table and so it was inserted
+    """
     if db is None:
         db = current.db
 
@@ -88,6 +186,10 @@ def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None):
 
 
 def update_or_insert_impressions(answer_id, owned_book_id, impression_gen, db=None):
+    """
+    Args:
+        impression_gen: see import_codex.py for the example of impression generator
+    """
     if db is None:
         db = current.db
 
@@ -130,6 +232,7 @@ def place_to_place_id(places_dict, place, db=None):
         places_dict[place] = place_id
     return place_id
 
+'''
 def set_imp_proc(library_id, proc=2.0, db=None):
     if db is None:
         db = current.db
@@ -142,3 +245,4 @@ def set_imp_proc(library_id, proc=2.0, db=None):
 
 def set_imp_finished(library_id, db=None):
     set_imp_proc(library_id, proc=100.0, db=db)
+'''
