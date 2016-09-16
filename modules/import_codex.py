@@ -72,9 +72,9 @@ def import_publ(record, param):
 
     klsl = []
     for klic in param['k_klsl'].get(id_publ, ()):
-        klsl.append(fix_895(param['klsl'][klic['id_klsl']]['klsl']))
+        klsl.append(fix_895(param['klsl'][klic['id_klsl']]['klsl'].strip()))
     for klic in param['k_dt'].get(id_publ, ()):
-        klsl.append(fix_895(klic['dt']))   # zatím neukládám k_dt.pom_znak a dt.dt_txt
+        klsl.append(fix_895(klic['dt'].strip()))   # zatím neukládám k_dt.pom_znak a dt.dt_txt
     surnamed = []
     full = []
     for osoba in param['k_autori'].get(id_publ, ()):
@@ -88,10 +88,10 @@ def import_publ(record, param):
     surnamed = REPEATJOINER.join(surnamed)
     full = REPEATJOINER.join(full)
 
-    puvod = fix_895(record['puvod'])
-    knpoznamka = fix_895(record['knpoznamka'])
-    impresum = fix_895(record['impresum'])
-    anotace = fix_895(record['anotace'])
+    puvod = fix_895(record['puvod'].strip())
+    knpoznamka = fix_895(record['knpoznamka'].strip())
+    impresum = fix_895(record['impresum'].strip())
+    anotace = fix_895(record['anotace'].strip())
     # TODO: promyslet, jak spojit a kam uložit <<<<<<<<<<<<<<<<<<<<<<
 
     ean = record['ean'].strip()

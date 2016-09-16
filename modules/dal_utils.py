@@ -27,9 +27,8 @@ def answer_by_hash(db, md5publ, flds, md5redirects=None):
         md5redirects: set this earlier if you want speed up the functionality in cycle calls
         return: row or None
     """
-    if md5redirects is None:
-        md5redirects
-    md5publ = md5redirects.get(md5publ, md5publ)
+    if md5redirects is not None:
+        md5publ = md5redirects.get(md5publ, md5publ)
     return db(db.answer.md5publ == md5publ).select(*flds).first()
 
 

@@ -9,6 +9,7 @@ class MarcFrom(object):
     TODO: initially made for Aleph/cz; if more systems will be implemented later,
      move specific behaviour into derived MarcFrom_AlephCz class
     """
+    src_quality = 70  # default quality for z39/marc database
 
     def __init__(self, record):
         self.record = record
