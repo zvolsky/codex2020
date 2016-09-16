@@ -58,7 +58,7 @@ class MarcFrom(object):
         Note: 264 field with second indicator '1' indicates publisher.
         """
         # TODO: fix .publishers[], publisher, same authors[], author
-        def get_publisher(marc_publisher):
+        def get_publisher_from_marc(marc_publisher):
             place = self.fix(marc_publisher['a'])
             if place and not self.pubplace:
                 self.pubplace = place
@@ -85,9 +85,9 @@ class MarcFrom(object):
         rec = self.record
         for f in rec.get_fields('260', '264'):
             if rec['260']:
-                get_publisher(rec['260'])
+                get_publisher_from_marc(rec['260'])
             if rec['264'] and f.indicator2 == '1':
-                get_publisher(rec['264'])
+                get_publisher_from_marc(rec['264'])
         for aut_publisher, used in aut_publishers:
             if not used:
                 self.publishers.append(aut_publisher)

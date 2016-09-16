@@ -22,7 +22,7 @@ def parse_Marc_and_updatedb(results, z39stamp=None):
     md5redirects = load_redirects()  # dict: md5publ -> md5publ(main) if book was joined with other (was/will be implemented later)
     for r in results:
         for record in MARCReader(r.data, to_unicode=True):  # will return 1 record
-            inserted += updatedb(record, touched, z39stamp=z39stamp, md5redirects=md5redirects)
+            inserted += updatedb(record, z39stamp=z39stamp, md5redirects=md5redirects)
     duration_marc = datetime.datetime.utcnow()
 
     '''
@@ -35,7 +35,7 @@ def parse_Marc_and_updatedb(results, z39stamp=None):
     return len(results), inserted, duration_marc
 
 
-def updatedb(record, touched, z39stamp=None, md5redirects=None, db=None):
+def updatedb(record, z39stamp=None, md5redirects=None, db=None):
     if db is None:
         db = current.db
 
