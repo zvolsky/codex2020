@@ -138,6 +138,8 @@ def update_or_insert_answer(ean, md5publ, fastinfo=None, marc=None, md5marc=None
             if not marc or row.md5marc != md5marc:    # yes, same book, but changed info
                 if not row.fastinfo or src_quality >= row.src_quality:
                     answer['fastinfo'] = fastinfo  # update fastinfo only if empty or we have better quality (>) or we have have same quality newer (=) source
+                if ean and row.rik and row.rik != answer['rik']:  # suplemental rik was used earlier, but now we know the real ean
+                    db.rik2.insert(rik2=row.rik)                  # we cannot give the suplemental one away because some library can use it (have it written in the book)
                 db.answer[row.id] = answer
                 #touched.append((row.id, marcrec, record, row.fastinfo or ''))  # or '': to distinguish update (not None) from insert (None)
             return True  # row exists, stop next actions
@@ -149,12 +151,12 @@ def update_or_insert_answer(ean, md5publ, fastinfo=None, marc=None, md5marc=None
     else:
         md5marc = z39stamp = None
     answer = dict(md5publ=md5publ, md5marc=md5marc, z39stamp=z39stamp, marc=marc,
-                  ean=ean, rik=ean_to_fbi(ean),
+                  ean=ean, rik=ean_to_fbi(ean) or suplemental_fbi(),
                   country=marcrec and marcrec.country[:PublLengths.country],
                   year_from=marcrec and marcrec.pubyears[0], year_to=marcrec and marcrec.pubyears[1],
                   src_quality=src_quality, needindex=True)
 
-    flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo, db.answer.src_quality)
+    flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo, db.answer.rik, db.answer.src_quality)
     if ean:
         row = answer_by_ean(db, ean, flds)
         if exists_update():         # row exists...
@@ -166,7 +168,6 @@ def update_or_insert_answer(ean, md5publ, fastinfo=None, marc=None, md5marc=None
         return False, row.id
     else:                           # row doesn't exist yet
         answer['fastinfo'] = fastinfo
-        answer['rik2'] = suplemental_fbi()
         row_id = db.answer.insert(**answer)  # ...insert it
         #touched.append((row_id, marcrec, record, None))
         return True, row_id    # True means new added rec ( + 1 into inserted count and so on .. )

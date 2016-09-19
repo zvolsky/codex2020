@@ -177,9 +177,6 @@ db.define_table('answer',
         Field('rik', 'string', length=PublLengths.rik,
               readable=False, writable=False,
               label=T("Rychlá identifikace"), comment=T("rychlá identifikace knihy podle EAN (obrácené pořadí)")),
-        Field('rik2', 'string', length=PublLengths.rik,
-              readable=False, writable=False,
-              label=T("Náhradní RIK"), comment=T("náhradní rychlá identifikace knihy při chybějícím EANu (obrácené pořadí)")),
         Field('country', 'string', length=PublLengths.country,
               label=T("Země vydání"), comment=T("země vydání")),
         Field('year_from', 'integer',
@@ -193,6 +190,14 @@ db.define_table('answer',
         Field('needindex', 'boolean', default=True, readable=False, writable=False),
         Field('marc', 'text',
               label=T("marc"), comment=T("marc")),
+        )
+
+db.define_table('rik2',
+        Field('answer_id', db.answer, ondelete='CASCADE',
+              label=T("Publikace"), comment=T("publikace")),
+        Field('rik2', 'string', length=PublLengths.rik,
+              readable=False, writable=False,
+              label=T("Náhradní RIK"), comment=T("náhradní rychlá identifikace knihy při později nalezeném EANu (obrácené pořadí)")),
         )
 
 db.define_table('authority',
@@ -215,7 +220,7 @@ db.define_table('authority',
         )
 
 db.define_table('book_authority',
-        Field('anser_id', db.answer,
+        Field('answer_id', db.answer, ondelete='CASCADE',
               label=T("Publikace"), comment=T("publikace")),
         Field('authority_id', db.authority,
               label=T("Autorita"), comment=T("autorita")),
@@ -239,7 +244,7 @@ db.define_table('publisher',
         )
 
 db.define_table('book_publisher',
-        Field('anser_id', db.answer,
+        Field('answer_id', db.answer, ondelete='CASCADE',
               label=T("Publikace"), comment=T("publikace")),
         Field('publisher_id', db.publisher,
               label=T("Nakladatel"), comment=T("nakladatel")),

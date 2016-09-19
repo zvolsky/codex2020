@@ -68,6 +68,10 @@ def impressions_by_usrid(question, stop_if_single=False, db=None):
         else:
             query |= rik_query
 
+        rik2ids = [row.answer_id for row in db(db.rik2.rik2.startswith(rik)).select(db.rik2.answer_id)]
+        if rik2ids:  # it can be a suplemental rik replaced later by real rik (given by ean)
+            query |= db.answer.id.belongs(rik2ids)
+
     if not query:
         return nothing()
 
