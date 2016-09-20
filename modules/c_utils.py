@@ -70,7 +70,7 @@ def publ_hash(title, author, publisher, pubyear, subtitle=None, author_need_norm
     return hashlib.md5(src).hexdigest()
 
 
-def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, subtitle=None, keys=None):
+def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, subtitle=None, isbn=None, keys=None):
     """
     Args:
         keys: accepts iterable (recommended) or string (use REPEATJOINER please)
@@ -89,11 +89,14 @@ def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, su
         fastinfo += '\nP' + publisher
     if pubyear:
         fastinfo += '\nY%s' % pubyear
+    if isbn:
+        fastinfo += '\nI%s' % isbn
     if keys:
         if type(keys) in (tuple, list):
             keys = REPEATJOINER.join(keys)
         fastinfo += '\nK' + keys
     return fastinfo
+
 
 def parse_fbi(question, libstyle, reverted=True):
     """can asked string be a rik(fbi)?

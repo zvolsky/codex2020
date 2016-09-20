@@ -5,8 +5,6 @@ import hashlib
 
 from pymarc import MARCReader    # pymarc from PyPI, see setup.py about problems
 
-from gluon import current
-
 from books import isxn_to_ean
 from c_db import PublLengths
 from c_utils import publ_hash, make_fastinfo
@@ -84,7 +82,8 @@ def marcrec_to_fastinfo_and_hash(marcrec):
 
 
 def marcrec_to_fastinfo(marcrec):
-    fastinfo = ''
+    fastinfo = make_fastinfo(marcrec.title, marcrec.author, subtitle=marcrec.subtitle,
+                pubplace=marcrec.pubplace, publisher=marcrec.publisher, pubyear=marcrec.pubyear, isbn=marcrec.isbn)
     return fastinfo
 
 
