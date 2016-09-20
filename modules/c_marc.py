@@ -9,7 +9,7 @@ from gluon import current
 
 from books import isxn_to_ean
 from c_db import PublLengths
-from c_utils import publ_hash, ean_to_fbi
+from c_utils import publ_hash, make_fastinfo
 from dal_import import update_or_insert_answer, load_redirects
 from marc_dialects import MarcFrom_AlephCz
 
@@ -35,20 +35,17 @@ def parse_Marc_and_updatedb(results, z39stamp=None):
     return len(results), inserted, duration_marc
 
 
-def updatedb(record, z39stamp=None, md5redirects=None, db=None):
-    if db is None:
-        db = current.db
-
+def updatedb(record, z39stamp=None, md5redirects=None):
     marc = record.as_marc()
     md5marc = hashlib.md5(marc).hexdigest()   # pryč
 
     marcrec = MarcFrom_AlephCz(record)
-    md5publ = publ_hash(marcrec.title, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
+    fastinfo, md5publ = marcrec_to_fastinfo_and_hash(marcrec)
 
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
-    added, _answer_id = update_or_insert_answer(ean, md5publ, marc=marc, md5marc=md5marc, marcrec=marcrec, z39stamp=z39stamp, md5redirects=md5redirects, src_quality=marcrec.src_quality)
+    added, _answer_id = update_or_insert_answer(ean, md5publ, fastinfo, marc=marc, md5marc=md5marc, marcrec=marcrec, z39stamp=z39stamp, md5redirects=md5redirects, src_quality=marcrec.src_quality)
     return added
 
     '''
@@ -78,3 +75,30 @@ def updatedb(record, z39stamp=None, md5redirects=None, db=None):
         touched.append((row_id, marcrec, record, None))
         return True  # True -> + 1 into inserted count
     '''
+
+
+def marcrec_to_fastinfo_and_hash(marcrec):
+    fastinfo = marcrec_to_fastinfo(marcrec)
+    md5publ = publ_hash(marcrec.title, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
+    return fastinfo, md5publ
+
+
+def marcrec_to_fastinfo(marcrec):
+    fastinfo = ''
+    return fastinfo
+
+
+
+'''
+author, _full = normalize_authors(author, string_surnamed=True)
+
+def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, subtitle=None, keys=None):
+
+
+    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear, subtitle=podnazev,
+                                               keys=klsl)
+
+def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, pubyear, subtitle=None, keys=None):
+    return (make_fastinfo(title, author, pubplace=pubplace, publisher=publisher, pubyear=pubyear, subtitle=subtitle, keys=keys),
+            publ_hash(title, surnamed_author, publisher, pubyear, subtitle=subtitle))
+'''

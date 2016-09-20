@@ -85,8 +85,8 @@ def import_publ(record, param):
             full.append(full1)
         else:  # ostatní osoby
             klsl.append(full1)   # zatím neukládám k_autori.vztah
-    surnamed = REPEATJOINER.join(surnamed)
-    full = REPEATJOINER.join(full)
+    auth_surnamed = REPEATJOINER.join(surnamed)
+    auth_full = REPEATJOINER.join(full)
 
     puvod = fix_895(record['puvod'].strip())
     knpoznamka = fix_895(record['knpoznamka'].strip())
@@ -99,11 +99,11 @@ def import_publ(record, param):
         ean = isxn_to_ean(record['isbn'])
 
     # always, because in case of other system import fastinfo can change together with same ean & md5publ
-    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, surnamed, full, pubplace, publisher, pubyear, subtitle=podnazev,
+    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear, subtitle=podnazev,
                                                keys=klsl)
 
     impressions = param['vytisky'].get(id_publ, ())
-    added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo=fastinfo, md5redirects=param['redirects'])
+    added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'])
     owned_book_id = update_or_insert_owned_book(answer_id, fastinfo, len(impressions))
     # impression_gen je generátor podle impression/impressions
     impression_gen = impression_iter(impressions)

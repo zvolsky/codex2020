@@ -5,9 +5,12 @@ from c_utils import REPEATJOINER, get_publisher, get_place_publisher
 
 
 class MarcFrom(object):
-    """convert from Marc to properties
-    TODO: initially made for Aleph/cz; if more systems will be implemented later,
-     move specific behaviour into derived MarcFrom_AlephCz class
+    """
+        convert from Marc to (self.)properties
+        must create properties for marcrec_to_fastinfo() + .isbn, .country, .pubyears
+
+        TODO: initially made for Aleph/cz; if more systems will be implemented later,
+            move specific behaviour into derived MarcFrom_AlephCz class
     """
     src_quality = 70  # default quality for z39/marc database
 

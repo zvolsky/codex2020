@@ -3,7 +3,7 @@
 # delayed imports inside func do_import: from import_codex import imp_codex, ...
 
 from z39 import get_from_large_library
-from c2_marc import parse_Marc_and_updatedb
+from c_marc import parse_Marc_and_updatedb
 
 from gluon.scheduler import Scheduler
 
