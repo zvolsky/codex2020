@@ -47,55 +47,126 @@ def normalize_authors(authors, string_surnamed=False, string_full=False):
     return join_author(surnamed) if string_surnamed else surnamed, join_author(full) if string_full else full
 
 
-def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, pubyear, subtitle=None, keys=None):
-    return (make_fastinfo(title, author, pubplace=pubplace, publisher=publisher, pubyear=pubyear, subtitle=subtitle, keys=keys),
-            publ_hash(title, surnamed_author, publisher, pubyear, subtitle=subtitle))
+class Answer:
+    def __init__(self, title=None, author=None, pubplace=None, publisher=None, pubyear=None,
+                 subtitles=None, origin=None, keys=None):
+        self.title = title
+        self.author = author
+        self.pubplace = pubplace
+        self.publisher = publisher
+        self.pubyear = pubyear
+        self.subtitles = subtitles
+        self.origin = origin
+        self.keys = keys
 
 
-def publ_hash(title, author, publisher, pubyear, subtitle=None, author_need_normalize=False):
+def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, pubyear, subtitles=None, origin=None, keys=None):
+    return (make_fastinfo(Answer(title=title, author=author, pubplace=pubplace, publisher=publisher, pubyear=pubyear,
+                                 subtitles=subtitles, origin=origin, keys=keys)),
+            publ_hash(title, surnamed_author, publisher, pubyear))
+
+
+def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
     """
     author: prefered use is 'surname shortened'string. For anything else (list, not shortened,..) please set author_need_normalize
     publisher: publisher1 publisher2 ...
     pubyear: we use digits only
     """
-    if subtitle:
-        title = title + subtitle  # connection not important: hash_prepared() removes all
+    #if subtitle:
+    #    title = title + subtitle  # connection not important: hash_prepared() removes all
     if author_need_normalize:
         author, _full = normalize_authors(author, string_surnamed=True)
 
-    src = '%s|%s|%s|%s' % (hash_prepared(title), hash_prepared(author),
+    src = '%s|%s|%s|%s' % (hash_prepared(title, title=True), hash_prepared(author),
                            hash_prepared(publisher), filter(lambda d: d.isdigit(), pubyear))
     if type(src) == unicode:
         src = src.encode('utf-8')
     return hashlib.md5(src).hexdigest()
 
 
-def make_fastinfo(title, author, pubplace=None, publisher=None, pubyear=None, subtitle=None, isbn=None, keys=None):
+def make_fastinfo(rec):
     """
     Args:
+        title (obligatory), subtitles (list), origin, title_indexparts, title_ignore_chars,
+            author,
+            pubplace, publisher, pubyear, isbn,
+            keys
         keys: accepts iterable (recommended) or string (use REPEATJOINER please)
     """
-    title = title.split(' : ')
-    fastinfo = 'T' + title.pop(0).strip()
-    if subtitle:
-        title.append(subtitle)
-    title = filter(None, map(lambda a: a.strip(), title))
-    if title:
-        fastinfo += '\nt' + '. '.join(title)
-    fastinfo += '\nA' + author
+    title_parts = rec.title.lstrip().split(' : ')
+    title = title_parts.pop(0)
+    if len(title_parts) <= 1:
+        title, crazy_tail = split_crazy_tail(title)
+    else:
+        title = title.rstrip()
+        crazy_tail = ' : '
+    fastinfo = 'T' + title
+    if crazy_tail:
+        fastinfo += '\n>' + crazy_tail
+    subtitles = getattr(rec, 'subtitles', None)
+    if subtitles:
+        if isinstance(subtitles, basestring):
+            subtitles = (subtitles,)
+        title_parts.extend(subtitles)
+    if title_parts:
+        title_parts = make_unique(title_parts)
+        for title_part in title_parts:
+            title_part, crazy_tail = split_crazy_tail(title_part)
+            fastinfo += '\nt' + crazy_tail + title_part
+    title_ignore_chars = getattr(rec, 'title_ignore_chars', None)
+    if title_ignore_chars:
+        fastinfo += '\n#%s' % title_ignore_chars
+    title_indexparts = getattr(rec, 'title_indexparts', None)
+    if title_indexparts:
+        fastinfo += '\ni%s' + title_indexparts
+    author = getattr(rec, 'author', None)
+    if author:
+        fastinfo += '\nA' + author
+    origin = getattr(rec, 'origin', None)
+    if origin:
+        fastinfo += '\nO' + origin
+    pubplace = getattr(rec, 'pubplace', None)
     if pubplace:
         fastinfo += '\nL' + pubplace
+    publisher = getattr(rec, 'publisher', None)
     if publisher:
         fastinfo += '\nP' + publisher
+    pubyear = getattr(rec, 'pubyear', None)
     if pubyear:
         fastinfo += '\nY%s' % pubyear
+    isbn = getattr(rec, 'isbn', None)
     if isbn:
         fastinfo += '\nI%s' % isbn
+    keys = getattr(rec, 'keys', None)
     if keys:
         if type(keys) in (tuple, list):
             keys = REPEATJOINER.join(keys)
         fastinfo += '\nK' + keys
     return fastinfo
+
+
+def split_crazy_tail(txt, convert_tail=True):
+    """
+        some libraries add into data connecting strings to next data (yes, it's really crazy)
+        we split here (as exact as possible) the real data and the crazy connector (=crazy_tail)
+        because we split the crazy_tail in order to save it somewhere,
+            it will be converted into an internal format; you can disable this by setting convert_tail=False
+
+        Returns: (real data, crazy_tail)  # both strings
+    """
+    tail = txt[-5:]
+    crazy_tail = re.findall(r'[ +\-/:,;]+$', tail)
+    if crazy_tail:
+        crazy_tail = crazy_tail[0]
+        if crazy_tail.strip():
+            txt = txt[:(len(txt) - len(crazy_tail))]
+            if convert_tail:
+                crazy_tail = '$%s$%s$' % (len(crazy_tail), crazy_tail)
+            return txt, crazy_tail
+    rstr = txt.rstrip()
+    if rstr[-1:] == '.' and rstr[-2:] != '..':
+        return rstr[:-1], txt[len(rstr) - 1:]
+    return rstr, ''
 
 
 def parse_fbi(question, libstyle, reverted=True):
@@ -182,3 +253,17 @@ def get_place_publisher(pubplace, publisher):
     if type(publisher) in (tuple, list):
         publisher = get_publisher(publisher)
     return ' : '.join((pubplace, publisher))
+
+
+def make_unique(parts):
+    parts = list(parts)
+    len_parts = len(parts)
+    for rev1, part in enumerate(parts[::-1]):
+        pos1 = len_parts - rev1 - 1
+        testpart = part
+        for pos2, part in enumerate(parts):
+            if pos1 != pos2:
+                testpart = testpart.replace(part, '')
+        if not re.findall('\w', testpart):  # part can be joined from other parts
+            parts[pos1] = ''                # remove it (but in 2 steps to avoid item movement inside the cycle)
+    return filter(None, parts)

@@ -28,6 +28,11 @@ if False:  # for IDE only, need web2py/__init__.py
     from web2py.gluon import current
 
 
+# temporary setting - TODO: use better setting after we will allow more sources in single application
+extsrc = current.db().select(current.db.extsrc.id, orderby=current.db.extsrc.id).first()
+extsrc_id = extsrc.id if extsrc else None
+
+
 def init_param():
     """
         initialize record counts and table dictionaries for places/locations and (md5publ)redirects
@@ -126,7 +131,8 @@ def clear_before_import(incremental=False, db=None, auth=None, session=None):
     db.commit()
 
 
-def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10, db=None):
+def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10,
+                            db=None):
     """
     Returns tuple: (bool, answer_id) ; bool is True if the row wasn't yet in answer table and so it was inserted
     """
@@ -150,7 +156,7 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
         z39stamp = z39stamp or datetime.datetime.utcnow()
     else:
         md5marc = z39stamp = None
-    answer = dict(md5publ=md5publ, md5marc=md5marc, z39stamp=z39stamp, marc=marc,
+    answer = dict(extsrc_id=extsrc_id, md5publ=md5publ, md5marc=md5marc, z39stamp=z39stamp, marc=marc,
                   ean=ean, rik=ean_to_fbi(ean) or suplemental_fbi(),
                   country=marcrec and marcrec.country[:PublLengths.country],
                   year_from=marcrec and marcrec.pubyears[0], year_to=marcrec and marcrec.pubyears[1],

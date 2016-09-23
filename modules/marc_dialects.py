@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from books import parse_pubyear
-from c_utils import REPEATJOINER, get_publisher, get_place_publisher
+from c_utils import REPEATJOINER, get_publisher, get_place_publisher, make_unique
 
 
 class MarcFrom(object):
@@ -19,8 +19,8 @@ class MarcFrom(object):
 
         # to make pylint happy; parse_...() will set them
         self.title_ignore_chars = 0
-        self.title_parts = []
-        self.title = self.pubplace = self.publisher = self.place_publisher = self.pubyear = self.author = self.series = ''
+        self.title_indexparts = []
+        self.title = self.subtitles = self.origin = self.pubplace = self.publisher = self.place_publisher = self.pubyear = self.author = self.series = ''
         self.country = self.language_orig = ''
         self.pubyears = (None, None)  # from/to
         self.languages = []
@@ -103,46 +103,49 @@ class MarcFrom(object):
         def spec_append(part):
             if part[:2] == '<<' and '>>' in part:  # characters ignored for sorting
                 splitted = part[2:].lstrip().split('>>', 1)
-                parts.append(splitted[0] + splitted[1])
-                parts.append(splitted[1].lstrip())
+                subtitles.add(splitted[0] + splitted[1])
+                indexparts.add(splitted[1].lstrip())
             else:
-                parts.append(part)
+                subtitles.add(part)
 
-        parts = []
-        for idxt, marc_title in enumerate(self.record.get_fields('245')):
+        subtitles = set()
+        indexparts = set()
+        for idxt, marc_title in enumerate(self.record.get_fields('245')):  # used first 245 field only, see break cmd
             if not idxt:
                 try:
                     self.title_ignore_chars = int(marc_title.indicator2)
                 except:
                     self.title_ignore_chars = 0
             self.title = marc_title.value().split(' / ', 1)[0].strip()
-            parts.append(self.title)
             if self.title_ignore_chars:
-                part2 = self.title[self.title_ignore_chars:].lstrip()
-                if part2:
-                    parts.append(part2)
+                indexpart = self.title[self.title_ignore_chars:].lstrip()
+                if indexpart:
+                    indexparts.add(indexpart)
             subval = ''
             for idx, subfld in enumerate(marc_title.subfields[::-1]):
                 if idx % 2:
-                    if subfld in ['a', 'b', 'c', 'n', 'p']:
-                        parts.append(subval)
+                    if subval and subfld in ['a', 'b', 'n', 'p']:
+                        subtitles.add(subval)
+                    if subfld == 'c':
+                        self.origin = subval
                 else:
-                    subval += (' ' if subval else '') + subfld.strip()
+                    subval = subfld.strip()
             break  # use first 245 field only
         for marc_title in self.record.get_fields('246'):
             if not self.title:
-                parts.append(marc_title.value().strip())
+                subtitles.add(marc_title.value().strip())
             subval = ''
             for idx, subfld in enumerate(marc_title.subfields[::-1]):
                 if idx % 2:
-                    if subfld in ['a', 'b', 'n', 'p']:
+                    if subval and subfld in ['a', 'b', 'n', 'p']:
                         spec_append(subval)
                 else:
-                    subval += (' ' if subval else '') + subfld.strip()
+                    subval = subfld.strip()
             mt_value = marc_title.value().strip()
             if subval != mt_value:
                 spec_append(mt_value)
-        self.title_parts = parts
+        self.subtitles = subtitles
+        self.title_indexparts = make_unique(indexparts)
 
     def parse_authors(self):
         """will call self.parse_authorities() and establish self.authorities and self.authors (list) + self.author (string)

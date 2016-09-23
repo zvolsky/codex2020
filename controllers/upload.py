@@ -101,10 +101,24 @@ def codex():
                     fw.write(content)
 
         clear_before_import()
-        #do_import('imp_codex', auth.library_id, src_folder=uploadfolder, full=True)  # debug
-        #redirect(URL('default', 'index'))
-        scheduler.queue_task(do_import,
-                pvars={'imp_func': 'imp_codex', 'library_id': auth.library_id, 'src_folder': uploadfolder, 'full': True},
-                timeout=7200)
-        redirect(URL('running'))
+        if debug_scheduler:
+            do_import('imp_codex', auth.library_id, src_folder=uploadfolder, full=True)  # debug
+            redirect_url = URL('default', 'index')
+        else:
+            scheduler.queue_task(do_import,
+                    pvars={'imp_func': 'imp_codex', 'library_id': auth.library_id, 'src_folder': uploadfolder, 'full': True},
+                    timeout=7200)
+            redirect_url = URL('running')
+
+        if debug_scheduler:
+            idx()
+        else:
+            scheduler.queue_task(idx, pvars={}, timeout=100)
+
+        #from time import sleep
+        #sleep(1)
+        #scheduler.queue_task(idx, pvars={}, timeout=100)
+
+        redirect(redirect_url)
+
     return dict()

@@ -4,7 +4,7 @@ from mzutils import slugify
 
 from gluon import current
 
-from c_utils import make_fastinfo
+from c_utils import Answer, make_fastinfo
 from c_db import PublLengths
 
 
@@ -52,8 +52,8 @@ def create_idxs(answer_id, c2_parsed, marc_obj, old_fastinfo='', updating=False)
     # we allow fasinfo rewrite only if we have marc_obj or if fastinfo is empty yet
     #   that way fastinfo can have additional fields (from import maybe, like keywords) which aren't supported with this (simplified) make_fastinfo call
     if marc_obj or not old_fastinfo:
-        fastinfo = make_fastinfo(c2_parsed.title, c2_parsed.author, subtitle=c2_parsed.subtitle,
-                                 pubplace=c2_parsed.pubplace, publisher=c2_parsed.publisher, pubyear=c2_parsed.pubyear)
+        fastinfo = make_fastinfo(Answer(title=c2_parsed.title, author=c2_parsed.author, subtitles=c2_parsed.subtitle,
+                                 pubplace=c2_parsed.pubplace, publisher=c2_parsed.publisher, pubyear=c2_parsed.pubyear))
         if fastinfo.encode('utf8') != old_fastinfo:
             db = current.db
             db.answer[answer_id] = {'fastinfo': fastinfo}

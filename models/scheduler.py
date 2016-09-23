@@ -7,6 +7,8 @@ from c_marc import parse_Marc_and_updatedb
 
 from gluon.scheduler import Scheduler
 
+from dal_import import counter_and_commit_if_100
+
 from plugin_splinter import run_for_server
 
 
@@ -44,6 +46,24 @@ def do_import(imp_func, library_id, src_folder=None, full=False):
         db(db.impression.library_id == library_id).update(found_at_last=False)
         db.commit()
     imp_func(db, library_id, src_folder)
+    db.commit()   # to be sure; but imp_func itself should commit (in chunks or so)
+
+
+def idx():
+    rows = db(db.answer.needindex == True, ignore_common_filters=True).select(db.answer.id, db.answer.md5publ)
+    indexed = 0
+    for row in rows:
+        if row.md5publ:
+            md5publ = row.md5publ
+        else:
+            #md5publ =
+            pass
+        db.answer[row.id] = {'needindex': False, 'md5publ': md5publ}
+
+        indexed += 1
+        if not indexed % 100:
+            db.commit()
+    db.commit()
 
 
 def run_tests(form_vars, servers):
@@ -51,4 +71,5 @@ def run_tests(form_vars, servers):
         run_for_server(server, form_vars, myconf)
 
 
+debug_scheduler = True
 scheduler = Scheduler(db)

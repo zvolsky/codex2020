@@ -34,11 +34,12 @@ def find():
 
     form = SQLFORM(db.question, hidden=dict(f6=ISMN1, f7=ISBN1, f8=EAN1, f9=EAN2), formstyle=formstyle_bootstrap3_compact_factory())
     if form.process(onvalidation=onvalidation).accepted:
-        #from pdb import set_trace; set_trace()
-        #task_catalogize(form.vars.id, form.vars.question, str(form.vars.asked))  # debug
-        scheduler.queue_task(task_catalogize,
-                pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
-                timeout=300)
+        if debug_scheduler:
+            task_catalogize(form.vars.id, form.vars.question, str(form.vars.asked))  # debug
+        else:
+            scheduler.queue_task(task_catalogize,
+                    pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
+                    timeout=300)
     return dict(form=form, cancel_search=__btnCancelSearch())
 
 # ajax

@@ -3,6 +3,7 @@
 import re
 import unicodedata
 
+
 def stripAccents(s):
     """
         will replace accented characters with their basic ASCII characters)
@@ -11,12 +12,18 @@ def stripAccents(s):
         s = s.decode('utf8')
     return ''.join((c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'))
 
-def hash_prepared(s):
+
+def hash_prepared(s, title=False):
     """
         string suitable for hashing if we want compare unsafe text sources
         example: Graz,Kärnten == Graz, Karnten == graz;kárnten
     """
+    if title:
+        s = re.sub('[@#?]', 'X', s)
+        for item in re.findall('[0-9IVXLCDM]\s*-\s*[0-9IVXLCDM]', s):  # Story I-II. vs. Story III.
+            s = s.replace(item, item.replace('-', 'Q'))
     return filter(lambda ch: ch.isalnum(), stripAccents(s)).lower()
+
 
 def slugify(value, defaultIfEmpty='name', removeAccents=True, stringCoding='utf-8', connectChar='-'):
     """(from Django with small changes)
@@ -36,6 +43,7 @@ def slugify(value, defaultIfEmpty='name', removeAccents=True, stringCoding='utf-
     if connectChar != '-':
         value = value.replace('-', connectChar).strip()
     return value
+
 
 def shortened(txt, maxlen=12, tail='..'):
     if txt is None:

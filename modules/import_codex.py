@@ -4,6 +4,7 @@
     Read from dbf's with codepage unsupported by modules dbf and codecs (like 895 cz Kamenicky)
 """
 
+import re
 import os
 
 from books import isxn_to_ean
@@ -88,19 +89,25 @@ def import_publ(record, param):
     auth_surnamed = REPEATJOINER.join(surnamed)
     auth_full = REPEATJOINER.join(full)
 
-    puvod = fix_895(record['puvod'].strip())
+    origin = fix_895(record['puvod'].strip())
     knpoznamka = fix_895(record['knpoznamka'].strip())
     impresum = fix_895(record['impresum'].strip())
     anotace = fix_895(record['anotace'].strip())
     # TODO: promyslet, jak spojit a kam uložit <<<<<<<<<<<<<<<<<<<<<<
 
+    isbn = ''
+    if record['isbn']:
+        isbn_candidates = re.findall(r'\b[0-9X\-]\b', record['isbn'])
+        isbn_candidates = [candidate for candidate in isbn_candidates if len(candidate.replace('-', '')) in (8, 10, 13)]
+        if isbn_candidates:
+            isbn = isbn_candidates[0]
     ean = record['ean'].strip()
     if not ean:
-        ean = isxn_to_ean(record['isbn'])
+        ean = isxn_to_ean(isbn)
 
     # always, because in case of other system import fastinfo can change together with same ean & md5publ
-    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear, subtitle=podnazev,
-                                               keys=klsl)
+    fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear,
+                                               subtitles=(podnazev,), origin=origin, keys=klsl)
 
     impressions = param['vytisky'].get(id_publ, ())
     added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'])
