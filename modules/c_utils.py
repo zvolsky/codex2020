@@ -10,6 +10,11 @@ import random
 import re
 import string
 
+try:
+    import simplejson
+except ImportError:
+    from gluon.contrib import simplejson
+
 from mzutils import hash_prepared
 
 
@@ -84,7 +89,7 @@ def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
     return hashlib.md5(src).hexdigest()
 
 
-def make_fastinfo(rec):
+def make_fastinfo(rec, correct_title=False):
     """
     Args:
         title (obligatory), subtitles (list), origin, title_indexparts, title_ignore_chars,
@@ -93,26 +98,13 @@ def make_fastinfo(rec):
             keys
         keys: accepts iterable (recommended) or string (use REPEATJOINER please)
     """
-    title_parts = rec.title.lstrip().split(' : ')
-    title = title_parts.pop(0)
-    if len(title_parts) <= 1:
-        title, crazy_tail = split_crazy_tail(title)
-    else:
-        title = title.rstrip()
-        crazy_tail = ' : '
-    fastinfo = 'T' + title
-    if crazy_tail:
-        fastinfo += '\n>' + crazy_tail
+    if correct_title:
+        title_correction(rec)
+
+    fastinfo = 'T' + rec.title
     subtitles = getattr(rec, 'subtitles', None)
     if subtitles:
-        if isinstance(subtitles, basestring):
-            subtitles = (subtitles,)
-        title_parts.extend(subtitles)
-    if title_parts:
-        title_parts = make_unique(title_parts)
-        for title_part in title_parts:
-            title_part, crazy_tail = split_crazy_tail(title_part)
-            fastinfo += '\nt' + crazy_tail + title_part
+        fastinfo += '\nt' + simplejson.dumps()
     title_ignore_chars = getattr(rec, 'title_ignore_chars', None)
     if title_ignore_chars:
         fastinfo += '\n#%s' % title_ignore_chars
@@ -145,12 +137,12 @@ def make_fastinfo(rec):
     return fastinfo
 
 
-def split_crazy_tail(txt, convert_tail=True):
+def split_crazy_tail(txt):  # , convert_tail=True
     """
         some libraries add into data connecting strings to next data (yes, it's really crazy)
         we split here (as exact as possible) the real data and the crazy connector (=crazy_tail)
         because we split the crazy_tail in order to save it somewhere,
-            it will be converted into an internal format; you can disable this by setting convert_tail=False
+            ### removed: ### it will be converted into an internal format; you can disable this by setting convert_tail=False
 
         Returns: (real data, crazy_tail)  # both strings
     """
@@ -160,13 +152,14 @@ def split_crazy_tail(txt, convert_tail=True):
         crazy_tail = crazy_tail[0]
         if crazy_tail.strip():
             txt = txt[:(len(txt) - len(crazy_tail))]
-            if convert_tail:
-                crazy_tail = '$%s$%s$' % (len(crazy_tail), crazy_tail)
+            #if convert_tail:
+            #    crazy_tail = '$%s$%s$' % (len(crazy_tail), crazy_tail)
             return txt, crazy_tail
     rstr = txt.rstrip()
     if rstr[-1:] == '.' and rstr[-2:] != '..':
         return rstr[:-1], txt[len(rstr) - 1:]
-    return rstr, ''
+    return rstr, ' : '  # TODO? at this time we use ' : ' as default crazy_tail connector, but this behaviour
+                        #   should be improved (or connector changed later) based on the (marc) type of the next subtitle
 
 
 def parse_fbi(question, libstyle, reverted=True):
@@ -255,15 +248,63 @@ def get_place_publisher(pubplace, publisher):
     return ' : '.join((pubplace, publisher))
 
 
-def make_unique(parts):
+def make_unique(parts, safe_first=True, part_extraction=lambda p: p):
+    """
+        seek for parts*) if some of them could be joined from other parts; if so, such part will be removed
+        this is because we have in marc sources often such kind of unnecessary duplicates in the marc title (245/246) subfields
+        *) parts are
+            parts[1:] if safe_first=True (never remove the first item)
+            or all of them if safe_first=False
+
+        part_extraction is for internal use (see make_unique_tuples())
+    """
+    stop = 0 if safe_first else None
     parts = list(parts)
     len_parts = len(parts)
-    for rev1, part in enumerate(parts[::-1]):
-        pos1 = len_parts - rev1 - 1
-        testpart = part
+    for revpos1, part in enumerate(parts[:stop:-1]):
+        pos1 = len_parts - revpos1 - 1
+        testpart = part_extraction(part)
         for pos2, part in enumerate(parts):
             if pos1 != pos2:
-                testpart = testpart.replace(part, '')
-        if not re.findall('\w', testpart):  # part can be joined from other parts
+                testpart = testpart.replace(part_extraction(part), '')
+        if not re.findall('\w', unicode(testpart), flags=re.UNICODE):  # part can be joined from other parts (we ignore any connecting characters here)
             parts[pos1] = ''                # remove it (but in 2 steps to avoid item movement inside the cycle)
-    return filter(None, parts)
+    return filter(None, parts)              # this is 2nd step of removing
+
+
+def make_unique_tuples(parts, safe_first=True):
+    """
+        works like make_unique() but works with tuples where each part is in tuple[1]
+    """
+    return make_unique(parts, safe_first=safe_first, part_extraction=lambda p: p[1])
+
+
+def title_correction(rec):
+    """
+        isolates
+            - main title (string)
+            - subtitles (list of tuples, first item is connector to the previous part(s), second is subtitle itself)
+        this handles 2 types of crazy title representations:
+            - 'title : subtitle' inside the title value
+            - crazy_tails ie. extra characters added to the end of real title/subtitle value which should connect the next parts in the printed output
+                this crazy solution (which heavy breaks the value of data) is really used in real life: at least in Czech national library databases
+
+        TODO? maybe we will need this later with title/subtitle parameters and/or title/subtitle return value,
+            but at now we make this correction inside the rec object (containing rec.title, rec.subtitles)
+    """
+    title_parts = rec.title.lstrip().split(' : ')
+    subtitles_input = getattr(rec, 'subtitles', None)
+    if subtitles_input:
+        if isinstance(subtitles_input, basestring):
+            subtitles = (subtitles_input,)
+        title_parts.extend(subtitles_input)
+    subtitles = set()
+    next_crazy = None
+    for title_part in title_parts:
+        title_part, crazy_tail = split_crazy_tail(title_part)
+        subtitles.add((next_crazy, title_part))
+        next_crazy = crazy_tail
+    subtitles = make_unique_tuples(subtitles)
+
+    rec.title = title_parts.pop(0)[1]
+    rec.subtitles = subtitles

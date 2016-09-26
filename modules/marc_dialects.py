@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from books import parse_pubyear
-from c_utils import REPEATJOINER, get_publisher, get_place_publisher, make_unique
+from c_utils import REPEATJOINER, get_publisher, get_place_publisher, make_unique, title_correction
 
 
 class MarcFrom(object):
@@ -117,6 +117,7 @@ class MarcFrom(object):
                 except:
                     self.title_ignore_chars = 0
             self.title = marc_title.value().split(' / ', 1)[0].strip()
+            subtitles.add(self.title)  # add at this time and delete later after removing of duplicates
             if self.title_ignore_chars:
                 indexpart = self.title[self.title_ignore_chars:].lstrip()
                 if indexpart:
@@ -145,7 +146,9 @@ class MarcFrom(object):
             if subval != mt_value:
                 spec_append(mt_value)
         self.subtitles = subtitles
-        self.title_indexparts = make_unique(indexparts)
+        self.title_indexparts = make_unique(indexparts, safe_first=False)
+                # TODO? at this time we allow indexparts with crazy_tails with the hope this will be no problem for seeking
+                # crazy_tails are connectors added to the end of real data (hint: seek in the code to learn more)
 
     def parse_authors(self):
         """will call self.parse_authorities() and establish self.authorities and self.authors (list) + self.author (string)
