@@ -103,13 +103,13 @@ class MarcFrom(object):
         def spec_append(part):
             if part[:2] == '<<' and '>>' in part:  # characters ignored for sorting
                 splitted = part[2:].lstrip().split('>>', 1)
-                subtitles.add(splitted[0] + splitted[1])
-                indexparts.add(splitted[1].lstrip())
+                subtitles.append(splitted[0] + splitted[1])
+                indexparts.append(splitted[1].lstrip())
             else:
-                subtitles.add(part)
+                subtitles.append(part)
 
-        subtitles = set()
-        indexparts = set()
+        subtitles = []
+        indexparts = []
         for idxt, marc_title in enumerate(self.record.get_fields('245')):  # used first 245 field only, see break cmd
             if not idxt:
                 try:
@@ -117,16 +117,16 @@ class MarcFrom(object):
                 except:
                     self.title_ignore_chars = 0
             self.title = marc_title.value().split(' / ', 1)[0].strip()
-            subtitles.add(self.title)  # add at this time and delete later after removing of duplicates
+            subtitles.append(self.title)  # add at this time and delete later after removing of duplicates
             if self.title_ignore_chars:
                 indexpart = self.title[self.title_ignore_chars:].lstrip()
                 if indexpart:
-                    indexparts.add(indexpart)
+                    indexparts.append(indexpart)
             subval = ''
             for idx, subfld in enumerate(marc_title.subfields[::-1]):
                 if idx % 2:
                     if subval and subfld in ['a', 'b', 'n', 'p']:
-                        subtitles.add(subval)
+                        subtitles.append(subval)
                     if subfld == 'c':
                         self.origin = subval
                 else:
@@ -134,7 +134,7 @@ class MarcFrom(object):
             break  # use first 245 field only
         for marc_title in self.record.get_fields('246'):
             if not self.title:
-                subtitles.add(marc_title.value().strip())
+                subtitles.append(marc_title.value().strip())
             subval = ''
             for idx, subfld in enumerate(marc_title.subfields[::-1]):
                 if idx % 2:
@@ -146,6 +146,7 @@ class MarcFrom(object):
             if subval != mt_value:
                 spec_append(mt_value)
         self.subtitles = subtitles
+        title_correction(self)  # remove possible subtitles duplicates
         self.title_indexparts = make_unique(indexparts, safe_first=False)
                 # TODO? at this time we allow indexparts with crazy_tails with the hope this will be no problem for seeking
                 # crazy_tails are connectors added to the end of real data (hint: seek in the code to learn more)

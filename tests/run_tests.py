@@ -23,7 +23,7 @@ def run_tests(filename='test*.py'):
         execfile(file, locals())
     unittest.TextTestRunner(verbosity=2).run(suite)
 
-
+#       (first version cannot be used as long we use/set db=DAL() in run_tests)
 # python applications/codex2020/tests/run_tests.py filename.py  # selected test independent on app environment
 # python web2py.py -S codex2020 -M -R applications/codex2020/tests/run_tests.py                 # all tests
 # python web2py.py -S codex2020 -M -R applications/codex2020/tests/run_tests.py -A filename.py  # selected test

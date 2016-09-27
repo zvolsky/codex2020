@@ -152,6 +152,8 @@ def split_crazy_tail(txt):  # , convert_tail=True
         crazy_tail = crazy_tail[0]
         if crazy_tail.strip():
             txt = txt[:(len(txt) - len(crazy_tail))]
+            if crazy_tail[0] == ' ' and crazy_tail[-1] != ' ':
+                crazy_tail += ' '
             #if convert_tail:
             #    crazy_tail = '$%s$%s$' % (len(crazy_tail), crazy_tail)
             return txt, crazy_tail
@@ -265,7 +267,7 @@ def make_unique(parts, safe_first=True, part_extraction=lambda p: p):
         pos1 = len_parts - revpos1 - 1
         testpart = part_extraction(part)
         for pos2, part in enumerate(parts):
-            if pos1 != pos2:
+            if pos1 != pos2 and part:  # and part: some part can already be replaced, so without this part_extraction() will fail
                 testpart = testpart.replace(part_extraction(part), '')
         if not re.findall('\w', unicode(testpart), flags=re.UNICODE):  # part can be joined from other parts (we ignore any connecting characters here)
             parts[pos1] = ''                # remove it (but in 2 steps to avoid item movement inside the cycle)
@@ -296,15 +298,15 @@ def title_correction(rec):
     subtitles_input = getattr(rec, 'subtitles', None)
     if subtitles_input:
         if isinstance(subtitles_input, basestring):
-            subtitles = (subtitles_input,)
+            subtitles_input = (subtitles_input,)
         title_parts.extend(subtitles_input)
-    subtitles = set()
+    subtitles = []
     next_crazy = None
     for title_part in title_parts:
         title_part, crazy_tail = split_crazy_tail(title_part)
-        subtitles.add((next_crazy, title_part))
+        subtitles.append((next_crazy, title_part))
         next_crazy = crazy_tail
     subtitles = make_unique_tuples(subtitles)
 
-    rec.title = title_parts.pop(0)[1]
+    rec.title = subtitles.pop(0)[1]
     rec.subtitles = subtitles
