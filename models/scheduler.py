@@ -71,5 +71,5 @@ def run_tests(form_vars, servers):
         run_for_server(server, form_vars, myconf)
 
 
-debug_scheduler = True
+debug_scheduler = False
 scheduler = Scheduler(db)

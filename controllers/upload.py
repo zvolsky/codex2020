@@ -49,13 +49,13 @@ def running():
     library = get_library()
     if library.imp_proc >= 100.0:
         if iinfo and iinfo.finished:
-            msg_fin = T("Import katalogu byl dokončen v %s." % utc_to_local(iinfo.finished).strftime('%H:%M'))
+            msg_fin = T("Import katalogu byl dokončen v %s.") % utc_to_local(iinfo.finished).strftime('%H:%M')
     counts = db(db.library.id == auth.library_id).select(db.library.imp_total, db.library.imp_proc, db.library.imp_done, db.library.imp_new).first()
     started = utc_to_local(iinfo.started) if iinfo else None
 
     can_stop = False
     if msg_fin is None:
-        if session.imp_done == counts.imp_done:
+        if session.imp_done == counts.imp_done:  # count has not changed from previous attempt; it hangs??
             can_stop = True
         else:
             session.imp_done = counts.imp_done
