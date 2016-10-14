@@ -756,6 +756,7 @@
 'request': 'požadavek',
 'Request Reset Password': 'Vyžádat nové heslo',
 'Request reset password': 'Vyžádat nové heslo',
+'Reset Password': 'Reset Password',
 'Reset Password key': 'Reset registračního klíče',
 'response': 'response',
 'restart': 'restart',

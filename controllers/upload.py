@@ -11,7 +11,7 @@ from dal_import import clear_before_import, cancel_import
 from dal_utils import get_library
 from c2_config import get_contact
 
-from plugin_mz import utc_to_local
+from plugin_mz import link, utc_to_local
 
 if False:  # for IDE only, need web2py/__init__.py
     from web2py.applications.codex2020.models.scheduler import do_import
@@ -19,7 +19,7 @@ if False:  # for IDE only, need web2py/__init__.py
     from web2py.applications.codex2020.modules.dal_import import clear_before_import, cancel_import
     from web2py.applications.codex2020.modules.dal_utils import get_library
     from web2py.applications.codex2020.modules.c2_config import get_contact
-    from web2py.applications.codex2020.modules.plugin_mz import utc_to_local
+    from web2py.applications.codex2020.modules.plugin_mz import link, utc_to_local
 
 
 MAX_FILE_SIZE = 67108864   # upload max 64 MB single FoxPro file
@@ -51,6 +51,9 @@ def running():
         if iinfo and iinfo.finished:
             msg_fin = T("Import katalogu byl dokončen v %s.") % utc_to_local(iinfo.finished).strftime('%H:%M')
     counts = db(db.library.id == auth.library_id).select(db.library.imp_total, db.library.imp_proc, db.library.imp_done, db.library.imp_new).first()
+    counts.imp_total = counts.imp_total or 0
+    counts.imp_done = counts.imp_done or 0
+    counts.imp_new = counts.imp_new or 0
     started = utc_to_local(iinfo.started) if iinfo else None
 
     can_stop = False
@@ -121,4 +124,6 @@ def codex():
 
         redirect(redirect_url)
 
+    link('js/fine-uploader/fine-uploader-gallery.min.css')
+    link('js/fine-uploader/jquery.fine-uploader.min.js')
     return dict()
