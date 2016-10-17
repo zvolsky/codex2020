@@ -276,3 +276,9 @@ var manualUploader = new qq.FineUploader({
         }
     });
 '''
+
+'''
+bez chunku:
+nginx.conf: proxy_read_timeout 1200;
+Apache equivalent is: ProxyTimeout seconds (defaults to 300), and the Gunicorn equivalent is: -t seconds (defaults to 30 !!).
+'''
