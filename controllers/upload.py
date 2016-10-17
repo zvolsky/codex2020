@@ -245,6 +245,8 @@ def ccc():
 def bbb():
     import simplejson
     # request.vars.keys() : ['qqtotalfilesize', 'qqfilename', 'qquuid', 'qqfile']  qqfile == FieldStorage
+    # klíče se mohou měnit - viz Django example
+    content = request.vars.qqfile.file.read()
     from pdb import set_trace; set_trace()
     return simplejson.dumps({'success': True})
 
