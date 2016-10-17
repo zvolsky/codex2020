@@ -282,3 +282,7 @@ bez chunku:
 nginx.conf: proxy_read_timeout 1200;
 Apache equivalent is: ProxyTimeout seconds (defaults to 300), and the Gunicorn equivalent is: -t seconds (defaults to 30 !!).
 '''
+
+'''
+https://github.com/FineUploader/server-examples/blob/master/python/flask-fine-uploader/app.py
+'''
