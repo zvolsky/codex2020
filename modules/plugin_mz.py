@@ -18,7 +18,15 @@ admin_mail = 'admin@' + '.'.join(current.request.env.http_host.rsplit('.')[-2:])
 
 
 def link(src):
-    if '://' in src:
+    if src in ('alertify', 'alertifyjs'):
+        link('js/alertifyjs/alertify.min.js')
+        link('js/alertifyjs/css/alertify.min.css')
+        link('js/alertifyjs/css/themes/default.min.css')
+    elif src in ('fine-uploader', 'fineuploader'):
+        link('js/fine-uploader/fine-uploader-gallery.min.css')
+        link('js/fine-uploader/jquery.fine-uploader.min.js')
+
+    elif '://' in src:
         current.response.files.append(src)
     else:
         current.response.files.append(URL('static', src))
