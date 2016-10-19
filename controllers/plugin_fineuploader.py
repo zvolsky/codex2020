@@ -53,6 +53,7 @@ def uploader_finished():
         print 30*'-', request.vars.qqfilename, 'finished', 30*'-'
     return simplejson.dumps({'success': True})
 
+'''
 # ajax
 @auth.requires_login()
 def uploader_all_completed():
@@ -68,6 +69,7 @@ def uploader_auto_retry():
 @auth.requires_login()
 def uploader_manual_retry():
     return simplejson.dumps({'success': True})
+'''
 
 def __upload_filename(filename):
     """

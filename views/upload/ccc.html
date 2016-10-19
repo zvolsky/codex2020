@@ -113,10 +113,16 @@
         folders: true,  // has this any effect? don't see anything at Chrome/Debian
         callbacks: {
             onAllComplete: function(succeeded, failed) {
-                $.getJSON("{{=URL('plugin_fineuploader', 'uploader_all_completed')}}", function(result) {
-                    alertify.alert(result.msg);
-                });
-            },
+                if (failed.length) {
+                    alertify.alert('Neuspesne', 'Spuste znova (Retry) soubory, ktere selhaly, nebo zcela opakujte import.');
+                } else {
+                    alertify.alert('Dokonceno', 'Soubory byly preneseny na server, kde bude pokracovat jejich zpracovani.');
+                    //window.location = xxxxxx;
+                }
+                //$.getJSON("{{=URL('plugin_fineuploader', 'uploader_all_completed')}}", function(result) {
+                //    alertify.alert(result.msg);
+                //});
+            }/*,
             onAutoRetry: function(id, name, attemptNumber) {
                 $.getJSON("{{=URL('plugin_fineuploader', 'uploader_auto_retry')}}", function(result) {
                 });
@@ -124,7 +130,7 @@
             onManualRetry: function(id, name) {
                 $.getJSON("{{=URL('plugin_fineuploader', 'uploader_manual_retry')}}", function(result) {
                 });
-            }
+            }*/
         }
     });
     // option setting example: uploader._options.autoUpload = false;
