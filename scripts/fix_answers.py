@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
+    WARNING !!! not finished !!! pdb in all_fix() !!!
+
     python web2py.py -M -S codex2020 -R scripts/fix_answer.py
     fixes derrived data in answer table
 """

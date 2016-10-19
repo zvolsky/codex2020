@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+    WARNING: not finished !!! pdb !!!
+    but this is called from scripts/ only
+"""
+
 from pymarc import MARCReader
 
 from marc_dialects import MarcFrom_AlephCz
@@ -41,4 +46,4 @@ def fix_fastinfo_from_marc(row, extsrc_qualities):
         marcrec = MarcFrom_AlephCz(record)
         fastinfo, md5publ = marcrec_to_fastinfo_and_hash(marcrec)
         print fastinfo
-        import pdb;pdb.set_trace()
+        import pdb;pdb.set_trace()  # !!!!!!!!!!!!!!!

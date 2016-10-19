@@ -116,12 +116,15 @@
                 if (failed.length) {
                     alertify.alert('Neuspesne', 'Spuste znova (Retry) soubory, ktere selhaly, nebo zcela opakujte import.');
                 } else {
-                    alertify.alert('Dokonceno', 'Soubory byly preneseny na server, kde bude pokracovat jejich zpracovani.');
-                    //window.location = xxxxxx;
+                    $.getJSON("{{=URL('plugin_fineuploader', 'uploader_all_completed')}}", function(result) {
+                        if (result.missing) {
+                            alertify.alert('Neuspesne', 'Zapomnel(a) jste nahrat soubor(y) ' + result.missing + '.');
+                        } else {
+                            alertify.alert('Dokonceno', 'Soubory byly preneseny na server, kde bude pokracovat jejich zpracovani.');
+                            //window.location = xxxxxx;
+                        }
+                    });
                 }
-                //$.getJSON("{{=URL('plugin_fineuploader', 'uploader_all_completed')}}", function(result) {
-                //    alertify.alert(result.msg);
-                //});
             }/*,
             onAutoRetry: function(id, name, attemptNumber) {
                 $.getJSON("{{=URL('plugin_fineuploader', 'uploader_auto_retry')}}", function(result) {

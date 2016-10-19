@@ -14,13 +14,11 @@
 import os
 import simplejson
 
-ROOT = '/home/mirek/mz/web2py/applications/codex2020/imports/' + str(auth.user_id)
-ROOT_TMP = os.path.join(ROOT, 'tmp')
-ROOT_SRC = os.path.join(ROOT, 'src')
-if not os.path.isdir(ROOT_TMP):
-    os.makedirs(ROOT_TMP)
-if not os.path.isdir(ROOT_SRC):
-    os.makedirs(ROOT_SRC)
+
+ROOT_IMPORT = os.path.join(request.folder, 'imports')
+ROOT_TMP = os.path.join(ROOT_IMPORT, str(auth.user_id), 'tmp')
+ROOT_SRC = os.path.join(ROOT_IMPORT, str(auth.user_id), 'src')
+
 
 # ajax
 @auth.requires_login()
@@ -38,7 +36,7 @@ def uploader_request():
 # ajax
 @auth.requires_login()
 def uploader_finished():
-    filename = __upload_filename(request.vars.qqfilename)
+    filename = __upload_filename(request.vars.qqfilename)  # WARNING: we cannot manipulate session.upload_filenames here (to see if all required are uploaded) with regard to concurrent accesses which can save session in same time
     if filename:
         with open(os.path.join(ROOT_SRC, filename), 'wb') as f:
             idx = 0
@@ -53,13 +51,25 @@ def uploader_finished():
         print 30*'-', request.vars.qqfilename, 'finished', 30*'-'
     return simplejson.dumps({'success': True})
 
-'''
 # ajax
 @auth.requires_login()
 def uploader_all_completed():
-    print 50*'*'
-    return simplejson.dumps({'success': True, 'msg': 'finished'})
+    if session.upload_filenames:
+        '''
+        we cannot remove completed files immediately in uploader_finished() from session.upload_filenames
+            because concurrent ajax calls save session in unpredictable times
+        '''
+        missing = session.upload_filenames
+        session.forget()
+        uploaded = os.listdir(ROOT_SRC)
+        for the_file in uploaded:
+            if the_file in missing:
+                missing.remove(the_file)
+        if missing:
+            return simplejson.dumps({'success': False, 'missing': ','.join(missing)})
+    return simplejson.dumps({'success': True, 'missing': ''})
 
+'''
 # ajax
 @auth.requires_login()
 def uploader_auto_retry():
@@ -79,8 +89,8 @@ def __upload_filename(filename):
             otherwise without a change (upload from Linux style systems)
     """
     if session.upload_win:
-        filename = lower(filename)
-    if not session.upload_filenames or filename in session.upload_filenames:
+        filename = filename.lower()
+    if session.upload_filenames is None or filename in session.upload_filenames:
         return filename
     return None
 

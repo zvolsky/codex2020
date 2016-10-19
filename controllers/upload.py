@@ -5,7 +5,6 @@
 """
 
 import os
-import simplejson
 from urllib import quote
 
 from dal_import import clear_before_import, cancel_import
@@ -131,8 +130,26 @@ def codex():
 
 @auth.requires_login()
 def ccc():
+    ROOT_IMPORT = os.path.join(request.folder, 'imports')
+
+    def sure_exists_and_empty(subfolder):
+        folder = os.path.join(ROOT_IMPORT, str(auth.user_id), subfolder)
+        if os.path.isdir(folder):
+            for the_file in os.listdir(folder):
+                file_path = os.path.join(folder, the_file)
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+        else:
+            os.makedirs(folder)
+
+    # jen když neběží import !! při běžícím nutno redirect()
+    sure_exists_and_empty('tmp')
+    sure_exists_and_empty('src')
+
     link('fine-uploader')
     link('alertifyjs')
+    session.upload_filenames = ['knihy.dbf', 'knihy.fpt', 'knihy.cdx']
+    session.upload_win = True
     return {}
 
 '''
