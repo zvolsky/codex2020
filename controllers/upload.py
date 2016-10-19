@@ -135,37 +135,6 @@ def ccc():
     link('alertifyjs')
     return {}
 
-# ajax
-@auth.requires_login()
-def uploader_request():
-    # request.vars.keys() : ['qqtotalfilesize', 'qqfilename', 'qquuid', 'qqfile']  qqfile == FieldStorage
-    # klíče se mohou měnit - viz Django example
-    content = request.vars.qqfile.file.read()
-    print 20*'-', request.vars.qqfilename, request.vars.qqpartindex, '/', request.vars.qqtotalparts, 30*'-'
-    return simplejson.dumps({'success': True})
-
-# ajax
-@auth.requires_login()
-def uploader_finished():
-    print 30*'-', request.vars.qqfilename, 'finished', 30*'-'
-    return simplejson.dumps({'success': True})
-
-# ajax
-@auth.requires_login()
-def uploader_all_completed():
-    print 50*'*'
-    return simplejson.dumps({'success': True, 'msg': 'finished'})
-
-# ajax
-@auth.requires_login()
-def uploader_auto_retry():
-    return simplejson.dumps({'success': True})
-
-# ajax
-@auth.requires_login()
-def uploader_manual_retry():
-    return simplejson.dumps({'success': True})
-
 '''
 bez chunku:
 nginx.conf: proxy_read_timeout 1200;

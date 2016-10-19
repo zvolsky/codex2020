@@ -83,11 +83,11 @@
     var uploader = new qq.FineUploader({
         element: document.getElementById("uploader"),
         request: {
-            endpoint: "uploader_request"
+            endpoint: "../plugin_fineuploader/uploader_request"
         },
         deleteFile: {
             enabled: false,  // NOT SUPPORTED
-            endpoint: "uploader_delete"
+            endpoint: "../plugin_fineuploader/uploader_delete"
         },
         chunking: {
             enabled: true,
@@ -97,7 +97,7 @@
                 enabled: true
             },
             success: {
-                endpoint: "uploader_finished"
+                endpoint: "../plugin_fineuploader/uploader_finished"
             }
         },
         resume: {
@@ -110,16 +110,16 @@
         folders: true,  // has this any effect? don't see anything at Chrome/Debian
         callbacks: {
             onAllComplete: function(succeeded, failed) {
-                $.getJSON("{{=URL('uploader_all_completed')}}", function(result) {
+                $.getJSON("{{=URL('plugin_fineuploader', 'uploader_all_completed')}}", function(result) {
                     alertify.alert(result.msg);
                 });
             },
             onAutoRetry: function(id, name, attemptNumber) {
-                $.getJSON("{{=URL('uploader_auto_retry')}}", function(result) {
+                $.getJSON("{{=URL('plugin_fineuploader', 'uploader_auto_retry')}}", function(result) {
                 });
             },
             onManualRetry: function(id, name) {
-                $.getJSON("{{=URL('uploader_manual_retry')}}", function(result) {
+                $.getJSON("{{=URL('plugin_fineuploader', 'uploader_manual_retry')}}", function(result) {
                 });
             }
         }

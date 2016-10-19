@@ -89,6 +89,7 @@ var/
 sdist/
 develop-eggs/
 
+imports/
 uploads/
 downloads/
 databases/
