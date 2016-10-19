@@ -149,6 +149,7 @@ def ccc():
     link('fine-uploader')
     link('alertifyjs')
     session.upload_filenames = ['knihy.dbf', 'knihy.fpt', 'knihy.cdx']
+    # TODO: validovat na úrovni JavaScriptu pomocí .getUploads() /při .autoUpload = false/
     session.upload_win = True
     return {}
 
