@@ -80,6 +80,9 @@
 <div id="uploader"></div>
 <script>
     // Some options to pass to the uploader are discussed on the next page
+    if (!qq.supportedFeatures.chunking) {
+        alertify.alert('Not supported features', 'Use modern/standard browser: Chrome, Firefox.');
+    }
     var uploader = new qq.FineUploader({
         element: document.getElementById("uploader"),
         request: {
@@ -124,4 +127,5 @@
             }
         }
     });
+    // option setting example: uploader._options.autoUpload = false;
 </script>
