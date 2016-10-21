@@ -23,6 +23,8 @@ if False:  # for IDE only, need web2py/__init__.py
 
 
 MAX_FILE_SIZE = 67108864   # upload max 64 MB single FoxPro file
+UPLOAD_ROOT = os.path.join(request.folder, 'imports', str(auth.library_id))
+UPLOAD_RELATIVE = 'src'
 
 
 @auth.requires_login()
@@ -72,10 +74,64 @@ def cancel():
 
 
 @auth.requires_login()
+def import_uploaded():
+    """
+        args[0] - required import function; example: 'imp_codex' for codex import
+    Returns:
+
+    """
+    if len(request.args) != 1:
+        raise HTTP(404)
+
+    clear_before_import()
+
+    uploadfolder = os.path.join(UPLOAD_ROOT, UPLOAD_RELATIVE)
+    if debug_scheduler:
+        do_import(request.args[0], auth.library_id, src_folder=uploadfolder, full=True)  # debug
+        redirect_url = URL('default', 'index')
+    else:
+        scheduler.queue_task(do_import,
+                pvars={'imp_func': request.args[0], 'library_id': auth.library_id, 'src_folder': uploadfolder, 'full': True},
+                timeout=7200)
+        redirect_url = URL('running')
+
+    if debug_scheduler:
+        idx()
+    else:
+        scheduler.queue_task(idx, pvars={}, timeout=100)
+
+    redirect(redirect_url)
+
+
+@auth.requires_login()
 def codex():
     if not auth.user.librarian or not auth.library_id:
         redirect(URL('default', 'index'))
 
+    def sure_exists_and_empty(subfolder):
+        folder = os.path.join(UPLOAD_ROOT, subfolder)
+        if os.path.isdir(folder):
+            for the_file in os.listdir(folder):
+                file_path = os.path.join(folder, the_file)
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+        else:
+            os.makedirs(folder)
+
+    # jen když neběží import !! při běžícím nutno redirect()
+    sure_exists_and_empty('tmp')
+    sure_exists_and_empty(UPLOAD_RELATIVE)
+
+    link('fine-uploader')
+    link('alertifyjs')
+    session.upload_filenames = ['autori.dbf', 'k_autori.dbf', 'dodavat.dbf', 'dodavat.fpt', 'dt.dbf', 'dt.fpt', 'k_dt.dbf', 'klsl.dbf', 'k_klsl.dbf',
+                  'knihy.dbf', 'knihy.fpt', 'vytisk.dbf', 'vytisk.fpt']
+    # TODO: validovat na úrovni JavaScriptu pomocí .getUploads() /při .autoUpload = false/
+    session.upload_win = True
+    return {}
+
+
+def odpad():
     if request.vars.codex:
         needed = {'autori.dbf', 'k_autori.dbf', 'dodavat.dbf', 'dodavat.fpt', 'dt.dbf', 'dt.fpt', 'k_dt.dbf', 'klsl.dbf', 'k_klsl.dbf',
                   'knihy.dbf', 'knihy.fpt', 'vytisk.dbf', 'vytisk.fpt'}
@@ -104,6 +160,7 @@ def codex():
                     fw.write(content)
 
         clear_before_import()
+
         if debug_scheduler:
             do_import('imp_codex', auth.library_id, src_folder=uploadfolder, full=True)  # debug
             redirect_url = URL('default', 'index')
@@ -118,14 +175,8 @@ def codex():
         else:
             scheduler.queue_task(idx, pvars={}, timeout=100)
 
-        #from time import sleep
-        #sleep(1)
-        #scheduler.queue_task(idx, pvars={}, timeout=100)
-
         redirect(redirect_url)
 
-    link('fine-uploader')
-    link('alertifyjs')
     return {}
 
 @auth.requires_login()

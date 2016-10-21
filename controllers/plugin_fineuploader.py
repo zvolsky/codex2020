@@ -15,16 +15,16 @@ import os
 import simplejson
 
 
-ROOT_IMPORT = os.path.join(request.folder, 'imports')
-ROOT_TMP = os.path.join(ROOT_IMPORT, str(auth.user_id), 'tmp')
-ROOT_SRC = os.path.join(ROOT_IMPORT, str(auth.user_id), 'src')
+UPLOAD_ROOT = os.path.join(request.folder, 'imports', str(auth.library_id))
+UPLOAD_RELATIVE = 'src'
+ROOT_TMP = os.path.join(UPLOAD_ROOT, 'tmp')
+ROOT_SRC = os.path.join(UPLOAD_ROOT, UPLOAD_RELATIVE)
 
 
 # ajax
 @auth.requires_login()
 def uploader_request():
-    # request.vars.keys() : ['qqtotalfilesize', 'qqfilename', 'qquuid', 'qqfile']  qqfile == FieldStorage
-    # klíče se mohou měnit - viz Django example
+    # klíče request.vars - viz fine-uploader, Django example
     filename = __upload_filename(request.vars.qqfilename)
     if filename:
         content = request.vars.qqfile.file.read()
@@ -66,7 +66,7 @@ def uploader_all_completed():
             if the_file in missing:
                 missing.remove(the_file)
         if missing:
-            return simplejson.dumps({'success': False, 'missing': ','.join(missing)})
+            return simplejson.dumps({'success': False, 'missing': ', '.join(missing)})
     return simplejson.dumps({'success': True, 'missing': ''})
 
 '''
