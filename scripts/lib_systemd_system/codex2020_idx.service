@@ -1,0 +1,11 @@
+[Unit]
+Description=codex2020_idx
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/mirek/mz/web2py/applications/codex2020/scripts/codex2020_idx.py > /home/mirek/mz/web2py/applications/codex2020/logs/codex2020_idx.log 2>&1
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
