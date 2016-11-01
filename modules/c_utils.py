@@ -68,17 +68,17 @@ class Answer:
 def publ_fastinfo_and_hash(title, surnamed_author, author, pubplace, publisher, pubyear, subtitles=None, origin=None, keys=None):
     return (make_fastinfo(Answer(title=title, author=author, pubplace=pubplace, publisher=publisher, pubyear=pubyear,
                                  subtitles=subtitles, origin=origin, keys=keys)),
-            publ_hash(title, surnamed_author, publisher, pubyear))
+            publ_hash(title, subtitles, surnamed_author, publisher, pubyear))
 
 
-def publ_hash(title, author, publisher, pubyear, author_need_normalize=False):
+def publ_hash(title, subtitles, author, publisher, pubyear, author_need_normalize=False):
     """
     author: prefered use is 'surname shortened'string. For anything else (list, not shortened,..) please set author_need_normalize
     publisher: publisher1 publisher2 ...
     pubyear: we use digits only
     """
-    #if subtitle:
-    #    title = title + subtitle  # connection not important: hash_prepared() removes all
+    if subtitles:  # this is necessary with regard to something like "III-IV", "Part 2",.. in subtitles
+        title = title + subtitles[0][:12]  # connection not important: hash_prepared() removes all
     if author_need_normalize:
         author, _full = normalize_authors(author, string_surnamed=True)
 
@@ -102,7 +102,7 @@ def make_fastinfo(rec, correct_title=False):
         title_correction(rec)
 
     fastinfo = 'T' + rec.title
-    subtitles = getattr(rec, 'subtitles', None)
+    subtitles = filter(None, getattr(rec, 'subtitles', ()))
     if subtitles:
         fastinfo += '\nt' + simplejson.dumps(subtitles)
     title_ignore_chars = getattr(rec, 'title_ignore_chars', None)

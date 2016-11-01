@@ -1,0 +1,15 @@
+﻿delete from idx_join;
+delete from idx_long cascade;
+delete from idx_short cascade;
+delete from idx_word cascade;
+delete from impr_hist cascade;
+delete from impression cascade;
+delete from owned_book cascade;
+delete from lib_descr cascade;
+delete from answer cascade;
+delete from authority cascade;
+delete from book_authority cascade;
+delete from publisher cascade;
+delete from book_publisher cascade;
+delete from bill cascade;
+delete from partner cascade;

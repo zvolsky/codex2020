@@ -72,4 +72,5 @@ def run_tests(form_vars, servers):
 
 
 debug_scheduler = False
+#debug_scheduler = True   # uncomment to debug scheduler tasks
 scheduler = Scheduler(db)

@@ -134,6 +134,8 @@ def clear_before_import(incremental=False, db=None, auth=None, session=None):
 def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10,
                             db=None):
     """
+    Args:
+        marcrec is recommended ! It should be marcrec object from Marc parsing or suplementary object with attrs country (char 3), pubyears ((integer, integer), pls provide both same in case of single year)
     Returns tuple: (bool, answer_id) ; bool is True if the row wasn't yet in answer table and so it was inserted
     """
     if db is None:

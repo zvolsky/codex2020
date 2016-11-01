@@ -77,7 +77,7 @@ def updatedb(record, z39stamp=None, md5redirects=None):
 
 def marcrec_to_fastinfo_and_hash(marcrec):
     fastinfo = make_fastinfo(marcrec)
-    md5publ = publ_hash(marcrec.title, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
+    md5publ = publ_hash(marcrec.title, marcrec.subtitles, marcrec.authors, marcrec.publisher, marcrec.pubyear, author_need_normalize=True)
     return fastinfo, md5publ
 
 

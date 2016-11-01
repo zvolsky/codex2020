@@ -7,11 +7,13 @@
 import re
 import os
 
-from books import isxn_to_ean
+from books import isxn_to_ean, parse_pubyear
 
 from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
 from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,
         counter_and_commit_if_100, finished, init_param, init_import)
+
+from gluon.tools import Storage  # or other class used to create empty object
 
 import dbf
 from dbf_read_iffy import fix_init, fix_895
@@ -95,6 +97,11 @@ def import_publ(record, param):
     anotace = fix_895(record['anotace'].strip())
     # TODO: promyslet, jak spojit a kam uložit <<<<<<<<<<<<<<<<<<<<<<
 
+    answer_rec = Storage()  # get an empty object
+    answer_rec.pubyears = parse_pubyear(impresum)
+    answer_rec.country = 'cze'  # ???
+    # zatim ignorujeme JAZYK (Manetin: jazyk originalu nebo ORI pro knihy v originale)
+
     isbn = ''
     if record['isbn']:
         isbn_candidates = re.findall(r'\b[0-9X\-]\b', record['isbn'])
@@ -110,7 +117,7 @@ def import_publ(record, param):
                                                subtitles=(podnazev,), origin=origin, keys=klsl)
 
     impressions = param['vytisky'].get(id_publ, ())
-    added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'])
+    added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'], marcrec=answer_rec)
     owned_book_id = update_or_insert_owned_book(answer_id, fastinfo, len(impressions))
     # impression_gen je generátor podle impression/impressions
     impression_gen = impression_iter(impressions)

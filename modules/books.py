@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import re
 
 
@@ -79,22 +80,24 @@ def add_missing_control(isxn):
         isxn += check_digit_ean(isxn)
     return isxn
 
-def parse_pubyear(pubyear):
-    numbers = re.findall(r'\d+', pubyear)
-    syear2 = numbers[-1:]
-    syear1 = numbers[-2:-1] or syear2
-    nyear1 = syear1 and int(syear1[0]) or 0
-    nyear2 = syear2 and int(syear2[0]) or 0
-    if nyear1 < 100:                      # 1993 -> (1993,1993)
-        nyear1 = nyear2
-    elif 0 < nyear2 < 10:                 # 1990-2 -> (1990,1992)
-        nyear2 += int(nyear1 / 10) * 10
-    elif nyear2 < 100:                    # 1990-92 -> (1990,1992), 1989-91 -> (1989,1991)
-        nyear2 += int(nyear1 / 100) * 100
-    if nyear1 > 100 and nyear2 > 100:
-        return (nyear1, nyear2)
-    else:
-        return (None, None)
+
+def parse_pubyear(pubyear, minyear=1700):
+    numbers = map(int, re.findall(r'\d+', pubyear))
+    lastpos = len(numbers) - 1
+    lastyear = datetime.date.today().year + 10  # with regard to publishers
+    for pos, nu in enumerate(numbers):
+        if minyear <= nu <= lastyear:
+            if pos == lastpos:
+                return (nu, nu)
+            nu2 = numbers[pos + 1]
+            if 1 <= nu2 <= 9:
+                nu2 += int(nu / 10) * 10
+            elif 10 <= nu2 <= 99:
+                nu2 += int(nu / 100) * 100
+            if nu < nu2 <= lastyear:
+                return (nu, nu2)
+            return (nu, nu)
+    return (None, None)
 
 
 # librarian (impressions agenda)
