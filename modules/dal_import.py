@@ -61,6 +61,16 @@ def init_import(param, cnt_total=None, db=None, auth=None):
     db.commit()
 
 
+def set_proc(proc, db=None, auth=None):
+    if db is None:
+        db = current.db
+    if auth is None:
+        auth = current.auth
+
+    db.library[auth.library_id] = dict(imp_proc=proc)
+    db.commit()
+
+
 def counter_and_commit_if_100(param, added):
     """
         increment counter and commit at the chunk (of length 100 rows) end
@@ -108,8 +118,8 @@ def do_commit(param, finished=False, db=None, auth=None):
     if auth is None:
         auth = current.auth
 
-    if param:
-        upd = dict(imp_done=param['cnt_done'], imp_new=param['cnt_new'], imp_proc=100.0 if finished else min(99.9, 100.0 * param['cnt_done'] / param['cnt_total']))
+    if param:   # proc before 2.0% can be used before main processing, example: db.library[auth.library_id] = dict(imp_proc=0.3)
+        upd = dict(imp_done=param['cnt_done'], imp_new=param['cnt_new'], imp_proc=100.0 if finished else max(2.0, min(99.9, 100.0 * param['cnt_done'] / param['cnt_total'])))
     else:  # ie. if cancel!
         upd = dict(imp_proc=100.0)
     db.library[auth.library_id] = upd

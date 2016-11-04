@@ -12,6 +12,10 @@ from dal_import import counter_and_commit_if_100
 from plugin_splinter import run_for_server
 
 
+DEBUG_SCHEDULER = False
+#DEBUG_SCHEDULER = True   # uncomment to debug scheduler tasks
+
+
 def task_catalogize(question_id, question, asked):
     """the time consuming retrieve/parse/db-save action
     called from catalogue/find
@@ -48,7 +52,7 @@ def do_import(imp_func, library_id, src_folder=None, full=False):
     imp_func(db, library_id, src_folder)
     db.commit()   # to be sure; but imp_func itself should commit (in chunks or so)
 
-
+'''to be removed
 def idx():
     rows = db(db.answer.needindex == True, ignore_common_filters=True).select(db.answer.id, db.answer.md5publ)
     indexed = 0
@@ -64,13 +68,11 @@ def idx():
         if not indexed % 100:
             db.commit()
     db.commit()
-
+'''
 
 def run_tests(form_vars, servers):
     for server in servers:
         run_for_server(server, form_vars, myconf)
 
 
-debug_scheduler = False
-#debug_scheduler = True   # uncomment to debug scheduler tasks
 scheduler = Scheduler(db)

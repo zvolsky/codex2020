@@ -30,7 +30,7 @@ def uploader_request():
         content = request.vars.qqfile.file.read()
         with open(os.path.join(ROOT_TMP, '_%s_%s' % (request.vars.qqpartindex, filename)), 'wb') as f:
             f.write(content)
-        print 20*'-', filename, request.vars.qqpartindex, '/', request.vars.qqtotalparts, 30*'-'
+        #print 20*'-', filename, request.vars.qqpartindex, '/', request.vars.qqtotalparts, 30*'-'
     return simplejson.dumps({'success': True})
 
 # ajax
@@ -48,7 +48,7 @@ def uploader_finished():
                     f.write(ch.read())
                 os.unlink(chunk)
                 idx += 1
-        print 30*'-', request.vars.qqfilename, 'finished', 30*'-'
+        #print 30*'-', request.vars.qqfilename, 'finished', 30*'-'
     return simplejson.dumps({'success': True})
 
 # ajax

@@ -11,7 +11,7 @@ from books import isxn_to_ean, parse_pubyear
 
 from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
 from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,
-        counter_and_commit_if_100, finished, init_param, init_import)
+        counter_and_commit_if_100, finished, init_param, init_import, set_proc)
 
 from gluon.tools import Storage  # or other class used to create empty object
 
@@ -36,19 +36,28 @@ def imp_codex(db, library_id, src_folder):
         This is the main (entry) function.
     """
     param = init_param()
+    set_proc(0.1)
     param['autori'] = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , need ","->", "
+    set_proc(0.2)
     param['k_autori'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')  # VZTAH, ID_AUTORA
+    set_proc(0.4)
     param['klsl'] = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'), key='id_klsl')  # KLSL
+    set_proc(0.5)
     param['k_klsl'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')  # ID_KLSL
-    #dt'] = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
+    set_proc(0.9)
+    #param['dt'] = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
     param['k_dt'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')  # POM_ZNAK, DT
+    set_proc(1.2)
     param['nakl'] = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'), key='id_dodav')  # ICO, NAZEV1, NAZEV2, NAZEV_ZKR, MISTO
+    set_proc(1.5)
     param['vytisky'] = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
                 # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
+    set_proc(1.9)  # < 2.0 !
     # TODO: VYPUJCKY?
 
     read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True)
     finished(param)  # commit tail records after nnn % 100 and set imp_proc=100.0
+
 
 def import_publ(record, param):
     # KNIHY: ID_PUBL, RADA_PC, RADA_KNIHY, SIGNATURA, TEMATIKA, EAN, AUTORI, NAZEV, PODNAZEV, PUVOD, KNPOZNAMKA,
@@ -131,14 +140,17 @@ def read_xbase(filename, callback, *args, **kwargs):
     """
         run the callback function for each row in the table (similar to xBase SCAN)
     """
+    flds = dbf.get_fields(filename)
     t = dbf.Table(filename)
     t.open('read-only')
     if kwargs.get('do_init'):
         del kwargs['do_init']  # to avoid error in the callback function
         init_import(args[0], cnt_total=len(t))  # args[0] ~ param
     for record in t:
-        callback(record, *args, **kwargs)
+        # callback(record, *args, **kwargs)    # this run extremely slow !!!
+        callback({fld: record[fld] for fld in flds}, *args, **kwargs)   # with real python dict it run well
     t.close()
+
 
 def read_xbase_as_dict(filename, key='id'):
     """
@@ -151,6 +163,7 @@ def read_xbase_as_dict(filename, key='id'):
     rows = {}
     read_xbase(filename, rec_to_dict, key, rows)
     return rows
+
 
 def read_xbase_as_list_dict(filename, key, left=None):
     """

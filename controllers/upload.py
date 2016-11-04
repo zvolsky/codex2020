@@ -86,7 +86,7 @@ def import_uploaded():
     clear_before_import()
 
     uploadfolder = os.path.join(UPLOAD_ROOT, UPLOAD_RELATIVE)
-    if debug_scheduler:
+    if DEBUG_SCHEDULER:
         do_import(request.args[0], auth.library_id, src_folder=uploadfolder, full=True)  # debug
         redirect_url = URL('default', 'index')
     else:
@@ -95,10 +95,10 @@ def import_uploaded():
                 timeout=7200)
         redirect_url = URL('running')
 
-    if debug_scheduler:
-        idx()
-    else:
-        scheduler.queue_task(idx, pvars={}, timeout=100)
+    #if DEBUG_SCHEDULER:
+    #    idx()
+    #else:
+    #    scheduler.queue_task(idx, pvars={}, timeout=100)
 
     redirect(redirect_url)
 
@@ -130,7 +130,7 @@ def codex():
     session.upload_win = True
     return {}
 
-
+'''to be removed
 def odpad():
     if request.vars.codex:
         needed = {'autori.dbf', 'k_autori.dbf', 'dodavat.dbf', 'dodavat.fpt', 'dt.dbf', 'dt.fpt', 'k_dt.dbf', 'klsl.dbf', 'k_klsl.dbf',
@@ -161,7 +161,7 @@ def odpad():
 
         clear_before_import()
 
-        if debug_scheduler:
+        if DEBUG_SCHEDULER:
             do_import('imp_codex', auth.library_id, src_folder=uploadfolder, full=True)  # debug
             redirect_url = URL('default', 'index')
         else:
@@ -170,7 +170,7 @@ def odpad():
                     timeout=7200)
             redirect_url = URL('running')
 
-        if debug_scheduler:
+        if DEBUG_SCHEDULER:
             idx()
         else:
             scheduler.queue_task(idx, pvars={}, timeout=100)
@@ -203,6 +203,7 @@ def ccc():
     # TODO: validovat na úrovni JavaScriptu pomocí .getUploads() /při .autoUpload = false/
     session.upload_win = True
     return {}
+'''
 
 '''
 bez chunku:
