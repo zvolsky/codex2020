@@ -1073,6 +1073,7 @@
 'Zpracován': 'Zpracován',
 'Zpracováno publikací: %s, z toho': 'Zpracováno publikací: %s, z toho',
 'Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude připravena na další import (pokud tento import skončí úspěšně).': 'Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude připravena na další import (pokud tento import skončí úspěšně).',
+'Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude volba připravena na další import (pokud tento import skončí úspěšně).': 'Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude volba připravena na další import (pokud tento import skončí úspěšně).',
 'Zpět': 'Zpět',
 'Zpět (storno)': 'Zpět (storno)',
 'Zpět ke katalogizaci': 'Zpět ke katalogizaci',

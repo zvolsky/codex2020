@@ -27,7 +27,7 @@
     <p>{{=A(T("pokračovat na úvodní stránku"), _href=URL('default', 'index'))}}</p>
 {{else:}}
     <p>{{=T("Průběh se aktualizuje po 2 minutách.")}} <a href="{{=URL()}}" class="btn btn-sm btn-default">{{=T("Aktualizovat stav importu nyní")}}</a></p>
-    <p><i>{{=T("Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude připravena na další import (pokud tento import skončí úspěšně).")}}</i></p>
+    <p><i>{{=T("Zpracování probíhá na serveru. Doporučujeme vyčkat, ale pokud nemůžete čekat, můžete již tento počítač vypnout. Výsledek dodatečně zjistíte opakováním volby Fond, Import: zobrazí buď tento stav (když import ještě probíhá nebo selhal) nebo bude volba připravena na další import (pokud tento import skončí úspěšně).")}}</i></p>
 
     {{if can_stop:}}
         <p>{{=T("Jestliže jste si absolutně jist(a), že import nepokračuje nebo že načítá chybné informace, můžete")}} {{=A(T("přerušit tento import"), _href=URL('cancel'))}}.</p>
