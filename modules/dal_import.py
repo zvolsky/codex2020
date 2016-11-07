@@ -79,18 +79,20 @@ def counter_and_commit_if_100(param, added):
         do_commit(param['_library_id'], param)
 
 
-def finished(library_id, param, db=None):
+def finished(param, db=None, session=None):
     """
         commit yet uncommitted books and set imp_proc=100.0
     """
     if db is None:
         db = current.db
+    if session is None:
+        session = current.session
 
-    running = db(db.import_run.finished == None).select(orderby=~db.import_run.started).first()
-    if running:
-        running.update_record(finished=datetime.datetime.utcnow(), cnt_total=param['cnt_done'], cnt_new=param['cnt_new'])
-        # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
-    do_commit(library_id, param, finished=True)
+    if session.import_run_id:
+        db.import_run[session.import_run_id] = dict(finished=datetime.datetime.utcnow(), cnt_total=param['cnt_done'], cnt_new=param['cnt_new'])
+            # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
+        del session.import_run_id
+    do_commit(param['_library_id'], param, finished=True)
 
 
 def cancel_import(db=None, auth=None):
@@ -134,8 +136,9 @@ def clear_before_import(incremental=False, db=None, auth=None, session=None):
     if 'imp_done' in session:
         del session['imp_done']
     db.library[auth.library_id] = dict(imp_done=0, imp_new=0, imp_proc=0.0, imp_total=0)
-    db.import_run.insert(library_id=auth.library_id, incremental=incremental, started=datetime.datetime.utcnow())
+    import_run_id = db.import_run.insert(library_id=auth.library_id, incremental=incremental, started=datetime.datetime.utcnow())
     db.commit()
+    return import_run_id
 
 
 def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10,

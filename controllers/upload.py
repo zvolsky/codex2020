@@ -47,16 +47,18 @@ def running():
     if not auth.user.librarian:
         redirect(URL('default', 'index'))
     msg_fin = None
-    iinfo = db(db.import_run).select(orderby=~db.import_run.started, limitby=(0, 1)).first()
     library = get_library()
     if library.imp_proc >= 100.0:
-        if iinfo and iinfo.finished:
-            msg_fin = T("Import katalogu byl dokončen v %s.") % utc_to_local(iinfo.finished).strftime('%H:%M')
+        msg_fin = T("Import katalogu byl dokončen v %s.") % utc_to_local(library.last_import).strftime('%H:%M')
     counts = db(db.library.id == auth.library_id).select(db.library.imp_total, db.library.imp_proc, db.library.imp_done, db.library.imp_new).first()
     counts.imp_total = counts.imp_total or 0
     counts.imp_done = counts.imp_done or 0
     counts.imp_new = counts.imp_new or 0
-    started = utc_to_local(iinfo.started) if iinfo else None
+
+    started = None
+    iinfo = db.import_run[session.import_run_id]
+    if iinfo:
+        started = utc_to_local(iinfo.started)
 
     can_stop = False
     if msg_fin is None:
@@ -83,7 +85,7 @@ def import_uploaded():
     if len(request.args) != 1:
         raise HTTP(404)
 
-    clear_before_import()
+    session.import_run_id = clear_before_import()
 
     uploadfolder = os.path.join(UPLOAD_ROOT, UPLOAD_RELATIVE)
     if DEBUG_SCHEDULER:

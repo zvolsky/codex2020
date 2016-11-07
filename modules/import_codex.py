@@ -57,7 +57,7 @@ def imp_codex(db, library_id, src_folder):
 
     param['_library_id'] = library_id
     read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True)
-    finished(library_id, param)  # commit tail records after nnn % 100 and set imp_proc=100.0
+    finished(param)  # commit tail records after nnn % 100 and set imp_proc=100.0
 
 
 def import_publ(record, param):
