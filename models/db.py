@@ -153,6 +153,8 @@ db.define_table('library',
               label=T("Počet již importovaných"), comment=T("počet již importovaných publikací celkem (nových i existujících)")),  # imp_done cnt
         Field('imp_new', 'integer', readable=False, default=0,
               label=T("Počet nových"), comment=T("počet nových již importovaných publikací")),  # imp_new cnt
+        Field('last_import', 'datetime', writable=False,
+              label=T("Naposledy importováno"), comment=T("čas posledního importu z jiného systému")),
         format='%(library)s'
         )
 

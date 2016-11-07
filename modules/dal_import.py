@@ -44,45 +44,42 @@ def init_param():
     return param
 
 
-def init_import(param, cnt_total=None, db=None, auth=None):
+def init_import(param, cnt_total=None, db=None):
     """
         initialize the import in database
     """
     if db is None:
         db = current.db
-    if auth is None:
-        auth = current.auth
 
+    library_id = param['_library_id']
     if cnt_total is None:
-        st_imp_rik = db(db.library.id == auth.library_id).select().first().st_imp_rik
+        st_imp_rik = db(db.library.id == library_id).select().first().st_imp_rik
         cnt_total = int(0.5 * 10 ** st_imp_rik)
     param['cnt_total'] = cnt_total
-    db.library[auth.library_id] = dict(imp_total=cnt_total, imp_done=0, imp_new=0, imp_proc=0.0)
+    db.library[library_id] = dict(imp_total=cnt_total, imp_done=0, imp_new=0, imp_proc=0.0)
     db.commit()
 
 
-def set_proc(proc, db=None, auth=None):
+def set_proc(library_id, proc, db=None):
     if db is None:
         db = current.db
-    if auth is None:
-        auth = current.auth
 
-    db.library[auth.library_id] = dict(imp_proc=proc)
+    db.library[library_id] = dict(imp_proc=proc)
     db.commit()
 
 
 def counter_and_commit_if_100(param, added):
     """
-        increment counter and commit at the chunk (of length 100 rows) end
+        increment the counter and commit at the chunk (of length 100 rows) end
         added - (1st tuple item of the) result from update_or_insert_answer()
     """
     param['cnt_new'] += added
     param['cnt_done'] += 1
     if not param['cnt_done'] % 100:
-        do_commit(param)
+        do_commit(param['_library_id'], param)
 
 
-def finished(param, db=None):
+def finished(library_id, param, db=None):
     """
         commit yet uncommitted books and set imp_proc=100.0
     """
@@ -93,7 +90,7 @@ def finished(param, db=None):
     if running:
         running.update_record(finished=datetime.datetime.utcnow(), cnt_total=param['cnt_done'], cnt_new=param['cnt_new'])
         # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
-    do_commit(param, finished=True)
+    do_commit(library_id, param, finished=True)
 
 
 def cancel_import(db=None, auth=None):
@@ -109,20 +106,20 @@ def cancel_import(db=None, auth=None):
     for imp in running:
         imp.update_record(failed=True, finished=datetime.datetime.utcnow())
         # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
-    do_commit(None, finished=True)
+    do_commit(auth.library_id, None, finished=True)
 
 
-def do_commit(param, finished=False, db=None, auth=None):
+def do_commit(library_id, param, finished=False, db=None):
     if db is None:
         db = current.db
-    if auth is None:
-        auth = current.auth
 
     if param:   # proc before 2.0% can be used before main processing, example: db.library[auth.library_id] = dict(imp_proc=0.3)
         upd = dict(imp_done=param['cnt_done'], imp_new=param['cnt_new'], imp_proc=100.0 if finished else max(2.0, min(99.9, 100.0 * param['cnt_done'] / param['cnt_total'])))
+        if finished:
+            upd['last_import'] = datetime.datetime.utcnow()
     else:  # ie. if cancel!
         upd = dict(imp_proc=100.0)
-    db.library[auth.library_id] = upd
+    db.library[library_id] = upd
     db.commit()
 
 

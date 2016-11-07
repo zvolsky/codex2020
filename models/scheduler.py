@@ -7,8 +7,6 @@ from c_marc import parse_Marc_and_updatedb
 
 from gluon.scheduler import Scheduler
 
-from dal_import import counter_and_commit_if_100
-
 from plugin_splinter import run_for_server
 
 

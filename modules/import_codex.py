@@ -36,27 +36,28 @@ def imp_codex(db, library_id, src_folder):
         This is the main (entry) function.
     """
     param = init_param()
-    set_proc(0.1)
+    set_proc(library_id, 0.1)
     param['autori'] = read_xbase_as_dict(os.path.join(src_folder, 'autori.dbf'), key='id_autora')  # AUTOR , need ","->", "
-    set_proc(0.2)
+    set_proc(library_id, 0.2)
     param['k_autori'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_autori.dbf'), key='id_publ')  # VZTAH, ID_AUTORA
-    set_proc(0.4)
+    set_proc(library_id, 0.4)
     param['klsl'] = read_xbase_as_dict(os.path.join(src_folder, 'klsl.dbf'), key='id_klsl')  # KLSL
-    set_proc(0.5)
+    set_proc(library_id, 0.5)
     param['k_klsl'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_klsl.dbf'), key='id_publ')  # ID_KLSL
-    set_proc(0.9)
+    set_proc(library_id, 0.9)
     #param['dt'] = read_xbase_as_dict(os.path.join(src_folder, 'dt.dbf'), key='dt')  # DT, DT_TXT
     param['k_dt'] = read_xbase_as_list_dict(os.path.join(src_folder, 'k_dt.dbf'), key='id_publ')  # POM_ZNAK, DT
-    set_proc(1.2)
+    set_proc(library_id, 1.2)
     param['nakl'] = read_xbase_as_dict(os.path.join(src_folder, 'dodavat.dbf'), key='id_dodav')  # ICO, NAZEV1, NAZEV2, NAZEV_ZKR, MISTO
-    set_proc(1.5)
+    set_proc(library_id, 1.5)
     param['vytisky'] = read_xbase_as_list_dict(os.path.join(src_folder, 'vytisk.dbf'), key='id_publ', left=4)
                 # value: (tail<id>, record)     # PC, SIGNATURA, UC, ZARAZENO, VYRAZENO, CENA, ID_DODAV, UMISTENI, BARCODE, REVIZE, POZNAMKA
-    set_proc(1.9)  # < 2.0 !
+    set_proc(library_id, 1.9)  # < 2.0 !
     # TODO: VYPUJCKY?
 
+    param['_library_id'] = library_id
     read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True)
-    finished(param)  # commit tail records after nnn % 100 and set imp_proc=100.0
+    finished(library_id, param)  # commit tail records after nnn % 100 and set imp_proc=100.0
 
 
 def import_publ(record, param):

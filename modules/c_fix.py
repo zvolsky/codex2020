@@ -18,7 +18,7 @@ def all_fix(db=None):
     if db is None:
         db = current.db
 
-    def do_commit():
+    def commit_now():
         db.commit()
         print('done: %s, missing fastinfo: %s, fixed md5publ: %s' % (pos, cnt_fastinfo, cnt_md5publ))
 
@@ -29,8 +29,8 @@ def all_fix(db=None):
         fix_fastinfo_from_marc(row, extsrc_qualities)
 
         if not pos % 1000:
-            do_commit()
-    do_commit()
+            commit_now()
+    commit_now()
 
 
 def fix_fastinfo_from_marc(row, extsrc_qualities):
