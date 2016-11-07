@@ -68,9 +68,9 @@ def idx():
     db.commit()
 '''
 
+
 def run_tests(form_vars, servers):
     for server in servers:
         run_for_server(server, form_vars, myconf)
-
 
 scheduler = Scheduler(db)
