@@ -90,7 +90,7 @@ LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")
 IMPORT_SOURCES = (('codex', T("codex/DOS")),)  # key is used in URL, use proper characters (but we do encode it)
 
 db.define_table('library',
-        Field('library', 'string', length=128, requires=IS_NOT_EMPTY(),
+        Field('library', 'string', length=128, requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.library')],
               label=T("Jméno knihovny"), comment=T("jméno vaší knihovny (nejedná-li se o zcela oficiální titul knihovny, vynechte typ knihovny - zadáte jej níže v samostatném údaji), pro osobní knihovnu např. zadejte Petr Starý, Kladno")),
         Field('slug', 'string', length=32,
               requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.slug')],

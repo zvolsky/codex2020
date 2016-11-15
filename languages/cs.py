@@ -824,6 +824,7 @@
 'Slouží k určení výtisků, které nebyly fyzicky nalezeny od rozhodného data.': 'Slouží k určení výtisků, které nebyly fyzicky nalezeny od rozhodného data.',
 'Snad nejvíc to platí o %s - napoprvé nemá význam ho nastavit, ale jeho změnou později zahájíte revizi fondu.': 'Snad nejvíc to platí o %s - napoprvé nemá význam ho nastavit, ale jeho změnou později zahájíte revizi fondu.',
 'Sorry, could not find mercurial installed': 'Bohužel mercurial není nainstalován.',
+'spravovat jinou knihovnu': 'spravovat jinou knihovnu',
 'Spreadsheet-optimised export of tab-separated content including hidden columns. May be slow': 'Spreadsheet-optimised export of tab-separated content including hidden columns. May be slow',
 'Spreadsheet-optimised export of tab-separated content, visible columns only. May be slow.': 'Spreadsheet-optimised export of tab-separated content, visible columns only. May be slow.',
 'Start a new app': 'Vytvořit novou aplikaci',

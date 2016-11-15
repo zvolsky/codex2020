@@ -11,9 +11,14 @@ current.auth = auth
 
 # dočasně, dokud ladíme první knihovnu
 # TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
-auth.library_id = auth.user and getattr(auth.user, 'library_id', None) or 1  # první z předvolených or zkušební
-if type(auth.library_id) == list:
-    auth.library_id = auth.library_id[0]
+if session.library_id:
+    auth.library_id = session.library_id
+elif auth.user and auth.user.library_id:
+    auth.library_id = session.library_id = auth.user.library_id[0]
+    if len(auth.user.library_id) > 1:
+        redirect('library', 'choose_library')
+else:
+    auth.library_id = None
 
 # TODO: přidej Objednávku do HACTIONS: bude zřejmě vyžadovat extra tabulku jen částečně zpracovaných knih
 HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),

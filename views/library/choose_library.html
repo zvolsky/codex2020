@@ -1,0 +1,32 @@
+{{extend 'layout.html'}}
+
+
+{{if not show_all and auth.has_membership('admin'):}}
+    <p><a href="{{=URL('library', 'choose_library', args='all')}}">Nabídnout všechny knihovny</a></p>
+{{pass}}
+
+
+{{if active:}}
+    <div class="well well-small">
+        Právě pracuješ s knihovnou: <strong>{{=active}}</strong>
+    </div>
+{{pass}}
+
+
+{{if accessible:}}
+    <div class="well well-small">
+        <p>Máš oprávnění spravovat následující další knihovny (databáze knih). Kliknutím na název se přepneš do vybrané knihovny.</p>
+        <p>
+            {{for library_id, library_name in accessible:}}
+                <a href="{{=URL('library', 'choose_library', args=library_id)}}">{{=library_name}}</a>
+            {{pass}}
+        </p>
+    </div>
+{{pass}}
+
+
+{{if not active and not accessible:}}
+    <div class="well well-small">
+        <p>Nemáš oprávnění spravovat žádnou knihovnu (databázi knih). Můžeš si v profilu založit vlastní knihovnu nebo Ti může správce některé existující knihovny zřídit přístup.</p>
+    </div>
+{{pass}}

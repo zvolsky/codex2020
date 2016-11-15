@@ -4,6 +4,38 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 
 
 @auth.requires_login()
+def choose_library():
+    active = None    # id of the selected library
+    accessible = []  # or other libaries accessible for this user, (id, name)
+    curr_lib = session.library_id
+    show_all = False
+    spec_request = request.args(0)
+    if spec_request == 'all' and auth.has_membership('admin'):
+        show_all = True
+    if show_all or auth.user.library_id:
+        rows = db(db.library).select(db.library.id, db.library.library, orderby=db.library.library)
+        if not show_all:
+            rows = rows.find(lambda r: r.id in auth.user.library_id)
+            leave = False
+            if spec_request:  # setting of the library
+                for row in rows:
+                    if str(row.id) == spec_request:
+                        session.library_id = row.id
+                        leave = True
+                        break
+            if leave:
+                redirect('default', 'index')
+        for row in rows:
+            if row.id == curr_lib:
+                active = row.library
+            else:
+                accessible.append((row.id, row.library))
+        if not active and curr_lib:  # this shouldn't be: improper library was assigned
+            del session.library_id
+    return dict(active=active, accessible=accessible, show_all=show_all)
+
+
+@auth.requires_login()
 def new():
     """will create library for the new librarian"""
     form = SQLFORM(db.library,
@@ -16,6 +48,7 @@ def new():
         auth.library_id = form.vars.id
         redirect(URL('catalogue', 'find'))
     return dict(form=form)
+
 
 @auth.requires_login()
 def library():
