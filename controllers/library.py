@@ -5,26 +5,32 @@ from plugin_mz import formstyle_bootstrap3_compact_factory
 
 @auth.requires_login()
 def choose_library():
+    """
+        request.args(0): missing: Show, 'all': ShowAll, '<id>': Set
+    """
     active = None    # id of the selected library
     accessible = []  # or other libaries accessible for this user, (id, name)
     curr_lib = session.library_id
-    show_all = False
     spec_request = request.args(0)
-    if spec_request == 'all' and auth.has_membership('admin'):
-        show_all = True
-    if show_all or auth.user.library_id:
+    allowed_all = auth.has_membership('admin')
+    show_all = allowed_all and spec_request == 'all'
+    if allowed_all or auth.user.library_id:
         rows = db(db.library).select(db.library.id, db.library.library, orderby=db.library.library)
-        if not show_all:
+        #                                       Admin-Show Admin-ShowAll Admin-Set User-Show User-Set
+        # allowed_all                           True        True        True        False       False
+        # show_all                              False       True        False       False       False
+        # not show_all                          True        False       True        True        True
+        # spec_request                          False       True        True        False       True
+        # not (allowed_all and spec_request)    True        False       False       True        True
+        # if.... (ie. apply filter)             True        False       False       True        True
+        if not show_all and not (allowed_all and spec_request):
             rows = rows.find(lambda r: r.id in auth.user.library_id)
-            leave = False
-            if spec_request:  # setting of the library
-                for row in rows:
-                    if str(row.id) == spec_request:
-                        session.library_id = row.id
-                        leave = True
-                        break
-            if leave:
-                redirect('default', 'index')
+        if spec_request and spec_request != 'all':  # Set the library
+            for row in rows:
+                if str(row.id) == spec_request:
+                    session.library_id = row.id
+                    redirect(URL('default', 'index'))  # if Set (and <id> is legal) then it will stop here
+                    break
         for row in rows:
             if row.id == curr_lib:
                 active = row.library
