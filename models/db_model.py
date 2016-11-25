@@ -55,7 +55,6 @@ class UNIQUE_QUESTION(object):
             return (value, None)
 """
 
-
 db.define_table('rgroup',
         Field('library_id', db.library,
               default=auth.library_id,

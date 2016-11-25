@@ -14,6 +14,31 @@ DEBUG_SCHEDULER = False
 #DEBUG_SCHEDULER = True   # uncomment to debug scheduler tasks
 
 
+def idx():
+    from time import sleep
+    #db.xxx.insert(tim=datetime.datetime.now())
+    #db.commit()
+    sleep(50)
+
+'''to be removed
+def idx():
+    rows = db(db.answer.needindex == True, ignore_common_filters=True).select(db.answer.id, db.answer.md5publ)
+    indexed = 0
+    for row in rows:
+        if row.md5publ:
+            md5publ = row.md5publ
+        else:
+            #md5publ =
+            pass
+        db.answer[row.id] = {'needindex': False, 'md5publ': md5publ}
+
+        indexed += 1
+        if not indexed % 100:
+            db.commit()
+    db.commit()
+'''
+
+
 def task_catalogize(question_id, question, asked):
     """the time consuming retrieve/parse/db-save action
     called from catalogue/find
@@ -49,24 +74,6 @@ def do_import(imp_func, library_id, src_folder=None, full=False):
         db.commit()
     imp_func(db, library_id, src_folder)
     db.commit()   # to be sure; but imp_func itself should commit (in chunks or so)
-
-'''to be removed
-def idx():
-    rows = db(db.answer.needindex == True, ignore_common_filters=True).select(db.answer.id, db.answer.md5publ)
-    indexed = 0
-    for row in rows:
-        if row.md5publ:
-            md5publ = row.md5publ
-        else:
-            #md5publ =
-            pass
-        db.answer[row.id] = {'needindex': False, 'md5publ': md5publ}
-
-        indexed += 1
-        if not indexed % 100:
-            db.commit()
-    db.commit()
-'''
 
 
 def run_tests(form_vars, servers):
