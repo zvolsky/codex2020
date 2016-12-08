@@ -8,6 +8,81 @@ from c_utils import Answer, make_fastinfo
 from c_db import PublLengths
 
 
+IDX_CHUNK = 15
+
+
+def idx_main():
+    """
+        index books which have set answer.needindex
+    """
+    while True:
+        answers = db(db.answer.needindex == True).select(
+                db.answer.id, db.answer.fastinfo,
+                limitby(0, IDX_CHUNK))
+        if not answers:   # nothing more to index
+            break
+        for answer in answers:
+            idx_row(answer)
+        db.commit()
+
+
+def idx_row(answer):
+    """
+        answer: db.answer.id, .fastinfo
+    """
+    def old_gen():
+        # idx_join: answer_id, idx_long_id, role
+        # idx_long: category, item
+        old_recs = db(db.idx_join.answer_id == answer.id).select(
+                db.idx_join.ALL, db.idx_long.category, db.idx_long.item,
+                join=db.idx_long.on(db.idx_long.id == db.idx_join.idx_long_id),
+                orderby=db.idx_join.id)
+        for old_rec in old_recs:
+            yield old_rec
+
+    def save_to_long_idx(category, item):
+        rows = db((db.idx_long.category == category) & (db.idx_long.item == item)).select(db.idx_long.id)
+        if rows:
+            return rows[0].id
+        return db.idx_long.insert(category=category, item=item)
+
+    new_idx_recs = get_new_idx_recs(answer)
+    o_gen = old_gen()
+    additional = False
+    for new_idx_rec in new_idx_recs:
+        if not additional:
+            try:
+                old = o_gen.next()
+            except StopIteration:
+                additional = True
+            else:
+                if (new_idx_rec['role'] != old.idx_join.role or
+                        new_idx_rec['category'] != old.idx_long.category or
+                        new_idx_rec['item'] != old.idx_long.item):   # differs -> rewrite it
+                    long_id = save_to_long_idx(new_idx_rec['category'], new_idx_rec['item'])
+                    db.idx_join[old.idx_join.id] = dict(idx_long_id=long_id, role=new_idx_rec['role'])
+        if additional:
+            long_id = save_to_long_idx(new_idx_rec['category'], new_idx_rec['item'])
+            db.idx_join.insert(answer_id=answer.id, idx_long_id=long_id, role=new_idx_rec['role'])
+    if not additional:
+        for old in o_gen:  # there were more rows as we will have now -> delete remaining rows
+            del db.idx_join[old.idx_join.id]
+
+
+def get_new_idx_recs(answer):
+    """
+        Args:
+            answer: answer.fastinfo
+        Returns: [{'role':.., 'category':.., 'item':..}] from parsed .fastinfo
+    """
+    new_idx_recs = []
+    for ln in answer.fastinfo.splitlines():
+        if ln[0] == 'T':
+            new_idx_recs.append({'role': None, 'category': 'T', 'item': slugify(ln[1:])})
+    return new_idx_recs
+
+# -------------------
+
 def del_idxs(answer_id):
     db = current.db
     db(db.idx_word.id == answer_id).delete()

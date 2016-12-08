@@ -5,6 +5,7 @@
 from z39 import get_from_large_library
 from c_marc import parse_Marc_and_updatedb
 
+from dal_idx import idx_main
 from gluon.scheduler import Scheduler
 
 from plugin_splinter import run_for_server
@@ -13,12 +14,9 @@ from plugin_splinter import run_for_server
 DEBUG_SCHEDULER = False
 #DEBUG_SCHEDULER = True   # uncomment to debug scheduler tasks
 
-
 def idx():
-    from time import sleep
-    #db.xxx.insert(tim=datetime.datetime.now())
-    #db.commit()
-    sleep(50)
+    idx_main()
+
 
 '''to be removed
 def idx():
