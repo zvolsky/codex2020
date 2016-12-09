@@ -11,14 +11,18 @@ from c_db import PublLengths
 IDX_CHUNK = 15
 
 
-def idx_main():
+def idx_main(db=None):
     """
         index books which have set answer.needindex
     """
+    if db is None:
+        db = current.db
+
     while True:
         answers = db(db.answer.needindex == True).select(
                 db.answer.id, db.answer.fastinfo,
-                limitby(0, IDX_CHUNK))
+                limitby=(0, IDX_CHUNK))
+        print len(answers)
         if not answers:   # nothing more to index
             break
         for answer in answers:
@@ -26,10 +30,13 @@ def idx_main():
         db.commit()
 
 
-def idx_row(answer):
+def idx_row(answer, db=None):
     """
         answer: db.answer.id, .fastinfo
     """
+    if db is None:
+        db = current.db
+
     def old_gen():
         # idx_join: answer_id, idx_long_id, role
         # idx_long: category, item
@@ -67,6 +74,7 @@ def idx_row(answer):
     if not additional:
         for old in o_gen:  # there were more rows as we will have now -> delete remaining rows
             del db.idx_join[old.idx_join.id]
+    db.answer[answer.id] = dict(needindex=False)
 
 
 def get_new_idx_recs(answer):
@@ -77,8 +85,8 @@ def get_new_idx_recs(answer):
     """
     new_idx_recs = []
     for ln in answer.fastinfo.splitlines():
-        if ln[0] == 'T':
-            new_idx_recs.append({'role': None, 'category': 'T', 'item': slugify(ln[1:])})
+        if ln and ln[0] == 'T':
+            new_idx_recs.append({'role': None, 'category': 'T', 'item': slugify(ln[1:])[:PublLengths.ilong]})
     return new_idx_recs
 
 # -------------------
