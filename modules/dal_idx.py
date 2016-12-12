@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import simplejson
+
 from mzutils import slugify
 
 from gluon import current
@@ -22,7 +24,7 @@ def idx_main(db=None):
         answers = db(db.answer.needindex == True).select(
                 db.answer.id, db.answer.fastinfo,
                 limitby=(0, IDX_CHUNK))
-        print len(answers)
+        print len(answers)  #-------------------------------------+++++++++++++++++++++++
         if not answers:   # nothing more to index
             break
         for answer in answers:
@@ -83,10 +85,33 @@ def get_new_idx_recs(answer):
             answer: answer.fastinfo
         Returns: [{'role':.., 'category':.., 'item':..}] from parsed .fastinfo
     """
+    def add_subtitle(category, item, pos, subtitles):
+        item = slugify(item)
+        for next_subt in subtitles[pos+1:]:
+            if len(item) >= PublLengths.ilong:
+                break
+            item += '-' + slugify(next_subt)
+        new_idx_recs.append({'role': None, 'category': category, 'item': item[:PublLengths.ilong]})
+
     new_idx_recs = []
+    title = ''
+    subtitles = []
     for ln in answer.fastinfo.splitlines():
-        if ln and ln[0] == 'T':
-            new_idx_recs.append({'role': None, 'category': 'T', 'item': slugify(ln[1:])[:PublLengths.ilong]})
+        if ln:
+            fld = ln[0]
+            if fld == 'T':
+                title = ln[1:]
+            if fld == 't':
+                subtitles = [subtitle.encode('utf-8') for subtitle in simplejson.loads(ln[1:])]
+            elif fld == 'A':
+                for author in ln[1:].splitlines():
+                    author = author.strip()
+                    if author:
+                        new_idx_recs.append({'role': 'aut', 'category': 'A', 'item': slugify(author)[:PublLengths.ilong]})
+    if title:
+        add_subtitle('T', title, -1, subtitles)
+    for pos, subtitle in enumerate(subtitles):
+        add_subtitle('t', subtitle, pos, subtitles)
     return new_idx_recs
 
 # -------------------
