@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 import simplejson
 
 from mzutils import slugify
@@ -24,7 +25,6 @@ def idx_main(db=None):
         answers = db(db.answer.needindex == True).select(
                 db.answer.id, db.answer.fastinfo,
                 limitby=(0, IDX_CHUNK))
-        print len(answers)  #-------------------------------------+++++++++++++++++++++++
         if not answers:   # nothing more to index
             break
         for answer in answers:
@@ -55,7 +55,39 @@ def idx_row(answer, db=None):
             return rows[0].id
         return db.idx_long.insert(category=category, item=item)
 
+    def get_idx_words_and_save():
+        title_string = ''
+        for new_idx_rec in new_idx_recs:
+            if new_idx_rec['category'].upper() == 'T':
+                title_string += '-' + new_idx_rec['item']
+
+        words = []
+        re.sub('\\-+', '-', title_string.strip('-'))
+        for pos, char in enumerate(title_string):
+            if char == '-':
+                words.append(title_string[:pos+1:pos+1+PublLengths.iword])
+
+        save_to_word_idx(words)
+
+    def save_to_word_idx(words):
+        word_cnt = len(words)
+        rows = db(db.idx_word.answer_id == answer_id).select(db.idx_word.id, db.idx_word.word)
+        if rows == word_cnt:
+            for pos, row in enumerate(rows):
+                if row['word'] != words[pos]:
+                    break
+            else:
+                return   # no difference
+        # any difference -> rewrite all
+        for pos, row in enumerate(rows[:word_cnt]):
+            db.idx_word[row['id']] = dict(answer_id=answer_id, word=words[pos])
+        for word in words[word_cnt:]:
+            db.idx_word.insert(answer_id=answer_id, word=word)
+
+        # TODO: zkontroluj + debug
+
     new_idx_recs = get_new_idx_recs(answer)
+    get_idx_words_and_save()
     o_gen = old_gen()
     additional = False
     for new_idx_rec in new_idx_recs:
