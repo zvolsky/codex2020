@@ -15,7 +15,7 @@ if session.library_id:
     auth.library_id = session.library_id
 elif auth.user and auth.user.library_id:
     auth.library_id = session.library_id = auth.user.library_id[0]
-    if len(auth.user.library_id) > 1:
+    if len(auth.user.library_id) > 1 and request.controller != 'library' and request.controller != 'choose_library':
         redirect(URL('library', 'choose_library'))
 else:
     auth.library_id = None

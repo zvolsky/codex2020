@@ -25,6 +25,11 @@
 
 
 {{if not active and not accessible:}}
+    {{if show_all:}}
+        <div class="well well-small">
+            <p>{{=T("V systému není zatím definována vůbec žádná knihovna.")}}</p>
+        </div>
+    {{pass}}
     <div class="well well-small">
         <p>{{=T("Nemáš oprávnění spravovat žádnou knihovnu (databázi knih). Můžeš si v profilu založit vlastní knihovnu nebo Ti může správce některé existující knihovny zřídit přístup.")}}</p>
     </div>

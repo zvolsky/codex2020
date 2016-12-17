@@ -2,14 +2,13 @@
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
 
-
 @auth.requires_login()
 def choose_library():
     """
         request.args(0): missing: Show, 'all': ShowAll, '<id>': Set
     """
     active = None    # id of the selected library
-    accessible = []  # or other libaries accessible for this user, (id, name)
+    accessible = []  # or other libraries accessible for this user, (id, name)
     curr_lib = session.library_id
     spec_request = request.args(0)
     allowed_all = auth.has_membership('admin')
@@ -49,7 +48,10 @@ def new():
                    submit_button=T("Pokračovat ke katalogizaci"))
     if form.process().accepted:
         __clear_libstyle()
-        auth.user.library_id.insert(0, form.vars.id)
+        if auth.user.library_id:
+            auth.user.library_id.insert(0, form.vars.id)
+        else:
+            auth.user.library_id = [form.vars.id]
         db.auth_user[auth.user_id] = dict(library_id=auth.user.library_id)
         auth.library_id = form.vars.id
         redirect(URL('catalogue', 'find'))

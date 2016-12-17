@@ -55,39 +55,7 @@ def idx_row(answer, db=None):
             return rows[0].id
         return db.idx_long.insert(category=category, item=item)
 
-    def get_idx_words_and_save():
-        title_string = ''
-        for new_idx_rec in new_idx_recs:
-            if new_idx_rec['category'].upper() == 'T':
-                title_string += '-' + new_idx_rec['item']
-
-        words = []
-        re.sub('\\-+', '-', title_string.strip('-'))
-        for pos, char in enumerate(title_string):
-            if char == '-':
-                words.append(title_string[:pos+1:pos+1+PublLengths.iword])
-
-        save_to_word_idx(words)
-
-    def save_to_word_idx(words):
-        word_cnt = len(words)
-        rows = db(db.idx_word.answer_id == answer_id).select(db.idx_word.id, db.idx_word.word)
-        if rows == word_cnt:
-            for pos, row in enumerate(rows):
-                if row['word'] != words[pos]:
-                    break
-            else:
-                return   # no difference
-        # any difference -> rewrite all
-        for pos, row in enumerate(rows[:word_cnt]):
-            db.idx_word[row['id']] = dict(answer_id=answer_id, word=words[pos])
-        for word in words[word_cnt:]:
-            db.idx_word.insert(answer_id=answer_id, word=word)
-
-        # TODO: zkontroluj + debug
-
-    new_idx_recs = get_new_idx_recs(answer)
-    get_idx_words_and_save()
+    new_idx_recs = get_new_idx_recs_and_idx_words(answer, db)
     o_gen = old_gen()
     additional = False
     for new_idx_rec in new_idx_recs:
@@ -111,19 +79,45 @@ def idx_row(answer, db=None):
     db.answer[answer.id] = dict(needindex=False)
 
 
-def get_new_idx_recs(answer):
+def get_new_idx_recs_and_idx_words(answer, db):
     """
         Args:
             answer: answer.fastinfo
         Returns: [{'role':.., 'category':.., 'item':..}] from parsed .fastinfo
     """
-    def add_subtitle(category, item, pos, subtitles):
+    def add_subtitle(category, item, pos, subtitles, words_string):
         item = slugify(item)
+        words_string += item + '-'
         for next_subt in subtitles[pos+1:]:
             if len(item) >= PublLengths.ilong:
                 break
             item += '-' + slugify(next_subt)
         new_idx_recs.append({'role': None, 'category': category, 'item': item[:PublLengths.ilong]})
+
+    def idx_words(words_string):
+        words_string = re.sub('\\-+', '-', words_string.strip('-'))
+        words = []
+        for pos, char in enumerate(words_string):
+            if char == '-':
+                words.append(words_string[:pos+1:pos+1+PublLengths.iword])
+        save_to_idx_word(words)
+
+    def save_to_idx_word(words):
+        word_cnt = len(words)
+        rows = db(db.idx_word.answer_id == answer.id).select(db.idx_word.id, db.idx_word.word)
+        if rows == word_cnt:
+            for pos, row in enumerate(rows):
+                if row['word'] != words[pos]:
+                    break
+            else:
+                return   # no difference
+        # any difference -> rewrite all
+        for pos, row in enumerate(rows[:word_cnt]):
+            db.idx_word[row['id']] = dict(answer_id=answer.id, word=words[pos])
+        for word in words[len(rows):]:
+            db.idx_word.insert(answer_id=answer.id, word=word)
+
+        # TODO: zkontroluj + debug
 
     new_idx_recs = []
     title = ''
@@ -140,10 +134,12 @@ def get_new_idx_recs(answer):
                     author = author.strip()
                     if author:
                         new_idx_recs.append({'role': 'aut', 'category': 'A', 'item': slugify(author)[:PublLengths.ilong]})
+    words_string = ''
     if title:
-        add_subtitle('T', title, -1, subtitles)
+        add_subtitle('T', title, -1, subtitles, words_string)
     for pos, subtitle in enumerate(subtitles):
-        add_subtitle('t', subtitle, pos, subtitles)
+        add_subtitle('t', subtitle, pos, subtitles, words_string)
+    idx_words(words_string)
     return new_idx_recs
 
 # -------------------

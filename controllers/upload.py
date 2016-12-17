@@ -32,6 +32,9 @@ def main():
     email = None
     if auth.user.librarian:
         library = get_library()
+        if library is None:
+            session.flash = T("Nemáš nastavenou žádnou knihovnu, kterou právě spravuješ. Je třeba provést Nastavení.")
+            redirect(URL('default', 'index'))
         if library.imp_proc < 100.0:
             redirect(URL('running'))
 
