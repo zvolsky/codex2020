@@ -93,13 +93,14 @@ def get_new_idx_recs_and_idx_words(answer, db):
                 break
             item += '-' + slugify(next_subt)
         new_idx_recs.append({'role': None, 'category': category, 'item': item[:PublLengths.ilong]})
+        return words_string
 
     def idx_words(words_string):
         words_string = re.sub('\\-+', '-', words_string.strip('-'))
         words = []
         for pos, char in enumerate(words_string):
             if char == '-':
-                words.append(words_string[:pos+1:pos+1+PublLengths.iword])
+                words.append(words_string[pos+1:pos+1+PublLengths.iword])
         save_to_idx_word(words)
 
     def save_to_idx_word(words):
@@ -136,14 +137,15 @@ def get_new_idx_recs_and_idx_words(answer, db):
                         new_idx_recs.append({'role': 'aut', 'category': 'A', 'item': slugify(author)[:PublLengths.ilong]})
     words_string = ''
     if title:
-        add_subtitle('T', title, -1, subtitles, words_string)
+        words_string = add_subtitle('T', title, -1, subtitles, words_string)
     for pos, subtitle in enumerate(subtitles):
-        add_subtitle('t', subtitle, pos, subtitles, words_string)
+        words_string = add_subtitle('t', subtitle, pos, subtitles, words_string)
     idx_words(words_string)
     return new_idx_recs
 
 # -------------------
 
+'''
 def del_idxs(answer_id):
     db = current.db
     db(db.idx_word.id == answer_id).delete()
@@ -297,3 +299,4 @@ def add_short(answer_id, item, category):
         db = current.db
         db.idx_short[0] = {'answer_id': answer_id, 'category': category, 'item': item[:PublLengths.ishort]}
         # we ignore slugify, as long as we have only languages here
+'''

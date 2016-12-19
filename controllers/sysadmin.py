@@ -26,6 +26,11 @@ def __xxx2():
 '''
 
 @auth.requires_membership('admin')
+def restart_idx():
+    db(db.answer).update(needindex=True)
+    redirect(URL('start_idx'))
+
+@auth.requires_membership('admin')
 def start_idx():
     if DEBUG_SCHEDULER:
         idx()
