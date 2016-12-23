@@ -1,9 +1,8 @@
 {{extend 'layout.html'}}
 
+{{=form}}
+
 {{if auth.user:}}
-    <div class="alert alert-warning">
-        {{=T("Aplikace je ve fázi vývoje. Nelze vyhledávat v knihovnách.")}}
-    </div>
     <div class="well">
         {{if auth.library_id > 1:}}
             <a href="{{=URL('catalogue', 'find')}}" class="btn btn-primary">{{=T("přejít ke katalogizaci")}}</a>

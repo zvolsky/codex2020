@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+'''imports in controllers:
+    query: from search import handle_qb_form
+'''
+
 #mz ++z
 def models():   # debug (broken migrations, ..)
     return 'models/db finished ok'
@@ -8,8 +12,20 @@ def models():   # debug (broken migrations, ..)
 def diag():   # debug (broken migrations, ..)
     return dict()
 
+qbform = FORM(
+    INPUT(_name='qb', requires=IS_NOT_EMPTY()),
+    INPUT(_type='submit', _value=T("najdi publikace")),
+    _action=URL('query')
+)
+
 def index():
-    return dict()
+    return dict(form=qbform)
+
+def query():
+    if not qbform.process(session=None, formname=None).accepted:
+        redirect(URL('index'))
+    from search import handle_qb_form
+    return handle_qb_form(request.vars)
 
 def theme():
     """requires:
