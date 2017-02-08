@@ -103,7 +103,7 @@ def parse_pubyear(pubyear, minyear=1700):
 # librarian (impressions agenda)
 
 def analyze_barcode(barcode):
-    """analyze the barcode to make possiible incrementing for different barcode formats
+    """analyze the barcode to make possible incrementing for different barcode formats
     works together with format_barcode()
     first found number is intended to be incremented, other parts will remain same
 

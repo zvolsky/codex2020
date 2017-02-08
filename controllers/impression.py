@@ -213,7 +213,8 @@ def list():
         if sgn and sgn_1:
             sgn_imp += sgsep + sgn_1
         barcode = form.vars.barcode and form.vars.barcode.strip()
-        incr_from, len_digits, barcode_no = analyze_barcode(barcode)
+        if barcode:
+            incr_from, len_digits, barcode_no = analyze_barcode(barcode)
         for ii in xrange(form.vars.new):
             while iorder_candidate in iorders:
                 iorder_candidate += 1

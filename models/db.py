@@ -131,7 +131,7 @@ db.define_table('library',
         Field('st_imp_bc', 'boolean', notnull=True, default=False,  # libstyle['bc'][0] = B
               label=T("Čarové kódy ?"), comment=T("označte, pokud knihovna používá vlastní čarové kódy")),
         Field('st_imp_bc2', 'boolean', notnull=True, default=True,  # libstyle['bc'][1] = +
-              label=T("Inkremetovat čar.kódy ?"), comment=T("Ano: čarový kód více výtisků bude předvyplněn zvětšujícím se číslem; Ne: čaar.kód 2+ výtisku doplníte ručně")),
+              label=T("Inkremetovat čar.kódy ?"), comment=T("Ano: čarový kód více výtisků bude předvyplněn zvětšujícím se číslem; Ne: čar.kód 2+ výtisku doplníte ručně")),
         Field('st_imp_pl', 'boolean', notnull=True, default=False,  # libstyle['gr'][0] = P
               label=T("Umístění výtisku ?"), comment=T("označte, pokud chcete zapisovat, kde je výtisk umístěn (oddělení, místnost, regál, apod.)")),
         Field('st_imp_sg', 'boolean', notnull=True, default=False,  # libstyle['sg'][0] = G

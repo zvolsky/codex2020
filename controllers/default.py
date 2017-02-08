@@ -12,6 +12,22 @@ def models():   # debug (broken migrations, ..)
 def diag():   # debug (broken migrations, ..)
     return dict()
 
+def index():
+    qbform = FORM(
+        INPUT(_name='qb', requires=IS_NOT_EMPTY()),
+        INPUT(_type='submit', _value=T("najdi publikace")),
+    )
+    if qbform.process().accepted:
+        redirect(URL('query', vars=dict(qb=request.vars.qb)))
+    return dict(form=qbform)
+
+def query():
+    if not request.vars.qb:
+        redirect(URL('index'))
+    from search import handle_qb_form
+    return handle_qb_form(request.vars.qb)
+
+'''
 qbform = FORM(
     INPUT(_name='qb', requires=IS_NOT_EMPTY()),
     INPUT(_type='submit', _value=T("najdi publikace")),
@@ -26,6 +42,7 @@ def query():
         redirect(URL('index'))
     from search import handle_qb_form
     return handle_qb_form(request.vars)
+'''
 
 def theme():
     """requires:

@@ -1,0 +1,26 @@
+{{extend 'layout.html'}}
+
+<style>
+.qb td {padding: 3px;}
+</style>
+
+<div class="well">
+    <table class="qb">
+        {{for book in books:}}
+        <tr>
+            <td>
+                {{=book['aut']}}
+            </td>
+            <td><b>
+                {{=book['tit']}}
+            </b></td>
+            <td><small>
+                {{=book['puy']}}
+            </small></td>
+            <td><small>
+                {{=book['pub']}}
+            </small></td>
+        </tr>
+        {{pass}}
+    </table>
+</div>

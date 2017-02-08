@@ -78,7 +78,7 @@ def publ_hash(title, subtitles, author, publisher, pubyear, author_need_normaliz
     pubyear: we use digits only
     """
     if subtitles:  # this is necessary with regard to something like "III-IV", "Part 2",.. in subtitles
-        title = title + subtitles[0][:12]  # connection not important: hash_prepared() removes all
+        title = title + subtitles[0][1][:12]  # connection not important: hash_prepared() removes all
     if author_need_normalize:
         author, _full = normalize_authors(author, string_surnamed=True)
 
@@ -110,7 +110,7 @@ def make_fastinfo(rec, correct_title=False):
         fastinfo += '\n#%s' % title_ignore_chars
     title_indexparts = getattr(rec, 'title_indexparts', None)
     if title_indexparts:
-        fastinfo += '\ni%s' + title_indexparts
+        fastinfo += '\ni%s' % title_indexparts[0]   # ???   zde jsem fixnul bez pochopení věci; bylo tu '\ni%s'+title_indexparts (str+list)
     author = getattr(rec, 'author', None)
     if author:
         fastinfo += '\nA' + author
