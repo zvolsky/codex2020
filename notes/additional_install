@@ -33,9 +33,11 @@ pip install sparkpost
 ------
 
 PyZ3950
-  # from: https://github.com/alexsdutton/PyZ3950,
-  # then: python setup.py install
-  # then: run python in terminal with root privilleges and: import PyZ3950 (or from PyZ3950 import zoom)
+  # from: https://github.com/zvolsky/PyZ3950,  (fork noisy, do něj zamergovano gr, pak další změny)
+  # then: python setup.py sdist
+  # then: sudo pip install PyZ3950 --no-index --no-cache-dir --find-links file:///home/mirek/mz/PyZ3950/PyZ3950/dist/
+  # sudo python /home/mirek/mz/web2py/web2py.py -a "q" -K codex2020 -X
+  # then Ctrl-C
 
   # other forks have problems:
         # original asl2/ - not installed properly on Debian/Jessie,
@@ -46,6 +48,10 @@ PyZ3950
 
 pip install pymarc
   # read setup.py about problems
+
+------
+
+pip install simplejson
 
 ------
 
