@@ -33,11 +33,9 @@ pip install sparkpost
 ------
 
 PyZ3950
-  # from: https://github.com/zvolsky/PyZ3950,  (fork noisy, do něj zamergovano gr, pak další změny)
+  # from: https://github.com/zvolsky/PyZ3950,  (fork noisy, do něj zamergovano gr + Brown-University-Library, pak další změny)
   # then: python setup.py sdist
   # then: sudo pip install PyZ3950 --no-index --no-cache-dir --find-links file:///home/mirek/mz/PyZ3950/PyZ3950/dist/
-  # sudo python /home/mirek/mz/web2py/web2py.py -a "q" -K codex2020 -X
-  # then Ctrl-C
 
   # other forks have problems:
         # original asl2/ - not installed properly on Debian/Jessie,
