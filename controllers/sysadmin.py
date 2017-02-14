@@ -25,19 +25,24 @@ def __xxx2():
     print dataset.to_json()
 '''
 
+def __idx_task_query():
+    return (db.scheduler_task.application_name == 'codex2020/sysadmin') & (db.scheduler_task.task_name == 'idx')
+
+
 @auth.requires_membership('admin')
 def restart_idx():
     db(db.answer).update(needindex=True)
+    db(__idx_task_query()).delete()
     redirect(URL('start_idx'))
 
+
 @auth.requires_membership('admin')
-def start_idx():
+def start_idx():    # hint: use restart_idx()
     if DEBUG_SCHEDULER:
         idx()
         return 'Indexing finished.'
     else:
-        if db((db.scheduler_task.application_name == 'codex2020/sysadmin') &
-                (db.scheduler_task.task_name == 'idx')).select().first():
+        if db(__idx_task_query()).select().first():
             return 'Task idx already queued. Remove it from scheduler_task table if you want re-create it.'
         else:
             scheduler.queue_task(

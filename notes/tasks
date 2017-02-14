@@ -1,0 +1,10 @@
+start indexing:
+  navigate to sysadmin/restart_idx
+ 
+
+delete data except scheduler/session/users/libraries:
+  truncate answer cascade;
+  truncate question cascade;
+  truncate authority cascade;
+  truncate publisher cascade;
+  ... more? partner, bill, ..

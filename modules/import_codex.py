@@ -9,7 +9,7 @@ import os
 
 from books import isxn_to_ean, parse_pubyear
 
-from c_utils import REPEATJOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
+from c_utils import REPEATJOINER, DEFAULT_SUBTITLE_JOINER, parse_year_from_text, normalize_authors, publ_fastinfo_and_hash
 from dal_import import (place_to_place_id, update_or_insert_answer, update_or_insert_owned_book, update_or_insert_impressions,
         counter_and_commit_if_100, finished, init_param, init_import, set_proc)
 
@@ -124,7 +124,7 @@ def import_publ(record, param):
 
     # always, because in case of other system import fastinfo can change together with same ean & md5publ
     fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear,
-                                               subtitles=(podnazev,), origin=origin, keys=klsl)
+                                               subtitles=((DEFAULT_SUBTITLE_JOINER, podnazev),), origin=origin, keys=klsl)
 
     impressions = param['vytisky'].get(id_publ, ())
     added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'], marcrec=answer_rec)

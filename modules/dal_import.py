@@ -22,6 +22,7 @@ from gluon import current
 
 from c_db import PublLengths
 from c_utils import ean_to_fbi, suplemental_fbi
+from dal_idx import idx_row
 from dal_utils import answer_by_ean, answer_by_hash, get_library
 
 if False:  # for IDE only, need web2py/__init__.py
@@ -142,7 +143,7 @@ def clear_before_import(incremental=False, db=None, auth=None, session=None):
 
 
 def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, marcrec=None, z39stamp=None, md5redirects=None, src_quality=10,
-                            db=None):
+                            delayed_indexing=True, db=None):
     """
     Args:
         marcrec is recommended ! It should be marcrec object from Marc parsing or suplementary object with attrs country (char 3), pubyears ((integer, integer), pls provide both same in case of single year)
@@ -150,6 +151,9 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
     """
     if db is None:
         db = current.db
+
+    class EmptyClass(object):
+        pass
 
     def exists_update():
         if row:                           # same ean or same significant data -> same book
@@ -160,6 +164,8 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
                     db.rik2.insert(rik2=row.rik)                  # we cannot give the suplemental one away because some library can use it (have it written in the book)
                 db.answer[row.id] = answer
                 #touched.append((row.id, marcrec, record, row.fastinfo or ''))  # or '': to distinguish update (not None) from insert (None)
+                if not delayed_indexing:
+                    idx_row(db.answer[row.id])
             return True  # row exists, stop next actions
             # TODO: indexovat podle answer + cycle přes všechny kopie v owned_book?
 
@@ -172,7 +178,7 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
                   ean=ean, rik=ean_to_fbi(ean) or suplemental_fbi(),
                   country=marcrec and marcrec.country[:PublLengths.country],
                   year_from=marcrec and marcrec.pubyears[0], year_to=marcrec and marcrec.pubyears[1],
-                  src_quality=src_quality, needindex=True)
+                  src_quality=src_quality, needindex=delayed_indexing)
 
     flds = (db.answer.id, db.answer.md5marc, db.answer.fastinfo, db.answer.rik, db.answer.src_quality)
     if ean:
@@ -188,6 +194,12 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
         answer['fastinfo'] = fastinfo
         row_id = db.answer.insert(**answer)  # ...insert it
         #touched.append((row_id, marcrec, record, None))
+        if not delayed_indexing:
+            # problem: answer is dict, we cannot pass it (alternative: convert to Storage)
+            answer_for_idx = EmptyClass()
+            answer_for_idx.id = row_id
+            answer_for_idx.fastinfo = fastinfo
+            idx_row(answer_for_idx)
         return True, row_id    # True means new added rec ( + 1 into inserted count and so on .. )
 
 

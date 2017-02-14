@@ -19,6 +19,7 @@ from mzutils import hash_prepared
 
 
 REPEATJOINER = '; '
+DEFAULT_SUBTITLE_JOINER = ' : '
 
 
 def join_author(authors):
@@ -160,8 +161,9 @@ def split_crazy_tail(txt):  # , convert_tail=True
     rstr = txt.rstrip()
     if rstr[-1:] == '.' and rstr[-2:] != '..':
         return rstr[:-1], txt[len(rstr) - 1:]
-    return rstr, ' : '  # TODO? at this time we use ' : ' as default crazy_tail connector, but this behaviour
-                        #   should be improved (or connector changed later) based on the (marc) type of the next subtitle
+    return rstr, DEFAULT_SUBTITLE_JOINER
+        # TODO? at this time we use ' : ' as default crazy_tail connector, but this behaviour
+        #   should be improved (or connector changed later) based on the (marc) type of the next subtitle
 
 
 def parse_fbi(question, libstyle, reverted=True):

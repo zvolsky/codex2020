@@ -100,6 +100,7 @@ def import_uploaded():
                 timeout=7200)
         redirect_url = URL('running')
 
+    # TODO: to remove, replaced with sysadmin/start_idx and scheduler
     #if DEBUG_SCHEDULER:
     #    idx()
     #else:

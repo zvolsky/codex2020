@@ -27,9 +27,20 @@ def idx_main(db=None):
                 limitby=(0, IDX_CHUNK))
         if not answers:   # nothing more to index
             break
-        for answer in answers:
-            idx_row(answer)
-        db.commit()
+        idx_group(answers, db=db)
+
+
+def idx_group(answers, db=None):
+    """
+        this is called from idx_main with record chunks
+        + can be called explicitly (example: for books retrieved from external libraries by user we need index immediately to user can see results)
+    """
+    if db is None:
+        db = current.db
+
+    for answer in answers:
+        idx_row(answer)
+    db.commit()
 
 
 def idx_row(answer, db=None):
@@ -129,7 +140,7 @@ def get_new_idx_recs_and_idx_words(answer, db):
             if fld == 'T':
                 title = ln[1:]
             if fld == 't':
-                subtitles = [subtitle.encode('utf-8') for subtitle in simplejson.loads(ln[1:])]
+                subtitles = [subtitle.encode('utf-8') for _connector, subtitle in simplejson.loads(ln[1:])]
             elif fld == 'A':
                 for author in ln[1:].splitlines():
                     author = author.strip()

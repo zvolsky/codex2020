@@ -43,7 +43,9 @@ def updatedb(record, z39stamp=None, md5redirects=None):
     isbn = marcrec.isbn[:PublLengths.isbn]
     ean = isxn_to_ean(isbn)
 
-    added, _answer_id = update_or_insert_answer(ean, md5publ, fastinfo, marc=marc, md5marc=md5marc, marcrec=marcrec, z39stamp=z39stamp, md5redirects=md5redirects, src_quality=marcrec.src_quality)
+    added, _answer_id = update_or_insert_answer(ean, md5publ, fastinfo, marc=marc, md5marc=md5marc, marcrec=marcrec, z39stamp=z39stamp, md5redirects=md5redirects,
+                                                src_quality=marcrec.src_quality, delayed_indexing=False)
+                                                # disable delayed_indexing because user need see results
     return added
 
     '''
