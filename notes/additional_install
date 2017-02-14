@@ -64,6 +64,23 @@ pip install splinter
 
 ------
 
+web2py-scheduler
+# /etc/systemd/system/web2py-scheduler.service:
+[Unit]
+Description=Web2py Scheduler service
+
+[Service]
+ExecStart=/usr/bin/python /home/www-data/web2py/web2py.py -K codex2020,codex2020,codex2020
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl enable web2py-scheduler
+systemctl start web2py-scheduler
+
+------
+
 start indexing:
   navigate to sysadmin/restart_idx
 

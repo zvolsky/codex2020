@@ -2,8 +2,10 @@
 
 from gluon import current
 from gluon.tools import URL, redirect
+from gluon.html import DIV, SPAN
 
 from c_utils import parse_fastinfo
+from c2_common import get_book_line
 
 from mzutils import slugify
 
@@ -29,5 +31,12 @@ def handle_qb_form(qb, db=None, session=None, T=None):
     for row in rows:
         tit, aut, pub, puy = parse_fastinfo(row.fastinfo)
         parsed_rows.append(dict(tit=tit, aut=aut, pub=pub, puy=puy))
-    return dict(books=sorted(parsed_rows, key=lambda row: row['puy'], reverse=True))
+    books = sorted(parsed_rows, key=lambda row: row['puy'], reverse=True)
 
+    # render
+    html = []
+    for book in books:
+        book_line = get_book_line(book['tit'], book['aut'], book['pub'], book['puy'])
+        html.append(SPAN(book_line, _class="list-group-item"))
+
+    return dict(books=DIV(*html, _class="list-group"))
