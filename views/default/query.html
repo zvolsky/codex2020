@@ -24,7 +24,7 @@
 <script>
 function bookLinkOver(ean) {
     jQuery.ajax({
-        type: "GET",
+        type: "jsonp",
         url: 'https://cache.obalkyknih.cz/api/books?isbn="' + ean + '"',
         contentType: "application/json; charset=utf-8",
         dataType: "json",
