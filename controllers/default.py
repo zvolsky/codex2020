@@ -25,6 +25,7 @@ def query():
     if qbform.process().accepted:
         redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
     books = handle_qb_form(request.vars.qb)
+    response.headers['Access-Control-Allow-Origin'] = '*'
     return dict(form=qbform, books=books)
 
 '''

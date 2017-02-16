@@ -53,6 +53,10 @@ pip install simplejson
 
 ------
 
+pip install enum34
+
+------
+
 pip install dbf_read_iffy   # for import Codex/DOS; aenum install error is not problem
     will install dbf - can be used for next/other xBase imports
 
