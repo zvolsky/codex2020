@@ -13,10 +13,8 @@ def diag():   # debug (broken migrations, ..)
     return dict()
 
 def index():
-    qbform = FORM(
-        INPUT(_name='qb', requires=IS_NOT_EMPTY()),
-        INPUT(_type='submit', _value=T("najdi publikace")),
-    )
+    from search import get_qb_form
+    qbform = get_qb_form()
     if qbform.process().accepted:
         redirect(URL('query', vars=dict(qb=request.vars.qb)))
     return dict(form=qbform)
@@ -24,7 +22,7 @@ def index():
 def query():
     if not request.vars.qb:
         redirect(URL('index'))
-    from search import handle_qb_form
+    from search import get_qb_form, handle_qb_form
     return handle_qb_form(request.vars.qb)
 
 '''

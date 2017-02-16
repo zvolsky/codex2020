@@ -124,7 +124,7 @@ def import_publ(record, param):
 
     # always, because in case of other system import fastinfo can change together with same ean & md5publ
     fastinfo, md5publ = publ_fastinfo_and_hash(nazev, auth_surnamed, auth_full, pubplace, publisher, pubyear,
-                                               subtitles=((DEFAULT_SUBTITLE_JOINER, podnazev),), origin=origin, keys=klsl)
+                                               subtitles=((DEFAULT_SUBTITLE_JOINER, podnazev),) if podnazev else None, origin=origin, keys=klsl)
 
     impressions = param['vytisky'].get(id_publ, ())
     added, answer_id = update_or_insert_answer(ean, md5publ, fastinfo, md5redirects=param['redirects'], marcrec=answer_rec)

@@ -7,7 +7,6 @@ from mzutils import slugify
 
 from gluon import current
 
-from c_utils import Answer, make_fastinfo
 from c_db import PublLengths
 
 

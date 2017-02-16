@@ -7,4 +7,6 @@ delete data except scheduler/session/users/libraries:
   truncate question cascade;
   truncate authority cascade;
   truncate publisher cascade;
-  ... more? partner, bill, ..
+  ... more?
+  truncate partner cascade;
+  truncate bill cascade;

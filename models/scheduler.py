@@ -12,7 +12,7 @@ from plugin_splinter import run_for_server
 
 
 DEBUG_SCHEDULER = False
-#DEBUG_SCHEDULER = True   # uncomment to debug scheduler tasks
+DEBUG_SCHEDULER = True   # uncomment to debug scheduler tasks
 
 def idx():
     idx_main()

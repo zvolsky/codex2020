@@ -103,7 +103,7 @@ def make_fastinfo(rec, correct_title=False):
         title_correction(rec)
 
     fastinfo = 'T' + rec.title
-    subtitles = filter(None, getattr(rec, 'subtitles', ()))
+    subtitles = getattr(rec, 'subtitles', ())
     if subtitles:
         fastinfo += '\nt' + simplejson.dumps(subtitles)
     title_ignore_chars = getattr(rec, 'title_ignore_chars', None)
