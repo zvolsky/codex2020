@@ -16,14 +16,16 @@ def index():
     from search import get_qb_form
     qbform = get_qb_form()
     if qbform.process().accepted:
-        redirect(URL('query', vars=dict(qb=request.vars.qb)))
+        redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
     return dict(form=qbform)
 
 def query():
-    if not request.vars.qb:
-        redirect(URL('index'))
     from search import get_qb_form, handle_qb_form
-    return handle_qb_form(request.vars.qb)
+    qbform = get_qb_form()
+    if qbform.process().accepted:
+        redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
+    books = handle_qb_form(request.vars.qb)
+    return dict(form=qbform, books=books)
 
 '''
 qbform = FORM(

@@ -20,3 +20,43 @@
         {{=books}}
     </div>
 </div>
+
+<script>
+function bookLinkOver(ean) {
+    jQuery.ajax({
+        type: "GET",
+        url: 'https://cache.obalkyknih.cz/api/books?isbn="' + ean + '"',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data, status, jqXHR) {
+            alert(data);
+            alert(status);
+            alert(jqXHR);
+        }
+    });
+}
+/*
+$.getJSON({
+            type: 'GET',
+            url: "https://cache.obalkyknih.cz/api/books?isbn=9788086964096",
+            //data: myJSONData,
+            //dataType: 'application/xml',
+            success: function(data) {
+             alert(333);
+            }
+          });
+*/
+/*
+    $.getJSON("https://cache.obalkyknih.cz/api/books?isbn=9788086964096", function(data) {
+        alert(data);
+    });
+    $('.book-link').mouseover(
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "https://cache.obalkyknih.cz/api/books?isbn=9788086964096", false);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send();
+        var response = JSON.parse(xhttp.responseText);
+alert(response);
+alert(xhttp.responseText);
+*/
+</script>

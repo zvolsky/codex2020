@@ -2,7 +2,7 @@
 
 from gluon import current
 from gluon.tools import URL, redirect
-from gluon.html import DIV, SPAN, INPUT, FORM
+from gluon.html import A, DIV, SPAN, INPUT, FORM
 from gluon.validators import IS_NOT_EMPTY
 
 from c_utils import parse_fastinfo
@@ -49,8 +49,8 @@ def handle_qb_form(qb, db=None, session=None, T=None):
     for book in books:
         book_line = get_book_line(book['tit'], book['aut'], book['pub'], book['puy'])
         book_line = SPAN(book_line, _class="list-group-item")
-        if book('ean'):
-            book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book('ean'), _class="book-row")
+        if book['ean']:
+            book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'])
         html.append(book_line)
 
-    return dict(books=DIV(*html, _class="list-group"))
+    return DIV(*html, _class="list-group")
