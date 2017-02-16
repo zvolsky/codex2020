@@ -24,14 +24,19 @@
 <script>
 function bookLinkOver(ean) {
     jQuery.ajax({
-        type: "jsonp",
-        url: 'https://cache.obalkyknih.cz/api/books?isbn="' + ean + '"',
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
+        url: 'https://cache.obalkyknih.cz/api/books?isbn=' + ean,
+        dataType: "jsonp",
+        //type: "GET",
+        //contentType: "application/json; charset=utf-8",
         success: function (data, status, jqXHR) {
             alert(data);
             alert(status);
             alert(jqXHR);
+        },
+        error: function (data, status, jqXHR) {
+            alert('err');
+            alert(status);
+debugger;
         }
     });
 }
