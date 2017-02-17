@@ -10,7 +10,7 @@ def stripAccents(s):
     """
     if type(s) != unicode:  # if s is 2.7 string then auto-decode it from utf8
         s = s.decode('utf8')
-    return ''.join((c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'))
+    return u''.join((c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'))
 
 
 def hash_prepared(s, title=False):

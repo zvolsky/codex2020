@@ -106,8 +106,8 @@ def get_new_idx_recs_and_idx_words(answer, db):
         return words_string
 
     def idx_words(words_string):
+        words = [words_string[:PublLengths.iword]]
         words_string = re.sub('\\-+', '-', words_string.strip('-'))
-        words = []
         for pos, char in enumerate(words_string):
             if char == '-':
                 words.append(words_string[pos+1:pos+1+PublLengths.iword])

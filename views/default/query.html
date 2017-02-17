@@ -2,6 +2,7 @@
 
 <style>
 .qb td {padding: 3px;}
+#cover {position: fixed;}
 </style>
 
 <div class="well">
@@ -9,11 +10,8 @@
 </div>
 
 <div class="col-md-2">
-    <a href="https://www.obalkyknih.cz/view?isbn=9788086964096">
-        <img src="https://www.obalkyknih.cz/file/cover/814768/medium">
-        <!--<img src="https://cache.obalkyknih.cz/api/books?isbn=9788086964096">
-        <img src="http://cache.obalkyknih.cz/api/books?multi=[{%22isbn%22:%22978-80-86964-09-6%22,%22nbn%22:%22cnb000154538",%22oclc%22:%22(OCoLC)311597120%22}]">-->
-    </a>
+    <div id="cover">
+    </div>
 </div>
 <div class="col-md-10">
     <div class="well">
@@ -22,46 +20,27 @@
 </div>
 
 <script>
+var lastEan = null;
 function bookLinkOver(ean) {
-    jQuery.ajax({
-        url: 'https://cache.obalkyknih.cz/api/books?isbn=' + ean,
-        dataType: "jsonp",
-        //type: "GET",
-        //contentType: "application/json; charset=utf-8",
-        success: function (data, status, jqXHR) {
-            alert(data);
-            alert(status);
-            alert(jqXHR);
-        },
-        error: function (data, status, jqXHR) {
-            alert('err');
-            alert(status);
-debugger;
+    if (ean !== lastEan) {
+        lastEan = ean;
+        if (ean) {
+            $.ajax({
+                url: "onbooklink",
+                data: {ean: ean},
+                success: function(result) {
+                    if (ean === lastEan) {
+                        result = JSON.parse(result);
+                        $("#cover").html('');
+                        var coverImg = $("<img>", {src: result.src});
+                        var coverA = $("<a></a>");
+                        coverA.attr("href", "https://www.obalkyknih.cz/view?isbn=" + ean);
+                        coverImg.appendTo(coverA);
+                        coverA.appendTo($("#cover"));
+                    }
+                }
+            });
         }
-    });
+    }
 }
-/*
-$.getJSON({
-            type: 'GET',
-            url: "https://cache.obalkyknih.cz/api/books?isbn=9788086964096",
-            //data: myJSONData,
-            //dataType: 'application/xml',
-            success: function(data) {
-             alert(333);
-            }
-          });
-*/
-/*
-    $.getJSON("https://cache.obalkyknih.cz/api/books?isbn=9788086964096", function(data) {
-        alert(data);
-    });
-    $('.book-link').mouseover(
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "https://cache.obalkyknih.cz/api/books?isbn=9788086964096", false);
-        xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.send();
-        var response = JSON.parse(xhttp.responseText);
-alert(response);
-alert(xhttp.responseText);
-*/
 </script>

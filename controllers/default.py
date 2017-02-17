@@ -2,6 +2,11 @@
 
 '''imports in controllers:
     query: from search import handle_qb_form
+    onbooklink: import urllib2
+'''
+
+'''settings in controllers:
+    onbooklink: OBALKY_CACHE
 '''
 
 #mz ++z
@@ -27,6 +32,26 @@ def query():
     books = handle_qb_form(request.vars.qb)
     response.headers['Access-Control-Allow-Origin'] = '*'
     return dict(form=qbform, books=books)
+
+# @ajaxMethod
+def onbooklink():
+    OBALKY_CACHE = 'https://cache.obalkyknih.cz/api/books?isbn=%s'
+    # https://cache.obalkyknih.cz/api/books?isbn=9788086964096
+    # https://cache.obalkyknih.cz/api/books?multi=[{%22isbn%22:%22978-80-86964-09-6%22,  ...
+
+    ean = request.vars.ean
+    if ean:
+        import simplejson
+        import urllib2
+        try:
+            hnd = urllib2.urlopen(OBALKY_CACHE % ean)
+            metadata = hnd.read()
+            hnd.close()
+            metadata = simplejson.loads(metadata)
+            src = metadata[0]['cover_medium_url']
+        except StandardError:
+            src = ''
+    return simplejson.dumps({'src': src})
 
 '''
 qbform = FORM(
