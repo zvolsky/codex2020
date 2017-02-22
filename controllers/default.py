@@ -49,6 +49,7 @@ def onbooklink():
             hnd.close()
             metadata = simplejson.loads(metadata)
             src = metadata[0]['cover_medium_url'].replace('cache.', 'www.').replace('http:', 'https:')
+                    # cache. nefunguje, muselo by se hnat pres server; ale primo z prohlizece funguje www.
         except StandardError:
             src = ''
     return simplejson.dumps({'src': src})
