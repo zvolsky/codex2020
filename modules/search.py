@@ -50,7 +50,7 @@ def handle_qb_form(qb, db=None, session=None, T=None):
             book_line = get_book_line(book['tit'], book['aut'], book['pub'], book['puy'])
             book_line = SPAN(book_line, _class="list-group-item")
             if book['ean']:
-                book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'])
+                book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'], _ontouchmove="bookLinkOver('%s')" % book['ean'])
             html.append(book_line)
 
     return DIV(*html, _class="list-group")
