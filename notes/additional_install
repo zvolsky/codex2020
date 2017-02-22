@@ -35,7 +35,7 @@ pip install sparkpost
 PyZ3950
   # from: https://github.com/zvolsky/PyZ3950,  (fork noisy, do něj zamergovano gr + Brown-University-Library, pak další změny)
   # then: python setup.py sdist
-  # then: sudo pip install PyZ3950 --no-index --no-cache-dir --find-links file:///home/mirek/mz/PyZ3950/PyZ3950/dist/
+  # then: sudo pip install PyZ3950 --no-index --no-cache-dir --find-links file:///home/mirek/mz/PyZ3950/dist/
 
   # other forks have problems:
         # original asl2/ - not installed properly on Debian/Jessie,
@@ -50,6 +50,10 @@ pip install pymarc
 ------
 
 pip install simplejson
+
+------
+
+pip install ply
 
 ------
 
