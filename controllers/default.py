@@ -48,7 +48,7 @@ def onbooklink():
             metadata = hnd.read()
             hnd.close()
             metadata = simplejson.loads(metadata)
-            src = metadata[0]['cover_medium_url'].replace('cache.', 'www.')
+            src = metadata[0]['cover_medium_url'].replace('cache.', 'www.').replace('http:', 'https:')
         except StandardError:
             src = ''
     return simplejson.dumps({'src': src})
