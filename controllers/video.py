@@ -20,4 +20,4 @@ def play4():
     return dict()
 def play4b():
     import os
-    return response.stream(os.path.join(os.getcwd(), 'applications', request.application, 'static', 'video/6.3gp'))
+    return response.stream(os.path.join(os.getcwd(), 'applications', request.application, 'video/6.3gp'))
