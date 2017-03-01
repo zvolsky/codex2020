@@ -55,6 +55,117 @@ class UNIQUE_QUESTION(object):
             return (value, None)
 """
 
+LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
+                 ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
+                 ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
+                 ('tst', T("jen pro odzkoušení")), ('oth', T("jiné, nelze zařadit")),
+                )
+IMPORT_SOURCES = (('codex', T("codex/DOS")),)  # key is used in URL, use proper characters (but we do encode it)
+
+db.define_table('library',
+        Field('library', 'string', length=128, requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.library')],
+              label=T("Jméno knihovny"), comment=T("jméno vaší knihovny (nejedná-li se o zcela oficiální titul knihovny, vynechte typ knihovny - zadáte jej níže v samostatném údaji), pro osobní knihovnu např. zadejte Petr Starý, Kladno")),
+        Field('slug', 'string', length=32,
+              requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.slug')],
+              label=T("URL jméno"), comment=T("jméno do URL adresy [malá písmena, číslice, pomlčka/podtržítko] (příklad: petr_stary_kladno)")),
+        Field('street', 'string', length=48,
+              label=T("Ulice"), comment=T("ulice (nepovinné)")),
+        Field('city', 'string', length=48,
+              label=T("Místo"), comment=T("město nebo obec")),
+        Field('plz', 'string', length=8,
+              label=T("PSČ"), comment=T("poštovní směrovací číslo obce")),
+        Field('ltype', 'string', length=3, default=LIBRARY_TYPES[0][0],
+              notnull=True, requires=IS_IN_SET(LIBRARY_TYPES),
+              label=T("Typ knihovny"), comment=T("typ knihovny")),
+        Field('src_quality', 'integer', default=30, writable=False,
+              label=T("Kvalita zdroje"), comment=T("kvalita zdroje [%]")),
+        Field('old_system', 'string', length=48,
+              label=T("Jiný systém"), comment=T("předchozí nebo hlavní evidenční knihovnický systém")),
+        Field('imp_system', 'string', length=18,
+              requires=IS_EMPTY_OR(IS_IN_SET(IMPORT_SOURCES)),
+              label=T("Importovat z .."), comment=T("(pro import z dosud nepodporovaného zdroje kontaktujte administrátora)")),
+        Field('created', 'datetime', default=datetime.datetime.utcnow(),
+              notnull=True, writable=False,
+              label=T("Vytvořeno"), comment=T("čas vytvoření evidence")),
+        Field('completed', 'date',
+              label=T("Dokončeno"), comment=T("datum dokončení zápisu fondu knihovny")),
+        Field('review_date', 'date', default=datetime.date.today(),
+              notnull=True, requires=[IS_NOT_EMPTY(), IS_DATE(format=T('%d.%m.%Y'))],
+              label=T("Zahájení revize"), comment=T("den zahájení revize (vypíší se výtisky, nenalezené od tohoto data)")),
+        Field('st_imp_id', 'boolean', notnull=True, default=False,  # libstyle['id'][0] = I
+              label=T("Přír.číslo ?"), comment=T("označte, pokud knihovna používá přírůstková čísla výtisků")),
+        Field('st_imp_idx', 'integer', notnull=True, default=1,  # libstyle['id'][1] = 0|1|2|.. which number-part of ID should be incremented
+              label=T("Typ inkrementování"), comment=T("0 nezvětšovat přír.číslo; 1 zvětšovat resp. zvětšovat první nalezené číslo; 2 zvětšovat druhé nalezené podčíslo (např. při stylu: rok/číslo)")),
+        Field('st_imp_ord', 'boolean', notnull=True, default=False,  # libstyle['id'][2] = O
+              label=T("Čís.výtisku ?"), comment=T("označte, pokud se má zobrazovat číslo výtisku jako rozlišení výtisků každé publikace")),
+        Field('st_imp_rik', 'integer',  # libstyle['lrik'] = 2/3/4/5/6
+              notnull=True, default=3, requires=IS_INT_IN_RANGE(2, 7),
+              label=T("Rychlá identifikace"), comment=T("[DŮLEŽITÉ: později NEMĚNIT!] kolikamístné číslo používat pro rychlé hledání knihy z klávesnice? zvol podle velikosti knihovny: 2 - do počtu 50 výtisků, 3 - do 500, 4 - do 5000, 5 - do 50000, 6 - nad 50000")),
+        Field('st_imp_bc', 'boolean', notnull=True, default=False,  # libstyle['bc'][0] = B
+              label=T("Čarové kódy ?"), comment=T("označte, pokud knihovna používá vlastní čarové kódy")),
+        Field('st_imp_bc2', 'boolean', notnull=True, default=True,  # libstyle['bc'][1] = +
+              label=T("Inkremetovat čar.kódy ?"), comment=T("Ano: čarový kód více výtisků bude předvyplněn zvětšujícím se číslem; Ne: čar.kód 2+ výtisku doplníte ručně")),
+        Field('st_imp_pl', 'boolean', notnull=True, default=False,  # libstyle['gr'][0] = P
+              label=T("Umístění výtisku ?"), comment=T("označte, pokud chcete zapisovat, kde je výtisk umístěn (oddělení, místnost, regál, apod.)")),
+        Field('st_imp_sg', 'boolean', notnull=True, default=False,  # libstyle['sg'][0] = G
+              label=T("Signatura výtisku ?"), comment=T("označte, pokud používáte signatury a každý výtisk má mít unikátní")),
+        Field('st_imp_sgsep', 'string', length=3, notnull=True, default='',  # libstyle['sgsep']
+              label=T("Oddělovač v signatuře"), comment=T("unikátní signatura výtisku (je-li použita): znak(y) pro oddělení dodatku")),
+        Field('st_imp_sgmod1', 'string', length=1, notnull=True, default='',  # libstyle['sg'][1]
+              label=T("Signatura, 1.výtisk"), comment=T("unikátní signatura výtisku (je-li použita): přídavný znak 1.výtisku (např. prázdný, a, A, 1)")),
+        Field('st_imp_sgmod2', 'string', length=1, notnull=True, default='b',  # libstyle['sg'][2]
+              label=T("Signatura, 2.výtisk"), comment=T("unikátní signatura výtisku (je-li použita): přídavný znak 2.výtisku (např. a, b, B, 2)")),
+        Field('st_imp_st', 'boolean', notnull=True, default=False,  # libstyle['gr'][1] = s
+              label=T("Stat.dělení výtisků ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat výtisky (tip: i pro oddělení dosp/děts, pokud výtisky titulu mohou být přiděleny do různých oddělení)")),
+        Field('st_tit_st', 'boolean', notnull=True, default=False,  # libstyle['gr'][2] = S
+              label=T("Stat.dělení titulů ?"), comment=T("označte, pokud chcete pro účel statistiky rozdělovat tituly")),
+        Field('imp_total', 'integer', readable=False, default=0,
+              label=T("Počet v importu"), comment=T("počet publikací, které budou/byly celkově importovány")),
+        Field('imp_proc', 'decimal(5,2)', readable=False, writable=False, default=100.0),  # import position in %
+        Field('imp_done', 'integer', readable=False, default=0,
+              label=T("Počet již importovaných"), comment=T("počet již importovaných publikací celkem (nových i existujících)")),  # imp_done cnt
+        Field('imp_new', 'integer', readable=False, default=0,
+              label=T("Počet nových"), comment=T("počet nových již importovaných publikací")),  # imp_new cnt
+        Field('last_import', 'datetime', writable=False,
+              label=T("Naposledy importováno"), comment=T("čas posledního importu z jiného systému")),
+        format='%(library)s'
+        )
+
+db.define_table('auth_lib',
+        Field('auth_user_id', db.auth_user,
+              readable=True, writable=False,
+              requires=IS_IN_DB(db, db.auth_user.id, '%(username)s'),
+              ondelete='SET NULL',
+              label=T("Uživatel"), comment=T("uživatel")),
+        Field('library_id', db.library,
+              readable=True, writable=False,
+              requires=IS_IN_DB(db, db.library.id, '%(library)s'),
+              ondelete='SET NULL',
+              label=T("Knihovna"), comment=T("přístup uživatele do knihovny")),
+        format='user %(auth_user_id)s lib %(library_id)s'
+        )
+
+db.define_table('lib_rights',
+        Field('auth_lib_id', db.auth_lib,
+              readable=True, writable=False,
+              requires=IS_IN_DB(db, db.auth_lib.id, 'user %(auth_user_id)s lib %(library_id)s'),
+              ondelete='CASCADE',
+              label=T("Přístup k"), comment=T("vazba uživatele na knihovnu")),
+        Field('auth_user_id', db.auth_user,
+              readable=True, writable=False,
+              requires=IS_EMPTY_OR(IS_IN_DB(db, db.auth_user.id, '%(username)s')),
+              ondelete='SET NULL',
+              label=T("povolil"), comment=T("oprávnění povolil ..")),
+        Field('allowed', 'string', length=1,
+              readable=True, writable=False,
+              requires=IS_IN_SET((('R', T("číst")), ('W', T("zapisovat")), ('A', T("admin")))),
+              label=T("Oprávnění"), comment=T("oprávnění uživatele")),
+        Field('given', 'datetime',
+              readable=True, writable=False,
+              requires=[IS_NOT_EMPTY(), IS_DATE(format=T('%d.%m.%Y'))],
+              label=T("Založeno dne"), comment=T("od kdy má oprávnění")),
+        )
+
 db.define_table('rgroup',
         Field('library_id', db.library,
               default=auth.library_id,

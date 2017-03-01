@@ -12,7 +12,7 @@ myconf = AppConfig(reload=request.is_local)
 #mz ++k
 
 #mz ++z
-........... table definitions: library, auth_user extended
+........... table definitions: auth_user extended
 #mz ++k
 
 
