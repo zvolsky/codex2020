@@ -1002,6 +1002,7 @@
 'Views': 'Pohledy',
 'views': 'pohledy',
 'Vlastní databáze': 'Vlastní databáze',
+'volba knihovny': 'volba knihovny',
 'vrácen': 'vrácen',
 'Vyber publikaci': 'Vyber publikaci',
 'Vyber vyhledanou knihu ke katalogizaci nebo zadej další': 'Vyber vyhledanou knihu ke katalogizaci nebo zadej další',
