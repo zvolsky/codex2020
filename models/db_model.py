@@ -9,17 +9,6 @@ from c_db import PublLengths
 auth.settings.create_user_groups = None
 current.auth = auth
 
-# dočasně, dokud ladíme první knihovnu
-# TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
-if session.library_id:
-    auth.library_id = session.library_id
-elif auth.user and auth.user.library_id:
-    auth.library_id = session.library_id = auth.user.library_id[0]
-    if len(auth.user.library_id) > 1 and request.controller != 'library' and request.controller != 'choose_library':
-        redirect(URL('library', 'choose_library'))
-else:
-    auth.library_id = None
-
 # TODO: přidej Objednávku do HACTIONS: bude zřejmě vyžadovat extra tabulku jen částečně zpracovaných knih
 HACTIONS = (('+o', T("zaevidován zpětně")), ('+g', T("získán jako dar")), ('+n', T("zaevidován - nový nákup")),
             ('--', T("vyřazen (bez dalších podrobností)")),
@@ -55,10 +44,11 @@ class UNIQUE_QUESTION(object):
             return (value, None)
 """
 
-LIBRARY_TYPES = (('per', T("osobní knihovna")), ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
+LIBRARY_TYPES = (('tst', T("jen pro odzkoušení")), ('per', T("osobní knihovna")),
+                 ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
                  ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
                  ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
-                 ('tst', T("jen pro odzkoušení")), ('oth', T("jiné, nelze zařadit")),
+                 ('oth', T("jiné, nelze zařadit")),
                 )
 IMPORT_SOURCES = (('codex', T("codex/DOS")),)  # key is used in URL, use proper characters (but we do encode it)
 
@@ -142,8 +132,19 @@ db.define_table('auth_lib',
               requires=IS_IN_DB(db, db.library.id, '%(library)s'),
               ondelete='SET NULL',
               label=T("Knihovna"), comment=T("přístup uživatele do knihovny")),
+        common_filter=lambda query: db.auth_lib.auth_user_id == auth.user_id,
         format='user %(auth_user_id)s lib %(library_id)s'
         )
+
+# dočasně, dokud ladíme první knihovnu
+# TODO: nahradit mechanismem, kdy pro novou knihovnu bude povoleno, pro starou ověří mailem prvnímu uživateli
+if session.library_id:
+    auth.library_id = session.library_id
+elif auth.is_logged_in():
+    first_library = db(db.auth_lib.library_id).select().first()
+    auth.library_id = first_library and first_library.library_id or None
+else:
+    auth.library_id = None
 
 db.define_table('lib_rights',
         Field('auth_lib_id', db.auth_lib,
@@ -162,7 +163,7 @@ db.define_table('lib_rights',
               label=T("Oprávnění"), comment=T("oprávnění uživatele")),
         Field('given', 'datetime',
               readable=True, writable=False,
-              requires=[IS_NOT_EMPTY(), IS_DATE(format=T('%d.%m.%Y'))],
+              requires=[IS_NOT_EMPTY(), IS_DATETIME(format=T('%d.%m.%Y %H:%M'))],
               label=T("Založeno dne"), comment=T("od kdy má oprávnění")),
         )
 

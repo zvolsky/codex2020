@@ -15,6 +15,12 @@ from c_utils import parse_fbi
 from dal_utils import get_libstyle
 
 
+def get_my_libraries(db=None):
+    if db is None:
+        db = current.db
+
+    return [lib.library_id for lib in db().select(db.auth_lib.library_id)]
+
 def get_imp_book(imp_id, db=None):
     """based on impression.id (imp_id)
     this will retrieve None or single row: imp.impression(id,iorder,iid,sgn)+imp.answer(rik,fastinfo)

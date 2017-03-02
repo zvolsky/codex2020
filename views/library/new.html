@@ -2,30 +2,10 @@
 
 <h4>{{=T("Vyplň informace o vaší knihovně (nebo knižním obchodu)")}}</h4>
 
-<div class="alert alert-info">
-    <h4>{{=T("Nápověda")}}</h4>
-    <p>
-        {{=T("Většinu údajů lze změnit kdykoli po návratu do profilu.")}}<br>
-        {{=T("Snad nejvíc to platí o %s - napoprvé nemá význam ho nastavit, ale jeho změnou později zahájíte revizi fondu.") % db.library.review_date.label}}<br>
-        {{=XML(T("ALE: Později nelze změnit %s, proto si dobře rozmyslete budoucí velikost (počet svazků knihovny) a podle ní údaj vyplňte.") % ('<b>%s</b>' % db.library.st_imp_rik.label))}}
-    </p>
-    <h5>{{=T("Pokud budete fond v tomto programu zpracovávat:")}}</h5>
-    <p>
-        {{=T("Zvolte správně všechny údaje výtisku. Podle předvoleb se zobrazí nebo nezobrazí údaje během katalogizace.")}}<br>
-        {{=T("Nevyplňujte datum %s. Přírůstková čísla tak nebudou přidělována (i když je to nastaveno) a zadáte je ručně. Po dokončení se vraťte do profilu a zadejte datum %s. Aktivuje se přidělování přírůstkových čísel. Můžete to změnit i vícekrát, podle toho, zda zpracováváte starý fond nebo nový nákup.") % (db.library.completed.label, db.library.completed.label)}}
-    </p>
-    <h5>{{=T("Pokud importujete data z jiného systému pro zobrazení na webu:")}}</h5>
-    <p>
-        {{=T("I tak doporučujeme zvolit správně %s a alespoň přibližně předvyplnit údaje výtisku tak, jak je skutečně používáte.") % db.library.st_imp_rik.label}}<br>
-        {{=T("Datum %s vyplňte (např. datem prvního importu nebo datem, kdy se domníváte, že byla dokončena katalogizace starého fondu).") % db.library.completed.label}}
-    </p>
-</div>
-
 <div class="well well-small">
     {{=form}}
 </div>
 
 <script>
     $('label').css('text-align', 'right');
-    $('textarea').attr('rows', 3);
 </script>

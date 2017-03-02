@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from plugin_mz import formstyle_bootstrap3_compact_factory
+# from dal_common import get_my_libraries   # in choose_library()
 
 @auth.requires_login()
 def choose_library():
     """
         request.args(0): missing: Show, 'all': ShowAll, '<id>': Set
     """
+    from dal_common import get_my_libraries
+
     active = None    # id of the selected library
     accessible = []  # or other libraries accessible for this user, (id, name)
     curr_lib = session.library_id
@@ -22,8 +25,9 @@ def choose_library():
         # spec_request                          False       True        True        False       True
         # not (allowed_all and spec_request)    True        False       False       True        True
         # if.... (ie. apply filter)             True        False       False       True        True
+        my_libraries = get_my_libraries()
         if not show_all and not (allowed_all and spec_request):
-            rows = rows.find(lambda r: r.id in auth.user.library_id)
+            rows = rows.find(lambda r: r.id in my_libraries)
         if spec_request and spec_request != 'all':  # Set the library
             for row in rows:
                 if str(row.id) == spec_request:
@@ -43,16 +47,23 @@ def choose_library():
 @auth.requires_login()
 def new():
     """will create library for the new librarian"""
+    for sfld in db.library.fields:
+        fld = db.library[sfld]
+        fld.writable = fld.readable = False
+    db.library.library.writable = db.library.library.readable = True
+    db.library.ltype.writable = db.library.ltype.readable = True
+
     form = SQLFORM(db.library,
                    formstyle=formstyle_bootstrap3_compact_factory(),
-                   submit_button=T("Pokračovat ke katalogizaci"))
+                   submit_button=T("Vytvořit knihovnu"))
+    if not auth.library_id:
+        form.vars.library = T("zkušební") + ' ' + auth.user.username
     if form.process().accepted:
         __clear_libstyle()
-        if auth.user.library_id:
-            auth.user.library_id.insert(0, form.vars.id)
-        else:
-            auth.user.library_id = [form.vars.id]
-        db.auth_user[auth.user_id] = dict(library_id=auth.user.library_id)
+        auth_lib_id = db.auth_lib.insert(auth_user_id=auth.user_id, library_id=form.vars.id)
+        now = datetime.datetime.now()
+        db.lib_rights.insert(auth_lib_id=auth_lib_id, allowed='W', given=now)
+        db.lib_rights.insert(auth_lib_id=auth_lib_id, allowed='A', given=now)
         auth.library_id = form.vars.id
         redirect(URL('catalogue', 'find'))
     return dict(form=form)

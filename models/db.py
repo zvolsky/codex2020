@@ -87,7 +87,7 @@ auth.settings.extra_fields['auth_user'] = [
           readable=False, writable=False, default=BOOTSTRAP_DEFAULT,
           label=T("Vzhled"), comment=T("vzhled aplikace (styl/téma)")),
     Field('librarian', 'boolean', notnull=True, default=False, readable=True, writable=True,
-          label=T("Vlastní databáze"), comment=T("označ, jestliže chceš vytvořit vlastní databázi (pro knihovnu [domácí zdarma] nebo knižní obchod)")),
+          label=T("Vlastní databáze"), comment=T("označ, jestliže chceš vytvořit vlastní databázi (pro knihovnu nebo knižní obchod)")),
     ]
 #mz ++k
 
