@@ -15,11 +15,44 @@ from c_utils import parse_fbi
 from dal_utils import get_libstyle
 
 
-def get_my_libraries(db=None):
+def hide_all_fields(tbl):
+    for sfld in tbl.fields:
+        fld = tbl[sfld]
+        fld.writable = fld.readable = False
+
+
+def get_my_libraries_with_names(db=None):
     if db is None:
         db = current.db
 
-    return [lib.library_id for lib in db().select(db.auth_lib.library_id)]
+    return db(db.auth_lib).select(db.library.id, db.library.library, db.auth_lib.rw,
+                                  join=db.library.on(db.auth_lib.library_id == db.library.id))
+
+
+def get_all_libraries(admin=False, exclude_ids=False, db=None):
+    if db is None:
+        db = current.db
+
+    if admin:
+        query = db.library
+    else:
+        query = db.library.ltype != 'tst'   # exclude testing
+    libraries = db(query).select(db.library.id, db.library.library, db.library.read_pwd)
+
+    if exclude_ids:
+        libraries = libraries.find(lambda row: row.id not in exclude_ids)
+
+    return libraries
+
+
+def get_all_libraries_with_names(db=None):
+    if db is None:
+        db = current.db
+
+    return db(db.auth_lib).select(
+            db.auth_lib.library_id, db.library.library, db.library.read_pwd,
+            ignore_common_filters=True)
+
 
 def get_imp_book(imp_id, db=None):
     """based on impression.id (imp_id)
@@ -33,6 +66,7 @@ def get_imp_book(imp_id, db=None):
             db.answer.rik, db.answer.fastinfo,
             left=db.answer.on(db.answer.id == db.impression.answer_id)
             ).first()
+
 
 def impressions_by_usrid(question, stop_if_single=False, db=None):
     """this is search for review, for loans, ...

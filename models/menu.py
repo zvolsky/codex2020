@@ -54,8 +54,8 @@ response.menu = [
         (T('nový nákup/doklad'), False, URL('manage', 'new_bill'), []),
         ]),
     (T('Nastavení'), False, '#', [
-        (T('volba knihovny'), False, URL('library', 'choose_library'), []),
-        (T('údaje o knihovně'), False, URL('library', 'library'), []),
+        (T('volba katalogu'), False, URL('library', 'choose_library'), []),
+        (T('údaje o katalogu'), False, URL('library', 'library'), []),
         (T('umístění výtisků'), False, URL('library', 'places'), []),
         (T('statistické skupiny výtisků'), False, URL('library', 'stgri'), []),  # uses default common filter
         #(T('statistické skupiny titulů'), False, URL('library', 'stgrt'), []),

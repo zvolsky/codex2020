@@ -1,8 +1,19 @@
 {{extend 'layout.html'}}
 
+<p>
+    <a href="{{=URL(args="home")}}" class="btn {{if section == 'home':}}btn-default{{pass}}">{{=T("Název a adresa knihovny")}}</a>
+    <a href="{{=URL(args="software")}}" class="btn {{if section == 'software':}}btn-default{{pass}}">{{=T("Používaný software, Import")}}</a>
+</p>
+
 <div class="well well-small">
     {{=form}}
 </div>
+
+<ul>
+    {{if not important.imp_system:}}
+        <li>{{=T("Zatím není nastaven import: nemůžete nahrát data ze stávajícího systému.")}}</li>
+    {{pass}}
+</ul>
 
 <script>
     $('label').css('text-align', 'right');

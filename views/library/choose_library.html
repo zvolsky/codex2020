@@ -1,37 +1,54 @@
 {{extend 'layout.html'}}
 
-
-{{if not show_all and auth.has_membership('admin'):}}
-    <p><a href="{{=URL('library', 'choose_library', args='all')}}">{{=T("Nabídnout všechny knihovny")}}</a></p>
-{{pass}}
-
-
 {{if active:}}
     <div class="well well-small">
-        {{=T("Právě pracuješ s knihovnou (databází knih):")}} <strong>{{=active}}</strong>
+        {{=T("Právě pracuješ s katalogem:")}} <strong>{{=active}}</strong>
     </div>
 {{pass}}
 
+<p><a href="{{=URL('new')}}" class="btn">{{=T("Založit nový katalog")}}</a></p>
 
-{{if accessible:}}
+{{if my_rw:}}
     <div class="well well-small">
-        <ul>{{=T("Máš oprávnění spravovat následující další knihovny. Kliknutím na název se přepneš do vybrané knihovny.")}}
-            {{for library_id, library_name in accessible:}}
-                <li><a href="{{=URL('library', 'choose_library', args=library_id)}}">{{=library_name}}</a>
+        <ul>{{=T("Máš oprávnění spravovat následující další katalogy. Kliknutím na název se přepneš do vybraného katalogu.")}}
+            {{for library in my_rw:}}
+                <li><a href="{{=URL('library', 'choose_library', args=library.library.id)}}">{{=library.library.library}}</a>
             {{pass}}
         </ul>
     </div>
 {{pass}}
 
-
-{{if not active and not accessible:}}
-    {{if show_all:}}
+{{if accessible is None:}}
+    <p><a href="{{=URL('library', 'choose_library', args='all')}}">{{=T("Nabídnout všechny katalogy")}}</a></p>
+{{else:}}
+    {{if my_ro:}}
         <div class="well well-small">
-            <p>{{=T("V systému není zatím definována vůbec žádná knihovna.")}}</p>
+            <ul>
+                {{for library in my_ro:}}
+                    <li><a href="{{=URL('library', 'choose_library', args=library.library.id)}}">{{=library.library.library}}</a>
+                {{pass}}
+            </ul>
         </div>
     {{pass}}
-    <div class="well well-small">
-        <p>{{=T("Nemáš oprávnění spravovat žádnou knihovnu (databázi knih). Můžeš si založit vlastní knihovnu nebo Ti může správce některé existující knihovny zřídit přístup.")}}</p>
-    </div>
-    <p><a href="{{=URL('new')}}">{{=T("Založit vlastní knihovnu")}}</a></p>
+
+    {{if accessible:}}
+        <div class="well well-small">
+            <ul>{{if admin:}}{{=T("Jako admin máš přístup i do cizích katalogů:")}}
+                {{else:}}{{=T("Další katalogy:")}}{{pass}}
+                {{for library in accessible:}}
+                    <li>{{if admin:}}<a href="{{=URL('library', 'choose_library', args=library.id)}}">{{pass}}
+                        {{=library.library}}
+                        {{if admin:}}</a>{{pass}}
+                {{pass}}
+            </ul>
+        </div>
+    {{elif not my_ro:}}
+        <div class="well well-small">
+            {{if active or my_rw:}}
+                {{=T("Nejsou k dispozici žádné další katalogy.")}}
+            {{else:}}
+                {{=T("V systému není zatím definován vůbec žádný katalog (kromě zkušebních).")}}
+            {{pass}}
+        </div>
+    {{pass}}
 {{pass}}

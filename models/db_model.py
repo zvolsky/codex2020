@@ -44,7 +44,7 @@ class UNIQUE_QUESTION(object):
             return (value, None)
 """
 
-LIBRARY_TYPES = (('tst', T("jen pro odzkoušení")), ('per', T("osobní knihovna")),
+LIBRARY_TYPES = (('tst', T("jen pro odzkoušení")), ('per', T("osobní knihovna")),   # testing as first!
                  ('pub', T("veřejná knihovna")), ('sch', T("školní knihovna")),
                  ('pri', T("knihovna firmy nebo instituce")), ('ant', T("antkvariát")),
                  ('bsr', T("knihkupec")), ('bsd', T("knižní velkoobchod, distribuce")), ('plr', T("nakladatel")),
@@ -54,7 +54,7 @@ IMPORT_SOURCES = (('codex', T("codex/DOS")),)  # key is used in URL, use proper 
 
 db.define_table('library',
         Field('library', 'string', length=128, requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.library')],
-              label=T("Jméno knihovny"), comment=T("jméno vaší knihovny (nejedná-li se o zcela oficiální titul knihovny, vynechte typ knihovny - zadáte jej níže v samostatném údaji), pro osobní knihovnu např. zadejte Petr Starý, Kladno")),
+              label=T("Jméno knihovny"), comment=T("nejedná-li se o oficiální titul knihovny, neuvádějte zde její typ; pro osobní knihovnu zadejte např. Petr Starý, Kladno")),
         Field('slug', 'string', length=32,
               requires=[IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'library.slug')],
               label=T("URL jméno"), comment=T("jméno do URL adresy [malá písmena, číslice, pomlčka/podtržítko] (příklad: petr_stary_kladno)")),
@@ -69,6 +69,8 @@ db.define_table('library',
               label=T("Typ knihovny"), comment=T("typ knihovny")),
         Field('src_quality', 'integer', default=30, writable=False,
               label=T("Kvalita zdroje"), comment=T("kvalita zdroje [%]")),
+        Field('read_pwd', 'password',
+              label=T("Heslo pro čtení"), comment=T("ponechej prázdné pro veřejně přístupný katalog")),
         Field('old_system', 'string', length=48,
               label=T("Jiný systém"), comment=T("předchozí nebo hlavní evidenční knihovnický systém")),
         Field('imp_system', 'string', length=18,
@@ -132,6 +134,8 @@ db.define_table('auth_lib',
               requires=IS_IN_DB(db, db.library.id, '%(library)s'),
               ondelete='SET NULL',
               label=T("Knihovna"), comment=T("přístup uživatele do knihovny")),
+        Field('rw', 'boolean', default=False,
+              label=T("Pro zápis"), comment=T("jsou povoleny změny dat v knihovně")),
         common_filter=lambda query: db.auth_lib.auth_user_id == auth.user_id,
         format='user %(auth_user_id)s lib %(library_id)s'
         )
