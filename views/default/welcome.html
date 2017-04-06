@@ -17,7 +17,7 @@
     pass
     }}
     {{=MARKMIN(openinfo % addon)}}
-    {{=MARKMIN(T("Je vytvořen [[v jazyce Python http://www.python.org]], v programovacím jazyku, který [[má budoucnost https://www.google.com/trends/explore#q=python%2C%20perl%2C%20php%2C%20c%23&date=today%2072-m&cmpt=q&tz=Etc%2FGMT-2]]."))}}
+    {{=MARKMIN(T("Je vytvořen [[v jazyce Python http://www.python.org]], v programovacím jazyku, který [[má budoucnost https://trends.google.com/trends/explore?q=python,php,c%23]]"))}}
 </div>
 
 <div class="well">
@@ -27,15 +27,13 @@
 </div>
 
 <div class="alert alert-success">
-    Práce na projektu začaly v květnu 2016, momentálně zprovozňujeme první (školní) knihovnu.
-    {{=MARKMIN("Ne vše je tedy hotovo, ale, abychom vás povzbudili, je tady tato **AKCE**:")}}
+    Práce na projektu začaly v roce 2016.
+    {{=MARKMIN("Ne vše je hotovo, ale, abychom vás povzbudili, je tady tato **AKCE**:")}}
     <blockquote>
         {{=MARKMIN(T("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%."))}}
     </blockquote>
     {{if auth.user:}}
-        {{if auth.user.library_id == [TESTING_LIB_ID]:}}
-            <a href="{{=URL('newdb')}}" class="btn btn-primary">{{=T("Vytvořit databázi ZDARMA")}}</a>
-        {{pass}}
+        <a href="{{=URL('newdb')}}" class="btn btn-primary">{{=T("Vytvořit databázi")}}</a>
     {{else:}}
         <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">{{=T("Registrovat se")}}</a>
         <a href="{{=URL('login_newdb', vars={'_next': '/%s/default/user/profile' % request.application})}}" class="btn btn-info">
