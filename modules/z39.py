@@ -2,12 +2,7 @@
 
 import re
 
-from PyZ3950 import zoom  # z https://github.com/alexsdutton/PyZ3950, pak: python setup.py install
-                          # napoprvé import z Py pod rootovskými právy (něco si ještě vytvoří)
-    # viz forked.yannick.io:
-        # originální asl2/ chyba instalace,
-        # naposled aktualizovaný Brown-University-Library/ chyba Unicode znaků
-
+from PyZ3950 import zoom  # https://github.com/zvolsky/PyZ3950 (for install see readme)
 from books import ean2isbn10, ean2issn, can_be_isxn, add_missing_control
 
 
