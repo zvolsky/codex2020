@@ -170,7 +170,7 @@ def user():
             on_new_lib(usr)
 
     def onaccept_edit(form):
-        if form.vars.librarian and (not auth.user.library_id or auth.user.library_id == [TESTING_LIB_ID]):
+        if form.vars.librarian and (not auth.library_id or auth.library_id == [TESTING_LIB_ID]):
             on_new_lib(userinfo(form))
 
     auth.settings.register_onaccept.append(onaccept_new)
