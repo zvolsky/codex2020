@@ -9,6 +9,13 @@
     onbooklink: OBALKY_CACHE
 '''
 
+@auth.requires_login()
+def test():
+    tm = datetime.datetime.now()
+    curr_login = db(db.auth_event.user_id == auth.user_id).select(orderby=~db.auth_event.time_stamp, limitby=(0, 1)).first()
+    db.auth_event[curr_login] = {'time_stamp': tm}
+    return tm.strftime('%H:%M:%S')
+
 #mz ++z
 def models():   # debug (broken migrations, ..)
     return 'models/db finished ok'
