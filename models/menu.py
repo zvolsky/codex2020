@@ -6,11 +6,14 @@
 #########################################################################
 
 #mz ++z
+response.files.insert(0, URL('static', 'css/codex2020.css'))
+
 logo_library = db(db.library.id == auth.library_id).select(db.library.library).first()
 logo_library = logo_library.library if logo_library else ''
 response.logo = DIV(
         A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
-        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'library', 'choose_library')),
+        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'library', 'choose_library'),
+                _id="menu-library", _style="xxx_background-color: gray"),
         )
 #mz ++k
 response.title = request.application.replace('_',' ').title()
@@ -54,8 +57,8 @@ response.menu = [
         (T('nový nákup/doklad'), False, URL('manage', 'new_bill'), []),
         ]),
     (T('Nastavení'), False, '#', [
-        (T('volba katalogu'), False, URL('library', 'choose_library'), []),
-        (T('údaje o katalogu'), False, URL('library', 'library'), []),
+        (T('volba katalogu/knihovny'), False, URL('library', 'choose_library'), []),
+        (T('nastavení knihovny'), False, URL('library', 'library'), []),
         (T('umístění výtisků'), False, URL('library', 'places'), []),
         (T('statistické skupiny výtisků'), False, URL('library', 'stgri'), []),  # uses default common filter
         #(T('statistické skupiny titulů'), False, URL('library', 'stgrt'), []),

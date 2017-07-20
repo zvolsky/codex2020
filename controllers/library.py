@@ -22,6 +22,7 @@ def choose_library():
     my_ro = []
 
     my_libraries = get_my_libraries_with_names()
+
     if spec_request:
         if spec_request == 'all':
             accessible = get_all_libraries(admin=admin,
@@ -32,9 +33,9 @@ def choose_library():
                 if row:
                     set_this(row.id)
             else:
-                for row in my_rw:
+                for row in my_libraries:
                     if str(row.library.id) == spec_request:
-                        set_this(row.library.id)
+                        set_this(row.library.id)  # contains redirect
 
     if session.library_id:
         row = db(db.library.id == session.library_id).select(db.library.library).first()
@@ -79,10 +80,13 @@ def new():
 
 def library():
     """edit library info"""
-    if not auth.library_id:
+    if not auth.library_id or not auth.user_id:
         redirect(URL('choose_library'))
     important = db(db.library.id == auth.library_id).select(db.library.imp_system).first()
     if not important:
+        redirect(URL('choose_library'))
+    ownership = db((db.auth_lib.auth_user_id == auth.user_id) & (db.auth_lib.library_id == auth.library_id) & (db.auth_lib.rw == True)).select().first()
+    if not ownership:
         redirect(URL('choose_library'))
 
     section = request.args(0) or 'home'
