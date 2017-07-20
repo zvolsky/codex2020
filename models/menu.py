@@ -10,7 +10,7 @@ logo_library = db(db.library.id == auth.library_id).select(db.library.library).f
 logo_library = logo_library.library if logo_library else ''
 response.logo = DIV(
         A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
-        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
+        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'library', 'choose_library')),
         )
 #mz ++k
 response.title = request.application.replace('_',' ').title()
