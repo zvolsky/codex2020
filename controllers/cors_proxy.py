@@ -9,6 +9,6 @@ def api():
 
     if url:
         response.headers = {'Access-Control-Allow-Origin': '*'}
-        return urllib2.urlopen(request).read()
+        return urllib2.urlopen(url).read()
     else:
         raise HTTP(403)
