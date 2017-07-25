@@ -4,6 +4,7 @@ import urllib2
 
 def api():
     if request.args[0] == 'zonky':
+        request.headers = {'X-Size': '30'}
         url = 'https://api.zonky.cz/loans/marketplace?rating__eq=%s' % request.args[1]
 
     if url:
