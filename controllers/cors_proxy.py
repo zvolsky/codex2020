@@ -5,7 +5,7 @@ import urllib2
 def api():
     if request.args[0] == 'zonky':
         url = 'https://api.zonky.cz/loans/marketplace?rating__eq=%s' % request.args[1]
-        request = urllib2.Request(url, headers={'X-Page': '0', 'X-Size': '30'})
+        #request = urllib2.Request(url, headers={'X-Page': '0', 'X-Size': '30'})
 
     if url:
         response.headers = {'Access-Control-Allow-Origin': '*'}
