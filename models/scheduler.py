@@ -65,6 +65,7 @@ def do_import(imp_func, library_id, src_folder=None, full=False):
         from import_codex import imp_codex
         return imp_codex
 
+    auth.library_id = library_id
     imp_func = {'imp_codex': init_imp_codex}[imp_func]()
     if full:
         db(db.owned_book.library_id == library_id).update(found_at_last=False)

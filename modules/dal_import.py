@@ -203,11 +203,13 @@ def update_or_insert_answer(ean, md5publ, fastinfo, marc=None, md5marc=None, mar
         return True, row_id    # True means new added rec ( + 1 into inserted count and so on .. )
 
 
-def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None):
+def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None, auth=None):
     if db is None:
         db = current.db
+    if auth is None:
+        auth = current.auth
 
-    owned_book = {'answer_id': answer_id, 'fastinfo': fastinfo, 'cnt': cnt, 'found_at_last': True}
+    owned_book = {'library_id': auth.library_id, 'answer_id': answer_id, 'fastinfo': fastinfo, 'cnt': cnt, 'found_at_last': True}
     row = db(db.owned_book.answer_id == answer_id).select().first()
     if row:
         db.owned_book[row.id] = owned_book
@@ -216,17 +218,20 @@ def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None):
         return db.owned_book.insert(**owned_book)
 
 
-def update_or_insert_impressions(answer_id, owned_book_id, impression_gen, db=None):
+def update_or_insert_impressions(answer_id, owned_book_id, impression_gen, db=None, auth=None):
     """
     Args:
         impression_gen: see import_codex.py for the example of impression generator
     """
     if db is None:
         db = current.db
+    if auth is None:
+        auth = current.auth
 
     old_impressions = db(db.impression.owned_book_id == owned_book_id).select()
     len_old = len(old_impressions)
     for pos, impression in enumerate(impression_gen):
+        impression['library_id'] = auth.library_id
         impression['answer_id'] = answer_id
         impression['owned_book_id'] = owned_book_id
         impression['iorder'] = pos
