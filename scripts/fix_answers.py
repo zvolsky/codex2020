@@ -4,7 +4,7 @@
     WARNING !!! not finished !!! pdb in all_fix() !!!
 
     python web2py.py -M -S codex2020 -R scripts/fix_answer.py
-    fixes derrived data in answer table
+    fixes derived data in answer table
 """
 
 from c_fix import all_fix

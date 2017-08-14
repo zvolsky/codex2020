@@ -4,8 +4,9 @@
     Read from dbf's with codepage unsupported by modules dbf and codecs (like 895 cz Kamenicky)
 """
 
-import re
 import os
+import re
+from time import sleep
 
 from books import isxn_to_ean, parse_pubyear
 
@@ -147,7 +148,9 @@ def read_xbase(filename, callback, *args, **kwargs):
     if kwargs.get('do_init'):
         del kwargs['do_init']  # to avoid error in the callback function
         init_import(args[0], cnt_total=len(t))  # args[0] ~ param
-    for record in t:
+    for pos, record in enumerate(t):
+        if not pos % 200:
+            sleep(5)
         # callback(record, *args, **kwargs)    # this run extremely slow !!!
         callback({fld: record[fld] for fld in flds}, *args, **kwargs)   # with real python dict it run well
     t.close()
