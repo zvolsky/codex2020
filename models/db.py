@@ -20,7 +20,7 @@ if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     #mz ++z plugin_splinter
     def get_db(db_uri):
-        return DAL(myconf.take(db_uri), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
+        return DAL(myconf.take(db_uri), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all']
                             , fake_migrate_all=True)
 
     db0 = get_db('db.uri')
