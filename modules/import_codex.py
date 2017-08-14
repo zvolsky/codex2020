@@ -57,7 +57,7 @@ def imp_codex(db, library_id, src_folder):
     # TODO: VYPUJCKY?
 
     param['_library_id'] = library_id
-    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True)
+    read_xbase(os.path.join(src_folder, 'knihy.dbf'), import_publ, param, do_init=True, delay=200)
     finished(param)  # commit tail records after nnn % 100 and set imp_proc=100.0
 
 
@@ -148,8 +148,9 @@ def read_xbase(filename, callback, *args, **kwargs):
     if kwargs.get('do_init'):
         del kwargs['do_init']  # to avoid error in the callback function
         init_import(args[0], cnt_total=len(t))  # args[0] ~ param
+    delay_records_step = kwargs.get('delay')
     for pos, record in enumerate(t):
-        if not pos % 200:
+        if delay_records_step and not pos % delay_records_step:
             sleep(5)
         # callback(record, *args, **kwargs)    # this run extremely slow !!!
         callback({fld: record[fld] for fld in flds}, *args, **kwargs)   # with real python dict it run well
