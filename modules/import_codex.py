@@ -6,7 +6,6 @@
 
 import os
 import re
-from time import sleep
 
 from books import isxn_to_ean, parse_pubyear
 
@@ -148,9 +147,7 @@ def read_xbase(filename, callback, *args, **kwargs):
     if kwargs.get('do_init'):
         del kwargs['do_init']  # to avoid error in the callback function
         init_import(args[0], cnt_total=len(t))  # args[0] ~ param
-    for pos, record in enumerate(t):
-        if pos % 200:
-            sleep(5)
+    for record in t:
         # callback(record, *args, **kwargs)    # this run extremely slow !!!
         callback({fld: record[fld] for fld in flds}, *args, **kwargs)   # with real python dict it run well
     t.close()
