@@ -388,6 +388,8 @@
 'Import katalogu byl dokončen v 13:16.': 'Import katalogu byl dokončen v 13:16.',
 'Import katalogu byl dokončen v 13:18.': 'Import katalogu byl dokončen v 13:18.',
 'Import katalogu byl dokončen v 13:27.': 'Import katalogu byl dokončen v 13:27.',
+'Import katalogu selhal. Prosím, kontaktujte podporu.': 'Import katalogu selhal. Prosím, kontaktujte podporu.',
+'Import selhal. Chyba při přenosu nebo na serveru.': 'Import selhal. Chyba při přenosu nebo na serveru.',
 'Import zahájen:': 'Import zahájen:',
 'Import/Export': 'Import/Export',
 'Importovat z ..': 'Importovat z ..',

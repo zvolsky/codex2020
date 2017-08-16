@@ -1,7 +1,11 @@
 {{extend 'layout.html'}}
 
 <h3>{{if msg_fin:}}
-    {{=T("Dokončeno.")}}
+    {{if msg_fin[0]:}}
+        {{=T("Dokončeno.")}}
+    {{else:}}
+        {{=T("Import selhal. Chyba při přenosu nebo na serveru.")}}
+    {{pass}}
 {{else:}}
     {{=T("Probíhá přenos katalogu na web.")}}
 {{pass}}</h3>
@@ -23,7 +27,7 @@
 </div>
 
 {{if msg_fin:}}
-    <p>{{=msg_fin}}</p>
+    <p>{{=msg_fin[1]}}</p>
     <p>{{=A(T("pokračovat na úvodní stránku"), _href=URL('default', 'index'))}}</p>
 {{else:}}
     <p>{{=T("Průběh se aktualizuje po 2 minutách.")}} <a href="{{=URL()}}" class="btn btn-sm btn-default">{{=T("Aktualizovat stav importu nyní")}}</a></p>

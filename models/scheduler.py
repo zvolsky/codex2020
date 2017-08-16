@@ -80,3 +80,4 @@ def run_tests(form_vars, servers):
         run_for_server(server, form_vars, myconf)
 
 scheduler = Scheduler(db)
+current.scheduler = scheduler

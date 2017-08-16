@@ -96,7 +96,7 @@ def finished(param, db=None, session=None):
     do_commit(param['_library_id'], param, finished=True)
 
 
-def cancel_import(db=None, auth=None):
+def cancel_import(library_id=None, db=None, auth=None, scheduler=None):
     """
         used by link in views/upload/running.html
     """
@@ -104,10 +104,18 @@ def cancel_import(db=None, auth=None):
         db = current.db
     if auth is None:
         auth = current.auth
+    if scheduler is None:
+        scheduler = current.scheduler
 
-    running = db(db.import_run.finished == None).select(orderby=~db.import_run.started)
+    if library_id is None:
+        library_id = auth.library_id
+
+    running = db((db.import_run.finished == None) & (db.import_run.library_id == library_id)).select(
+            orderby=~db.import_run.started)
     for imp in running:
         imp.update_record(failed=True, finished=datetime.datetime.utcnow())
+        if imp.scheduler_task_id:
+            scheduler.stop_task(imp.scheduler_task_id)
         # we do not prefer use cnt_total, because it can be just an estimate based on rik size inside; so cnt_done could be better
     do_commit(auth.library_id, None, finished=True)
 

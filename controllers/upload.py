@@ -51,15 +51,21 @@ def running():
         redirect(URL('default', 'index'))
     msg_fin = None
     library = get_library()
+    iinfo = db.import_run[session.import_run_id]
     if library.imp_proc >= 100.0:
-        msg_fin = T("Import katalogu byl dokončen v %s.") % utc_to_local(library.last_import).strftime('%H:%M')
+        msg_fin = (True, T("Import katalogu byl dokončen v %s.") % utc_to_local(library.last_import).strftime('%H:%M'))
+    else:
+        if iinfo and iinfo.scheduler_task_id:
+            status = scheduler.task_status(iinfo.scheduler_task_id)
+            if status.status == 'FAILED':
+                msg_fin = (False, T("Import katalogu selhal. Prosím, kontaktujte podporu."))
+                cancel_import()
     counts = db(db.library.id == auth.library_id).select(db.library.imp_total, db.library.imp_proc, db.library.imp_done, db.library.imp_new).first()
     counts.imp_total = counts.imp_total or 0
     counts.imp_done = counts.imp_done or 0
     counts.imp_new = counts.imp_new or 0
 
     started = None
-    iinfo = db.import_run[session.import_run_id]
     if iinfo:
         started = utc_to_local(iinfo.started)
 
@@ -95,9 +101,10 @@ def import_uploaded():
         do_import(request.args[0], auth.library_id, src_folder=uploadfolder, full=True)  # debug
         redirect_url = URL('default', 'index')
     else:
-        scheduler.queue_task(do_import,
+        ref = scheduler.queue_task(do_import,
                 pvars={'imp_func': request.args[0], 'library_id': auth.library_id, 'src_folder': uploadfolder, 'full': True},
                 timeout=7200)
+        db.import_run[session.import_run_id] = {'scheduler_task_id': ref.id}
         redirect_url = URL('running')
 
     # TODO: to remove, replaced with sysadmin/start_idx and scheduler
