@@ -77,6 +77,7 @@ def counter_and_commit_if_100(param, added):
     param['cnt_new'] += added
     param['cnt_done'] += 1
     if not param['cnt_done'] % 100:
+        print(param['cnt_done'])
         do_commit(param['_library_id'], param)
 
 
@@ -131,6 +132,7 @@ def do_commit(library_id, param, finished=False, db=None):
     else:  # ie. if cancel!
         upd = dict(imp_proc=100.0)
     db.library[library_id] = upd
+    print('commit')
     db.commit()
 
 
