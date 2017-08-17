@@ -77,7 +77,6 @@ def counter_and_commit_if_100(param, added):
     param['cnt_new'] += added
     param['cnt_done'] += 1
     if not param['cnt_done'] % 100:
-        print(param['cnt_done'])
         do_commit(param['_library_id'], param)
 
 
@@ -132,7 +131,6 @@ def do_commit(library_id, param, finished=False, db=None):
     else:  # ie. if cancel!
         upd = dict(imp_proc=100.0)
     db.library[library_id] = upd
-    print('commit')
     db.commit()
 
 
@@ -222,14 +220,7 @@ def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None, auth=None):
     owned_book = {'library_id': auth.library_id, 'answer_id': answer_id, 'fastinfo': fastinfo, 'cnt': cnt, 'found_at_last': True}
     row = db(db.owned_book.answer_id == answer_id).select().first()
     if row:
-        try:
-            db.owned_book[row.id] = owned_book
-            problem = False
-        except:
-            problem = True
-        if problem:
-            from pdb import set_trace; set_trace()
-
+        db.owned_book[row.id] = owned_book
         return row.id
     else:
         return db.owned_book.insert(**owned_book)
