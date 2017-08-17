@@ -15,6 +15,7 @@ def do_import(imp_func, library_id, src_folder=None, full=False):
     print(222)
     db.commit()   # to be sure; but imp_func itself should commit (in chunks or so)
 
-do_import("imp_codex", 2, src_folder="/home/www-data/web2py/applications/codex2020/imports/2/src", full=true)
+do_import("imp_codex", 2, src_folder="/home/www-data/web2py/applications/codex2020/imports/2/src", full=True)
 
 #{"library_id": 2, "imp_func": "imp_codex", "full": true, "src_folder": "/home/www-data/web2py/applications/codex2020/imports/2/src"}
+--shell
