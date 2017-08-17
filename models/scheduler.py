@@ -60,6 +60,12 @@ def task_catalogize(question_id, question, asked):
 
 
 def do_import(imp_func, library_id, src_folder=None, full=False):
+    from time import sleep
+    dt = datetime.datetime.now() + datetime.timedelta(minutes=20)
+    while datetime.datetime.now() < dt:
+        sleep(20)
+    return
+
     # delayed imports
     def init_imp_codex():
         from import_codex import imp_codex
