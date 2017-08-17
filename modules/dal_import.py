@@ -220,7 +220,14 @@ def update_or_insert_owned_book(answer_id, fastinfo, cnt, db=None, auth=None):
     owned_book = {'library_id': auth.library_id, 'answer_id': answer_id, 'fastinfo': fastinfo, 'cnt': cnt, 'found_at_last': True}
     row = db(db.owned_book.answer_id == answer_id).select().first()
     if row:
-        db.owned_book[row.id] = owned_book
+        try:
+            db.owned_book[row.id] = owned_book
+            problem = False
+        except:
+            problem = True
+        if problem:
+            from pdb import set_trace; set_trace()
+
         return row.id
     else:
         return db.owned_book.insert(**owned_book)
