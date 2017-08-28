@@ -25,14 +25,12 @@ def __xxx2():
     print dataset.to_json()
 '''
 
-def __idx_task_query():
-    return (db.scheduler_task.application_name == 'codex2020/sysadmin') & (db.scheduler_task.task_name == 'idx')
+from dal_idx import idx_restart, idx_schedule
 
 
 @auth.requires_membership('admin')
 def restart_idx():
-    db(db.answer).update(needindex=True)
-    db(__idx_task_query()).delete()
+    idx_restart()
     redirect(URL('start_idx'))
 
 
@@ -42,19 +40,7 @@ def start_idx():    # hint: use restart_idx()
         idx()
         return 'Indexing finished.'
     else:
-        if db(__idx_task_query()).select().first():
-            return 'Task idx already queued. Remove it from scheduler_task table if you want re-create it.'
-        else:
-            scheduler.queue_task(
-                idx,
-                pargs=[],
-                pvars={},
-                start_time=datetime.datetime.now(),
-                stop_time=None,
-                timeout=2147483647,
-                prevent_drift=False,
-                period=20,
-                immediate=False,
-                repeats=0
-            )
+        if idx_schedule():
             return 'Task idx was added.'
+        else:
+            return 'Task idx already queued. Remove it from scheduler_task table (sysadmin/restart_idx/) if you want re-create it.'

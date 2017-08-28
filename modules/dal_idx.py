@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import re
 import simplejson
 
@@ -11,6 +12,46 @@ from c_db import PublLengths
 
 
 IDX_CHUNK = 15
+
+
+def __idx_task_query(db=None):
+    if db is None:
+        db = current.db
+    #return (db.scheduler_task.application_name == 'codex2020/sysadmin') & (db.scheduler_task.task_name == 'idx')
+    return db.scheduler_task.task_name == 'idx'
+
+
+def idx_restart(db=None):
+    if db is None:
+        db = current.db
+    db(db.answer).update(needindex=True)
+    db(__idx_task_query(db)).delete()
+    idx_schedule()
+
+
+def idx_schedule(db=None, scheduler=None):
+    if db is None:
+        db = current.db
+    if scheduler is None:
+        scheduler = current.scheduler
+
+    if db(__idx_task_query(db)).select().first():
+        return False
+    scheduler.queue_task(
+        current.idx,
+        pargs=[],
+        pvars={},
+        start_time=datetime.datetime.now(),
+        stop_time=None,
+        timeout=2147483647,
+        prevent_drift=False,
+        group_name='slow',
+        period=120,       # start every 2 minutes
+        immediate=False,
+        repeats=0,        # run unlimited times
+        retry_failed=-1   # unlimited
+    )
+    return True
 
 
 def idx_main(db=None):

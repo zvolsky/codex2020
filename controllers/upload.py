@@ -7,6 +7,7 @@
 import os
 from urllib import quote
 
+from dal_idx import idx_schedule
 from dal_import import clear_before_import, cancel_import
 from dal_utils import get_library
 from c2_config import get_contact
@@ -16,6 +17,7 @@ from plugin_mz import link, utc_to_local
 if False:  # for IDE only, need web2py/__init__.py
     from web2py.applications.codex2020.models.scheduler import do_import
 
+    from web2py.applications.codex2020.modules.dal_idx import idx_schedule
     from web2py.applications.codex2020.modules.dal_import import clear_before_import, cancel_import
     from web2py.applications.codex2020.modules.dal_utils import get_library
     from web2py.applications.codex2020.modules.c2_config import get_contact
@@ -103,8 +105,9 @@ def import_uploaded():
     else:
         ref = scheduler.queue_task(do_import,
                 pvars={'imp_func': request.args[0], 'library_id': auth.library_id, 'src_folder': uploadfolder, 'full': True},
-                timeout=7200)
+                timeout=7200, group_name='slow')
         db.import_run[session.import_run_id] = {'scheduler_task_id': ref.id}
+        idx_schedule()
         redirect_url = URL('running')
 
     # TODO: to remove, replaced with sysadmin/start_idx and scheduler

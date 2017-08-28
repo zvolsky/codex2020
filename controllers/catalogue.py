@@ -39,7 +39,7 @@ def find():
         else:
             scheduler.queue_task(task_catalogize,
                     pvars={'question_id': form.vars.id, 'question': form.vars.question, 'asked': str(form.vars.asked)},
-                    timeout=300)
+                    timeout=300, immediate=True)
     return dict(form=form, cancel_search=__btnCancelSearch())
 
 # ajax
