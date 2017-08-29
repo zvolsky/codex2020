@@ -41,9 +41,9 @@ def idx_schedule(db=None, scheduler=None):
         current.idx,
         pargs=[],
         pvars={},
-        start_time=datetime.datetime.now(),
+        start_time=datetime.datetime.now() + datetime.timedelta(seconds=30),
         stop_time=None,
-        timeout=2147483647,
+        timeout=14400,
         prevent_drift=False,
         group_name='slow',
         period=120,       # start every 2 minutes
