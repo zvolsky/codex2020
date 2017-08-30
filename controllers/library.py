@@ -107,7 +107,7 @@ def library():
         db.library.is_public.writable = db.library.is_public.readable = True
         db.library.slug.writable = db.library.slug.readable = True
         if not important.slug and important.library:
-            db.library[auth.library_id] = slugify(important.library)
+            db.library[auth.library_id] = dict(slug=slugify(important.library))
             db.commit()
 
     form = SQLFORM(db.library, auth.library_id,
