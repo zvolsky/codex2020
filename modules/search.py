@@ -80,9 +80,10 @@ def handle_qb_form(qb, lbid=None, lbslug=None, db=None, session=None, T=None):
         if not rows:
             session.flash = T("Nenalezeno")
             redirect(URL('default', 'index'))
+        rows.compact = False  # to sure have: row.answer
         for row in rows:
-            tit, aut, pub, puy = parse_fastinfo(row.fastinfo)
-            parsed_rows.append(dict(tit=tit, aut=aut, pub=pub, puy=puy, ean=row.ean))
+            tit, aut, pub, puy = parse_fastinfo(row.answer.fastinfo)
+            parsed_rows.append(dict(tit=tit, aut=aut, pub=pub, puy=puy, ean=row.answer.ean))
         books = sorted(parsed_rows, key=lambda row: row['puy'], reverse=True)
 
         # render
