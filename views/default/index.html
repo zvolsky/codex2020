@@ -1,5 +1,14 @@
 {{extend 'layout.html'}}
 
+{{if public:}}
+    <div class="well">
+        <h3>{{=T("Veřejně přístupné katalogy")}}</h3>
+        {{for lib in public:}}
+            <a href="{{=URL('query', args=lib.slug)}}" class="btn btn-small btn-info">{{=lib.library}}</a>
+        {{pass}}
+    </div>
+{{pass}}
+
 {{=form}}
 
 {{if auth.user:}}

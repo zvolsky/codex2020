@@ -9,13 +9,6 @@
     onbooklink: OBALKY_CACHE
 '''
 
-@auth.requires_login()
-def test():
-    tm = datetime.datetime.now()
-    curr_login = db(db.auth_event.user_id == auth.user_id).select(orderby=~db.auth_event.time_stamp, limitby=(0, 1)).first()
-    db.auth_event[curr_login.id] = {'time_stamp': tm}
-    return tm.strftime('%H : %M : %S')
-
 #mz ++z
 def models():   # debug (broken migrations, ..)
     return 'models/db finished ok'
@@ -26,19 +19,26 @@ def diag():   # debug (broken migrations, ..)
 
 def index():
     from search import get_qb_form
+
+    public = db((db.library.is_public == True) &
+                (db.library.slug != '') &
+                (db.library.library != '')
+            ).select(db.library.library, db.library.slug)
+
     qbform = get_qb_form()
     if qbform.process().accepted:
         redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
-    return dict(form=qbform)
+    return dict(form=qbform, public=public)
 
 def query():
     from search import get_qb_form, handle_qb_form
-    qbform = get_qb_form()
+    lbslug = request.args(0)
+    qbform = get_qb_form(lbslug)
     if qbform.process().accepted:
         redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
-    books = handle_qb_form(request.vars.qb)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return dict(form=qbform, books=books)
+    books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
+    #response.headers['Access-Control-Allow-Origin'] = '*'
+    return dict(form=qbform, books=books[1], library=books[0])
 
 # @ajaxMethod
 def onbooklink():
