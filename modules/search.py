@@ -49,11 +49,11 @@ def lib_by_slug_or_id(lbid=None, lbslug=None, db=None, auth=None):
     return library
 
 
-def handle_qb_form(qb, lbid=None, lbslug=None, db=None, session=None, T=None):
+def handle_qb_form(qb, lbid=None, lbslug=None, db=None, response=None, T=None):
     if db is None:
         db = current.db
-    if session is None:
-        session = current.session
+    if response is None:
+        response = current.response
     if T is None:
         T = current.T
 
@@ -80,21 +80,21 @@ def handle_qb_form(qb, lbid=None, lbslug=None, db=None, session=None, T=None):
                 distinct=db.answer.id
             )    # TODO? vrací navíc nějaká divná pole: ['impression', 'book_publisher', 'update_record', 'book_authority', 'owned_book', 'idx_word', 'fastinfo', 'rik2', 'idx_join', 'lib_descr', 'id', 'delete_record', 'idx_short']
 
-        if not rows:
-            session.flash = T("Nenalezeno")
-            redirect(URL('default', 'index'))
-        rows.compact = False  # to sure have: row.answer
-        for row in rows:
-            tit, aut, pub, puy = parse_fastinfo(row.answer.fastinfo)
-            parsed_rows.append(dict(tit=tit, aut=aut, pub=pub, puy=puy, ean=row.answer.ean))
-        books = sorted(parsed_rows, key=lambda row: row['puy'], reverse=True)
+        if rows:
+            rows.compact = False  # to sure have: row.answer
+            for row in rows:
+                tit, aut, pub, puy = parse_fastinfo(row.answer.fastinfo)
+                parsed_rows.append(dict(tit=tit, aut=aut, pub=pub, puy=puy, ean=row.answer.ean))
+            books = sorted(parsed_rows, key=lambda row: row['puy'], reverse=True)
 
-        # render
-        for book in books:
-            book_line = get_book_line(book['tit'], book['aut'], book['pub'], book['puy'])
-            book_line = SPAN(book_line, _class="list-group-item")
-            if book['ean']:
-                book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'])
-            html.append(book_line)
+            # render
+            for book in books:
+                book_line = get_book_line(book['tit'], book['aut'], book['pub'], book['puy'])
+                book_line = SPAN(book_line, _class="list-group-item")
+                if book['ean']:
+                    book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'])
+                html.append(book_line)
+        else:
+            current.response.flash = T("Nenalezeno")
 
     return (library, DIV(*html, _class="list-group"))
