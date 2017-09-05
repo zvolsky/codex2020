@@ -140,11 +140,11 @@ def codex():
 
     link('fine-uploader')
     link('alertifyjs')
-    session.upload_filenames = ['autori.dbf', 'k_autori.dbf', 'dodavat.dbf', 'dodavat.fpt', 'dt.dbf', 'dt.fpt', 'k_dt.dbf', 'klsl.dbf', 'k_klsl.dbf',
-                  'knihy.dbf', 'knihy.fpt', 'vytisk.dbf', 'vytisk.fpt']
-    # TODO: validovat na úrovni JavaScriptu pomocí .getUploads() /při .autoUpload = false/
+    upload_filenames = ['autori.dbf', 'k_autori.dbf', 'dodavat.dbf', 'dodavat.fpt', 'dt.dbf', 'dt.fpt', 'k_dt.dbf', 'klsl.dbf', 'k_klsl.dbf',
+                  'knihy.dbf', 'knihy.fpt', 'vytisk.dbf', 'vytisk.fpt']   # as lower!
+    session.upload_filenames = upload_filenames
     session.upload_win = True
-    return {}
+    return dict(upload_filenames=upload_filenames)
 
 '''to be removed
 def odpad():

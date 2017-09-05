@@ -17,6 +17,7 @@ def get_qb_form(lbslug=None, T=None):
     return FORM(
         INPUT(_name='qb'),
         INPUT(_type='submit', _value=T("najdi publikace")),
+        _action=URL(args=lbslug if lbslug else ())
     )
 
 
@@ -63,6 +64,7 @@ def handle_qb_form(qb, lbid=None, lbslug=None, db=None, session=None, T=None):
     if qb:
         qb = slugify(qb)
         query = db.idx_word.word.startswith(qb)
+        db.owned_book._common_filter = None
         wordjoin = db.answer.on(db.answer.id == db.idx_word.answer_id)
         flds = [db.answer.id, db.answer.fastinfo, db.answer.ean]
         if library:
@@ -77,6 +79,7 @@ def handle_qb_form(qb, lbid=None, lbslug=None, db=None, session=None, T=None):
                 join=wordjoin,
                 distinct=db.answer.id
             )    # TODO? vrací navíc nějaká divná pole: ['impression', 'book_publisher', 'update_record', 'book_authority', 'owned_book', 'idx_word', 'fastinfo', 'rik2', 'idx_join', 'lib_descr', 'id', 'delete_record', 'idx_short']
+
         if not rows:
             session.flash = T("Nenalezeno")
             redirect(URL('default', 'index'))

@@ -78,6 +78,8 @@
 
 {{extend 'layout.html'}}
 
+<!-- for fine-uploader onSubmit --><span id="uploadFilenames" class="hidden">{{=','.join(upload_filenames)}}</span>
+
 <h3>Import Codex/DOS</h3>
 
 <p><i>Dialog výběru souborů lze většinou posunout, abys viděl(a) tento návod.</i></p>
@@ -138,6 +140,12 @@
                             window.location = "{{=URL('import_uploaded', args=('imp_codex',))}}";
                         }
                     });
+                }
+            },
+            onSubmit: function(id, name) {
+                var names = ',' + $('#uploadFilenames')[0].innerHTML + ',';
+                if (names.indexOf(',' + name.toLowerCase() + ',') === -1) {
+                    return false
                 }
             }
         }

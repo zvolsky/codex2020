@@ -1,36 +1,56 @@
 {{extend 'layout.html'}}
 
-{{if public:}}
-    <div class="well">
-        <h3>{{=T("Veřejně přístupné katalogy")}}</h3>
-        {{for lib in public:}}
-            <a href="{{=URL('query', args=lib.slug)}}" class="btn btn-small btn-info">{{=lib.library}}</a>
-        {{pass}}
-    </div>
+<style>
+.qb td {padding: 3px;}
+#cover {position: fixed;}
+</style>
+
+{{=T("Kde hledat:")}}
+{{for lib in public:}}
+    {{css_class = 'btn-warning' if library and lib.slug == library[2] else 'btn-info'}}
+    <a href="{{=URL(args=lib.slug)}}" class="btn btn-small {{=css_class}}">{{=lib.library}}</a>
 {{pass}}
-
-{{=form}}
-
-{{if auth.user:}}
-    <div class="well">
-        {{if auth.library_id > 1:}}
-            <a href="{{=URL('catalogue', 'find')}}" class="btn btn-primary">{{=T("přejít ke katalogizaci")}}</a>
-        {{else:}}
-            <a href="{{=URL('catalogue', 'find')}}" class="btn btn-primary">{{=T("vyzkoušet katalogizaci ve ZKUŠEBNÍ knihovně")}}</a>
-            <a href="{{=URL('newdb')}}" class="btn btn-info">
-                {{=T("založit si vlastní databázi (pro knihovnu nebo knižní obchod)")}}
-            </a>
-        {{pass}}
-        <a href="{{=URL('theme')}}" class="btn btn-info">{{=T("změnit vzhled aplikace")}}</a>
-        <a href="{{=URL('welcome')}}" class="btn btn-info">{{=T("informace o portálu")}}</a>
-    </div>
+{{if library:}}
+    <a href="{{=URL()}}" class="btn btn-small btn-info">{{=T("ve kterémkoli katalogu")}}</a>
+    {{=H4(T("Hledá se v katalogu") + ': ' + library[1])}}
 {{else:}}
-    {{=MARKMIN(T("**Nejste přihlášen(a)**. Můžete pouze vyhledávat, ale nemůžete rezervovat ani spravovat své výpůjčky."))}}
-    <a href="{{=URL('user', args=('login'))}}" class="btn btn-primary">{{=T("přihlásit se nebo zaregistrovat")}}</a>
-    <a href="{{=URL('theme')}}" class="btn btn-info">{{=T("změnit vzhled aplikace")}}</a>
-
-    <div style="margin-top: 20px;">
-        {{=MARKMIN(T("Tato aplikace také umožňuje **evidovat knihy vlastní knihovny** (nebo knižního obchodu)."))}}
-    </div>
-    <a href="{{=URL('welcome')}}" class="btn btn-info">{{=T("chci vědět více")}}</a>
+    {{=H4(T("Hledá se ve kterémkoli katalogu."))}}
 {{pass}}
+
+<div class="well">
+    {{=form}}
+</div>
+
+<div class="col-md-2">
+    <div id="cover">
+    </div>
+</div>
+<div class="col-md-10">
+    {{=books}}
+</div>
+
+<script>
+var lastEan = null;
+function bookLinkOver(ean) {
+    if (ean !== lastEan) {
+        lastEan = ean;
+        if (ean) {
+            $.ajax({
+                url: "onbooklink",
+                data: {ean: ean},
+                success: function(result) {
+                    if (ean === lastEan) {
+                        result = JSON.parse(result);
+                        $("#cover").html('');
+                        var coverImg = $("<img>", {src: result.src});
+                        var coverA = $("<a></a>");
+                        coverA.attr("href", "https://www.obalkyknih.cz/view?isbn=" + ean);
+                        coverImg.appendTo(coverA);
+                        coverA.appendTo($("#cover"));
+                    }
+                }
+            });
+        }
+    }
+}
+</script>

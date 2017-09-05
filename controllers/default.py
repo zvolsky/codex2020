@@ -18,6 +18,18 @@ def diag():   # debug (broken migrations, ..)
     return dict()
 
 def index():
+    from search import get_qb_form, handle_qb_form
+
+    public = db((db.library.is_public == True) &
+                (db.library.slug != '') &
+                (db.library.library != '')
+            ).select(db.library.library, db.library.slug)
+    lbslug = request.args(0)
+    qbform = get_qb_form(lbslug)
+    books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
+    return dict(form=qbform, public=public, books=books[1], library=books[0])
+
+def XXXindex():
     from search import get_qb_form
 
     public = db((db.library.is_public == True) &
@@ -30,12 +42,12 @@ def index():
         redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
     return dict(form=qbform, public=public)
 
-def query():
+def XXXquery():
     from search import get_qb_form, handle_qb_form
     lbslug = request.args(0)
     qbform = get_qb_form(lbslug)
-    if qbform.process().accepted:
-        redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
+    #if qbform.process().accepted:
+    #    redirect(URL('query', args=lbslug if lbslug else (), vars=dict(qb=qbform.vars.qb)))
     books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
     #response.headers['Access-Control-Allow-Origin'] = '*'
     return dict(form=qbform, books=books[1], library=books[0])
