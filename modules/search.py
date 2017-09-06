@@ -95,6 +95,6 @@ def handle_qb_form(qb, lbid=None, lbslug=None, db=None, response=None, T=None):
                     book_line = A(book_line, _href="https://www.obalkyknih.cz/view?isbn=%s" % book['ean'], _class="book-link", _onmouseover="bookLinkOver('%s')" % book['ean'])
                 html.append(book_line)
         else:
-            current.response.flash = T("Nenalezeno")
+            response.flash = T("Nenalezeno")
 
     return (library, DIV(*html, _class="list-group"))
