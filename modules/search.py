@@ -16,7 +16,17 @@ def get_qb_form(lbslug=None, T=None):
 
     return FORM(
         INPUT(_name='qb'),
-        INPUT(_type='submit', _value=T("najdi publikace")),
+        ' ',
+        INPUT(_name='cat', _type='radio', _value='W', _checked=''),
+        SPAN(T("slovo")),
+        ' ',
+        INPUT(_name='cat', _type='radio', _value='A'),
+        SPAN(T("autor")),
+        #' ',
+        #INPUT(_name='cat', _type='radio', _value='t'),   # incl. subtitle
+        #SPAN(T("titul")),
+        ' ',
+        INPUT(_type='submit', _value=T("najdi")),
         _action=URL(args=lbslug if lbslug else ())
     )
 
@@ -49,7 +59,7 @@ def lib_by_slug_or_id(lbid=None, lbslug=None, db=None, auth=None):
     return library
 
 
-def handle_qb_form(args, qb, lbid=None, lbslug=None, db=None, response=None, T=None):
+def handle_qb_form(vars, lbid=None, lbslug=None, db=None, response=None, T=None):
     if db is None:
         db = current.db
     if response is None:
@@ -68,29 +78,32 @@ def handle_qb_form(args, qb, lbid=None, lbslug=None, db=None, response=None, T=N
     rows = None
     flds = [db.answer.id, db.answer.fastinfo, db.answer.ean]
     db.owned_book._common_filter = None
-    if qb:
-        qb = slugify(qb)
-        query = db.idx_word.word.startswith(qb)
-        wordjoin = db.answer.on(db.answer.id == db.idx_word.answer_id)
+    if vars.qb:
+        qb = slugify(vars.qb)
+        if vars.cat == 'W':
+            query = db.idx_word.word.startswith(qb)
+            wordjoin = [db.answer.on(db.answer.id == db.idx_word.answer_id)]
+        elif vars.cat == 'A':
+            query = db.idx_long.item.startswith(qb) & (db.idx_long.category == 'A')
+            wordjoin = [db.idx_join.on(db.idx_join.idx_long_id == db.idx_long.id),
+                        db.answer.on(db.answer.id == db.idx_join.answer_id)]
+        '''
+        elif vars.cat == 't':
+        '''
         if library:
             lib_query = db.owned_book.library_id == library.id
             query = query & lib_query
             flds.append(db.owned_book.cnt)
-            rows = db(query).select(*flds,
-                join=(wordjoin, db.owned_book.on(db.owned_book.answer_id == db.idx_word.answer_id)),
-                distinct=db.answer.id
-            )
-        else:
-            rows = db(query).select(*flds,
-                join=wordjoin,
-                distinct=db.answer.id
-            )    # TODO? vrací navíc nějaká divná pole: ['impression', 'book_publisher', 'update_record', 'book_authority', 'owned_book', 'idx_word', 'fastinfo', 'rik2', 'idx_join', 'lib_descr', 'id', 'delete_record', 'idx_short']
+            #wordjoin.append(db.owned_book.on(db.owned_book.answer_id == db.idx_word.answer_id)) # this was valid for 'W' only
+            wordjoin.append(db.owned_book.on(db.owned_book.answer_id == db.answer.id))
+        # else: # TODO? vrací navíc nějaká divná pole: ['impression', 'book_publisher', 'update_record', 'book_authority', 'owned_book', 'idx_word', 'fastinfo', 'rik2', 'idx_join', 'lib_descr', 'id', 'delete_record', 'idx_short']
+        rows = db(query).select(*flds, join=wordjoin, distinct=db.answer.id)
 
     elif news_status >= 0:
         lib_query = db.owned_book.library_id == library.id
         flds.append(db.owned_book.id)
         rows = db(lib_query).select(*flds,
-                join=(db.owned_book.on(db.owned_book.answer_id == db.answer.id)),
+                join=db.owned_book.on(db.owned_book.answer_id == db.answer.id),
                 orderby=~db.owned_book.id,
                 limitby=(0, library.news_cnt)
                 )
