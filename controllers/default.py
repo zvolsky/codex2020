@@ -17,6 +17,7 @@ def models():   # debug (broken migrations, ..)
 def diag():   # debug (broken migrations, ..)
     return dict()
 
+
 def index():
     from search import get_qb_form, handle_qb_form
 
@@ -29,28 +30,6 @@ def index():
     books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
     return dict(form=qbform, public=public, books=books[1], library=books[0])
 
-def XXXindex():
-    from search import get_qb_form
-
-    public = db((db.library.is_public == True) &
-                (db.library.slug != '') &
-                (db.library.library != '')
-            ).select(db.library.library, db.library.slug)
-
-    qbform = get_qb_form()
-    if qbform.process().accepted:
-        redirect(URL('query', vars=dict(qb=qbform.vars.qb)))
-    return dict(form=qbform, public=public)
-
-def XXXquery():
-    from search import get_qb_form, handle_qb_form
-    lbslug = request.args(0)
-    qbform = get_qb_form(lbslug)
-    #if qbform.process().accepted:
-    #    redirect(URL('query', args=lbslug if lbslug else (), vars=dict(qb=qbform.vars.qb)))
-    books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
-    #response.headers['Access-Control-Allow-Origin'] = '*'
-    return dict(form=qbform, books=books[1], library=books[0])
 
 # @ajaxMethod
 def onbooklink():
@@ -73,22 +52,6 @@ def onbooklink():
             src = ''
     return simplejson.dumps({'src': src})
 
-'''
-qbform = FORM(
-    INPUT(_name='qb', requires=IS_NOT_EMPTY()),
-    INPUT(_type='submit', _value=T("najdi publikace")),
-    _action=URL('query')
-)
-
-def index():
-    return dict(form=qbform)
-
-def query():
-    if not qbform.process(session=None, formname=None).accepted:
-        redirect(URL('index'))
-    from search import handle_qb_form
-    return handle_qb_form(request.vars)
-'''
 
 def theme():
     """requires:
@@ -122,15 +85,19 @@ def theme():
 def __active_theme():
     return auth.user and auth.user.theme or session.theme
 
+
 def wiki():
     return auth.wiki()
+
 
 def welcome():
     return {}
 
+
 def login_newdb():
     session.flash = T("Chcete-li si vytvořit vlastní databázi, přihlašte se, a pak zaškrtněte [Vlastní databáze]")
     redirect(URL('user', args=('login'), vars=request.vars))
+
 
 def newdb():
     if auth.user and auth.user.librarian:
@@ -138,6 +105,7 @@ def newdb():
     else:
         session.flash = T("Chcete-li si vytvořit vlastní databázi, zaškrtněte [Vlastní_databáze]")
         redirect(URL('user', args=('profile')))
+
 
 def user():
     """
