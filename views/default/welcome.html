@@ -21,27 +21,28 @@
 </div>
 
 <div class="well">
-    {{=MARKMIN("Používání tohoto portálu je **trvale zdarma pro domácí knihovny**.")}}
-    {{=MARKMIN("**Pro instituce** nabízíme mimořádně **nízké ceny**.")}}
-    {{=MARKMIN("**Levně** nabízíme také **program placené podpory** (konzultace, zaškolení, kontrola správnosti katalogizace, apod.).")}}
+    {{=MARKMIN("Používání portálu pro kohokoli: **CZK 10,-** za **1000 knih** ročně.")}}
+    {{=MARKMIN("Do CZK 10,- ročně (1000 knih) je úhrada **dobrovolná**.")}}
+    {{=MARKMIN("Jste v nestandardní situaci a potřebujete jiné ceny? Kontaktujte nás.")}}
 </div>
 
-<div class="alert alert-success">
-    Práce na projektu začaly v roce 2016.
-    {{=MARKMIN("Ne vše je hotovo, ale, abychom vás povzbudili, je tady tato **AKCE**:")}}
-    <blockquote>
-        {{=MARKMIN(T("Používání tohoto portálu bude **trvale zdarma** také pro knihovnu (nebo knižní obchod), **pokud se po dobu AKCE zaregistrujete** a v registraci připíšete instituci, pro kterou chcete portál používat. Současně, budete-li mít později zájem o program placené podpory, získáte jej na první 3 roky za 50%."))}}
-    </blockquote>
-    {{if auth.user:}}
-        <a href="{{=URL('newdb')}}" class="btn btn-primary">{{=T("Vytvořit databázi")}}</a>
-    {{else:}}
-        <a href="{{=URL('user', args=('register'))}}" class="btn btn-primary">{{=T("Registrovat se")}}</a>
-        <a href="{{=URL('login_newdb', vars={'_next': '/%s/default/user/profile' % request.application})}}" class="btn btn-info">
-            {{=T("Už jsem registrován. Jak mám postupovat?")}}
-        </a>
-    {{pass}}
+<div class="alert alert-warning">
+    <p>POZOR: <b>Na projektu se pracuje.</b></p>
+    <p>Proto, začínáte-li projekt používat, nás vždy kontaktujte: **admin@mojeknihovna.eu**</p>
+    <p>Chybí Vám import z vašeho softwaru do webového katalogu nebo jiná funkce? Napište nám.</p>
 </div>
-<a href="{{=URL('index')}}" class="btn btn-default">{{=T("Pokračovat")}}</a>
+
+{{if auth.user:}}
+    <a href="{{=URL('newdb')}}" class="btn btn-primary"><span class="glyphicon glyphicon-edit"></span> {{=T("Vytvořit databázi")}}</a>
+{{else:}}
+<a href="{{=URL('user', args=('register'))}}" class="btn btn-primary"><span class="glyphicon glyphicon-user"></span> {{=T("Registrovat se")}}</a>
+    <!--
+    <a href="{{=URL('login_newdb', vars={'_next': '/%s/default/user/profile' % request.application})}}" class="btn btn-info">
+        {{=T("Už jsem registrován. Jak mám postupovat?")}}
+    </a>
+    -->
+{{pass}}
+<a href="{{=URL('index')}}" class="btn btn-default"><span class="glyphicon glyphicon-home"></span> {{=T("Vyhledávat knihy")}}</a>
 
 <script>
     $('#c22').click(function() {

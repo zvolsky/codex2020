@@ -16,6 +16,9 @@
 {{else:}}
     {{=H4(T("Hledá se ve kterémkoli katalogu."))}}
 {{pass}}
+{{if not auth.user_id:}}
+    <a href="{{=URL('welcome')}}" class="btn btn-primary"><span class="glyphicon glyphicon-edit"></span> {{=T("Chtěl(a) bych tu mít vlastní katalog knih")}}</a>
+{{pass}}
 
 <div class="well">
     {{=form}}
