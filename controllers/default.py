@@ -86,10 +86,6 @@ def __active_theme():
     return auth.user and auth.user.theme or session.theme
 
 
-def wiki():
-    return auth.wiki()
-
-
 def welcome():
     return {}
 

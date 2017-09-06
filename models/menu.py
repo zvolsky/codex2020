@@ -45,7 +45,7 @@ response.google_analytics_id = None
 response.menu = [
     (T('Info'), False, URL('default', 'wiki'), [
         (T('chci vlastní katalog'), False, URL('default', 'welcome'), []),
-        (T('návod'), False, URL('default', 'wiki'), []),
+        (T('návod'), False, URL('wiki', 'index'), []),
         ]),
     (T('Fond'), False, URL('catalogue', 'find'), [
         (T('katalogizace'), False, URL('catalogue', 'find'), []),
