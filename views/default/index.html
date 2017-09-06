@@ -7,27 +7,36 @@
 
 {{=T("Kde hledat:")}}
 {{for lib in public:}}
-    {{css_class = 'btn-warning' if library and lib.slug == library[2] else 'btn-info'}}
+    {{css_class = 'btn-warning' if library and lib.slug == library.slug else 'btn-info'}}
     <a href="{{=URL(args=lib.slug)}}" class="btn btn-small {{=css_class}}">{{=lib.library}}</a>
 {{pass}}
 {{if library:}}
     <a href="{{=URL()}}" class="btn btn-small btn-info">{{=T("ve kterémkoli katalogu")}}</a>
-    {{=H4(T("Hledá se v katalogu") + ': ' + library[1])}}
+    {{=H4(T("Hledá se v katalogu") + ': ' + library.library)}}
 {{else:}}
     {{=H4(T("Hledá se ve kterémkoli katalogu."))}}
 {{pass}}
 
 <div class="well">
     {{=form}}
+    {{if news_status == 0:}}
+        {{=A(T("Zobrazit novinky"), _href="%s" % URL(args=library.slug))}}
+    {{pass}}
 </div>
-
-<div class="col-md-2">
-    <div id="cover">
+{{if books:}}
+    {{if news_status > 0:}}
+        {{=H4(T("Novinky v knihovně"))}}
+    {{pass}}
+    <div class="col-md-2">
+        <div id="cover">
+        </div>
     </div>
-</div>
-<div class="col-md-10">
-    {{=books}}
-</div>
+    <div class="col-md-10">
+        {{=books}}
+    </div>
+{{else:}}
+    {{=T("Katalog knihovny je prázdný.")}}
+{{pass}}
 
 <script>
 var lastEan = null;

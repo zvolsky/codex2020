@@ -27,8 +27,8 @@ def index():
             ).select(db.library.library, db.library.slug)
     lbslug = request.args(0)
     qbform = get_qb_form(lbslug)
-    books = handle_qb_form(request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
-    return dict(form=qbform, public=public, books=books[1], library=books[0])
+    books = handle_qb_form(request.args, request.vars.qb, lbslug=lbslug)  # (library, DIV) where library is: (.id, .library, .slug)
+    return dict(form=qbform, public=public, books=books[1], library=books[0], news_status=books[2])
 
 
 # @ajaxMethod

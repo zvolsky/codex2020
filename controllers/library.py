@@ -106,6 +106,7 @@ def library():
     elif section == 'publish':
         db.library.is_public.writable = db.library.is_public.readable = True
         db.library.slug.writable = db.library.slug.readable = True
+        db.library.news_cnt.writable = db.library.news_cnt.readable = True
         if not important.slug and important.library:
             db.library[auth.library_id] = dict(slug=slugify(important.library))
             db.commit()
