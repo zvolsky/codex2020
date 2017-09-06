@@ -44,10 +44,12 @@ function bookLinkOver(ean) {
     if (ean !== lastEan) {
         lastEan = ean;
         if (ean) {
+debugger;
             $.ajax({
                 url: "onbooklink",
                 data: {ean: ean},
                 success: function(result) {
+debugger;
                     if (ean === lastEan) {
                         result = JSON.parse(result);
                         $("#cover").html('');
