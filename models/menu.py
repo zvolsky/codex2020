@@ -11,7 +11,7 @@ response.files.insert(0, URL('static', 'css/codex2020.css'))
 logo_library = db(db.library.id == auth.library_id).select(db.library.library).first()
 logo_library = logo_library.library if logo_library else ''
 response.logo = DIV(
-        A(B('codex 2020'), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
+        A(SPAN('', _class="glyphicon glyphicon-home"), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
         A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'library', 'choose_library'),
                 _id="menu-library", _style="xxx_background-color: gray"),
         )

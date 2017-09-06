@@ -37,7 +37,7 @@ def get_all_libraries(admin=False, exclude_ids=False, db=None):
         query = db.library
     else:
         query = db.library.ltype != 'tst'   # exclude testing
-    libraries = db(query).select(db.library.id, db.library.library, db.library.read_pwd)
+    libraries = db(query).select(db.library.id, db.library.library)
 
     if exclude_ids:
         libraries = libraries.find(lambda row: row.id not in exclude_ids)
