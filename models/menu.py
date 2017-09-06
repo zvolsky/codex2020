@@ -11,9 +11,16 @@ response.files.insert(0, URL('static', 'css/codex2020.css'))
 logo_library = db(db.library.id == auth.library_id).select(db.library.library).first()
 logo_library = logo_library.library if logo_library else ''
 response.logo = DIV(
-        A(SPAN('', _class="glyphicon glyphicon-home"), _class="navbar-brand", _href="%s" % URL('codex2020', 'default', 'index')),
-        A(B(logo_library), _class="navbar-brand", _href="%s" % URL('codex2020', 'library', 'choose_library'),
-                _id="menu-library", _style="xxx_background-color: gray"),
+        A(SPAN('', _class="glyphicon glyphicon-home"),
+            _class="navbar-brand",
+            _href="%s" % URL('codex2020', 'default', 'index'),
+            _title=T("zpět na hlavní stránku")
+        ),
+        A(B(logo_library),
+            _class="navbar-brand",
+            _href="%s" % URL('codex2020', 'library', 'choose_library'),
+            _title=T("zvolit spravovanou knihovnu"),
+            _id="menu-library", _style="xxx_background-color: gray"),
         )
 #mz ++k
 response.title = request.application.replace('_',' ').title()
